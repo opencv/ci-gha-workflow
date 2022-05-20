@@ -1,6 +1,10 @@
-name: PR:3.4 ARM64
+name: OCV PR:3.4 ARM64
 
-on: workflow_call
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
 
 env:
   EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_opencv_xfeatures2d=OFF -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
@@ -10,7 +14,7 @@ env:
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
   ANT_HOME: '/usr/share/ant'
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
-  PYTHONPATH: /opencv-build/python_loader:$PYTHONPATH
+  PYTHONPATH: /build/python_loader:$PYTHONPATH
   OPENCV_TEST_DATA_PATH: '/opencv_extra/testdata'
   OPENCV_DOCKER_WORKDIR: '/opencv'
   DNN_MODELS: '/home/ci/dnn-models'
@@ -29,6 +33,9 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     steps:
+    - name: Setup infra environment
+      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
+      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV; fi
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
@@ -40,6 +47,7 @@ jobs:
     - name: Fetch opencv
       run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}
         git config --global --add safe.directory ${{ env.OPENCV_DOCKER_WORKDIR }}
@@ -49,6 +57,7 @@ jobs:
     - name: Clone opencv_extra
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git https://github.com/opencv/opencv_extra.git /opencv_extra
     - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
         if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
@@ -78,81 +87,81 @@ jobs:
         fi
     - name: Configure OpenCV
       run: |
-        cmake -G Ninja -B /opencv-build ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+        cmake -G Ninja -B /build ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Build OpenCV
       run: |
-        cd /opencv-build
+        cd /build
         ninja
     - name: Accuracy:calib3d
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_calib3d
+      run: cd /build && xvfb-run -a bin/opencv_test_calib3d
     - name: Accuracy:core
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_core
+      run: cd /build && xvfb-run -a bin/opencv_test_core
     - name: Accuracy:dnn
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_dnn
+      run: cd /build && xvfb-run -a bin/opencv_test_dnn
     - name: Accuracy:features2d
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_features2d
+      run: cd /build && xvfb-run -a bin/opencv_test_features2d
     - name: Accuracy:flann
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_flann
+      run: cd /build && xvfb-run -a bin/opencv_test_flann
     - name: Accuracy:highgui
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_highgui
+      run: cd /build && xvfb-run -a bin/opencv_test_highgui
     - name: Accuracy:imgcodecs
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_imgcodecs
+      run: cd /build && xvfb-run -a bin/opencv_test_imgcodecs
     - name: Accuracy:imgproc
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_imgproc
+      run: cd /build && xvfb-run -a bin/opencv_test_imgproc
     - name: Accuracy:ml
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_ml
+      run: cd /build && xvfb-run -a bin/opencv_test_ml
     - name: Accuracy:objdetect
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_objdetect --gtest_filter="-Objdetect_QRCode_Close.regression/0:Objdetect_QRCode_Close.regression/4"
+      run: cd /build && xvfb-run -a bin/opencv_test_objdetect --gtest_filter="-Objdetect_QRCode_Close.regression/0:Objdetect_QRCode_Close.regression/4"
     - name: Accuracy:photo
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_photo --gtest_filter="-Photo_CalibrateDebevec.regression"
+      run: cd /build && xvfb-run -a bin/opencv_test_photo --gtest_filter="-Photo_CalibrateDebevec.regression"
     - name: Accuracy:shape
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_shape
+      run: cd /build && xvfb-run -a bin/opencv_test_shape
     - name: Accuracy:stitching
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_stitching
+      run: cd /build && xvfb-run -a bin/opencv_test_stitching
     - name: Accuracy:superres
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_superres
+      run: cd /build && xvfb-run -a bin/opencv_test_superres
     - name: Accuracy:video
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_video
+      run: cd /build && xvfb-run -a bin/opencv_test_video
     - name: Accuracy:videoio
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_videoio
+      run: cd /build && xvfb-run -a bin/opencv_test_videoio
     - name: Accuracy:videostab
-      run: cd /opencv-build && xvfb-run -a bin/opencv_test_videostab
+      run: cd /build && xvfb-run -a bin/opencv_test_videostab
     - name: Performance:calib3d
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:core
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:dnn
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:features2d
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:imgcodecs
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:imgproc
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:objdetect
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter="-Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.decodeMulti*:Perf_Objdetect_QRCode_Multi.detectMulti*"
+      run: cd /build && xvfb-run -a bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter="-Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.decodeMulti*:Perf_Objdetect_QRCode_Multi.detectMulti*"
     - name: Performance:photo
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:stitching
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:superres
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:video
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:videoio
-      run: cd /opencv-build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      run: cd /build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Python3
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/python/test
         python3 ./test.py --repo ../../../ -v
     - name: Java
-      run: cd /opencv-build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
+      run: cd /build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
     - name: Save Unit Test Results
       uses: actions/upload-artifact@v3
       if: always()
       with:
         name: junit-html
-        path: /opencv-build/java_test/testResults/junit-noframes.html
+        path: /build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
     runs-on: opencv-cn-lin-arm64
@@ -166,6 +175,9 @@ jobs:
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
     steps:
+    - name: Setup infra environment
+      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
+      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV; fi
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
@@ -177,6 +189,7 @@ jobs:
     - name: Fetch opencv
       run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Merge opencv with a test branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}
         git config --global --add safe.directory ${{ env.OPENCV_DOCKER_WORKDIR }}
@@ -184,8 +197,9 @@ jobs:
         git config user.name "opencv.ci"
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv_contrib
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_contrib.git /opencv_contrib
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git https://github.com/opencv/opencv_contrib.git /opencv_contrib
     - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         OPENCV_CONTRIB_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}") || true
         if [[ ! -z "$OPENCV_CONTRIB_FORK" ]]; then
@@ -199,8 +213,8 @@ jobs:
         fi
     - name: Configure OpenCV Contrib
       run: |
-        cmake -G Ninja -B /opencv-contrib-build ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=/opencv_contrib/modules ${{ env.OPENCV_DOCKER_WORKDIR }}
+        cmake -G Ninja -B /build ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=/opencv_contrib/modules ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Build OpenCV Contrib
       run: |
-        cd /opencv-contrib-build
+        cd /build
         ninja

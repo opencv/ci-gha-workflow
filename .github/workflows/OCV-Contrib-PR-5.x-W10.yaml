@@ -1,0 +1,242 @@
+name: OCV Contrib PR:5.x W10
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DCL_Z_OPTION=/Z7 -DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DCMAKE_BUILD_TYPE=Release'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  OPENCV_TEST_DATA_PATH: ${{ github.workspace }}\opencv_extra\testdata
+  GTEST_FILTER_STRING: '-Samples.findFile:Drawing.ttf_text:videoio/videocapture_acceleration.read/122:videoio/videocapture_acceleration.read/126'
+
+jobs:
+  BuildAndTest:
+    runs-on: opencv-cn-win
+    defaults:
+      run:
+        shell: cmd
+    steps:
+    - name: Setup infra environment
+      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
+      shell: bash
+      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV; fi
+    - name: PR info
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      run: cd ${{ github.workspace }} && rm -rf *
+    - name: Fetch opencv_contrib
+      run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv_contrib.git git@github.com:opencv/opencv_contrib.git
+    - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        cd ${{ github.workspace }}\opencv_contrib
+        git config user.email "opencv.ci"
+        git config user.name "opencv.ci"
+        git pull -v "git@github.com:${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+    - name: Fetch opencv
+      run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv.git git@github.com:opencv/opencv.git
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      shell: bash
+      run: |
+        OPENCV_FORK=$(git ls-remote --heads "git@github.com:/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_FORK" ]]; then
+          echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          cd opencv
+          git config user.email "opencv.ci"
+          git config user.name "opencv.ci"
+          git pull -v "git@github.com:${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+    - name: Fetch opencv_extra
+      run: cd ${{ github.workspace }} && git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv_extra.git git@github.com:opencv/opencv_extra.git
+    - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      shell: bash
+      run: |
+        OPENCV_EXTRA_FORK=$(git ls-remote --heads "git@github.com:/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
+          echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          cd opencv_extra
+          git config user.email "opencv.ci"
+          git config user.name "opencv.ci"
+          git pull -v "git@github.com:${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+    - name: Configure OpenCV
+      run: |
+        mkdir ${{ github.workspace }}\build && cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ${{ github.workspace }}\opencv
+    - name: Build OpenCV
+      run: |
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        ninja
+    - name: Accuracy:3d
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_3d.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:aruco
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_aruco.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:barcode
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_barcode.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:bgsegm
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_bgsegm.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:bioinspired
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_bioinspired.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:calib
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_calib.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:core
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_core.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:dnn
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:dnn_superres
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn_superres.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:face
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_face.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:features2d
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_features2d.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:flann
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_flann.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:fuzzy
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_fuzzy.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:gapi
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_gapi.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:highgui
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_highgui.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:img_hash
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_img_hash.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:imgcodecs
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_imgcodecs.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:imgproc
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_imgproc.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:intensity_transform
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_intensity_transform.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:line_descriptor
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_line_descriptor.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:mcc
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_mcc.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:ml
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_ml.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:objdetect
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_objdetect.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:optflow
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_optflow.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:phase_unwrapping
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_phase_unwrapping.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:photo
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_photo.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:quality
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_quality.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:rapid
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_rapid.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:reg
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_reg.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:rgbd
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_rgbd.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:saliency
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_saliency.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:shape
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_shape.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:stereo
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_stereo.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:stitching
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_stitching.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:structured_light
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_structured_light.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:superres
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_superres.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:text
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_text.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:tracking
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_tracking.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:video
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_video.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:videoio
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_videoio.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:videostab
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_videostab.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:wechat_qrcode
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_wechat_qrcode.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:xfeatures2d
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_xfeatures2d.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:ximgproc
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_ximgproc.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:xphoto
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_xphoto.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Accuracy:xstereo
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_xstereo.exe --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:3d
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_3d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:aruco
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_aruco.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:bioinspired
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_bioinspired.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:calib
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_calib.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:core
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_core.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:dnn
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_dnn.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:dnn_superres
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_dnn_superres.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:features2d
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_features2d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:gapi
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_gapi.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:imgcodecs
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgcodecs.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:imgproc
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgproc.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:line_descriptor
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_line_descriptor.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:objdetect
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_objdetect.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:optflow
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_optflow.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:photo
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_photo.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:reg
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_reg.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:stereo
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_stereo.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:stitching
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_stitching.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:superres
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_superres.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:tracking
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_tracking.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:video
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_video.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:videoio
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_videoio.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:xfeatures2d
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_xfeatures2d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:ximgproc
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_ximgproc.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:xphoto
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_xphoto.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Performance:xstereo
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_xstereo.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    - name: Python3
+      run: |
+        cd ${{ github.workspace }}\opencv\modules\python\test
+        set PYTHONPATH=%PYTHONPATH%;${{ github.workspace }}\build\python_loader;${{ github.workspace }}\build\lib\python3
+        set PATH=%PATH%;${{ github.workspace }}\build\bin;${{ github.workspace }}\build\lib\python3
+        python test.py --repo ..\..\..\ -v
+    - name: Java
+      run: |
+        cd ${{ github.workspace }}\build
+        set PATH=%PATH%;${{ github.workspace }}\build\bin
+        ${{ github.workspace }}\opencv\modules\ts\misc\run.py . -a -t java

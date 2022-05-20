@@ -1,42 +1,54 @@
-name: PR:3.4 U20
+name: OCV Contrib PR:3.4 U20
 
-on: workflow_call
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DENABLE_CCACHE=OFF'
-  OPENCV_TEST_DATA_PATH: '/opencv_extra/testdata'
-  OPENCV_CONTRIB_DOCKER_WORKDIR: '/__w/opencv_contrib/opencv_contrib'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
   ANT_HOME: '/usr/share/ant'
-  PYTHONPATH: /opencv-contrib-build/python_loader:$PYTHONPATH
+  GIT_CACHE_DOCKER: '/home/ci/git_cache'
+  PYTHONPATH: /build/python_loader:$PYTHONPATH
+  OPENCV_TEST_DATA_PATH: '/opencv_extra/testdata'
+  OPENCV_CONTRIB_DOCKER_WORKDIR: '/opencv_contrib'
+  DNN_MODELS: '/home/ci/dnn-models'
   GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*'
 
 jobs:
   BuildAndTest:
-    runs-on: ubuntu-20.04
+    runs-on: opencv-cn-lin-x86-64
     defaults:
       run:
         shell: bash
     container:
-      image: quay.io/asenyaev/opencv-ubuntu:20.04
+      image: quay.io/opencv-ci/opencv-ubuntu:20.04
+      volumes:
+        - /home/opencv-cn/git_cache:/home/ci/git_cache
+        - /home/opencv-cn/ci_cache/opencv_contrib:/home/ci/.ccache
+        - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
+        - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     steps:
+    - name: Setup infra environment
+      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
+      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV; fi
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
         echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
         echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
     - name: Clean
-      run: find . -mindepth 1 -delete
+      run: find ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }} -mindepth 1 -delete
     - name: Fetch opencv_contrib
-      uses: actions/checkout@v3
-      with:
-        repository: opencv/opencv_contrib
-        ref: ${{ env.TARGET_BRANCH_NAME }}
-        fetch-depth: 0
+      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git https://github.com/opencv/opencv_contrib.git ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
     - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
         git config --global --add safe.directory ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
@@ -44,8 +56,9 @@ jobs:
         git config user.name "opencv.ci"
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv.git /opencv
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git /opencv
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         OPENCV_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
         if [[ ! -z "$OPENCV_FORK" ]]; then
@@ -58,8 +71,9 @@ jobs:
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
     - name: Clone opencv_extra
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_extra.git /opencv_extra
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git https://github.com/opencv/opencv_extra.git /opencv_extra
     - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
         if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
@@ -71,141 +85,157 @@ jobs:
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
+    - name: Extra DNN models update
+      run: |
+        DOWNLOAD_MODELS_FILE='download_models.py'
+        LATEST_SAVED_HASH=$(cat ${{ env.DNN_MODELS }}/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
+        LATEST_HASH=$(sha256sum /opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
+        if [[ $LATEST_HASH == $LATEST_SAVED_HASH ]]; then
+          echo "DNN models are up to date"
+          echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
+        else
+          echo "Updating DNN models list"
+          echo "OPENCV_DNN_TEST_DATA_PATH=/home/ci/new-dnn-models" >> $GITHUB_ENV && OPENCV_DNN_TEST_DATA_PATH='/home/ci/new-dnn-models'
+          mkdir -p "$OPENCV_DNN_TEST_DATA_PATH"
+          rsync -a --exclude=$DOWNLOAD_MODELS_FILE ${{ env.DNN_MODELS }}/* $OPENCV_DNN_TEST_DATA_PATH
+          cp /opencv_extra/testdata/dnn/download_models.py $OPENCV_DNN_TEST_DATA_PATH/dnn
+          cd $OPENCV_DNN_TEST_DATA_PATH/dnn && python3 download_models.py
+        fi
     - name: Configure OpenCV
       run: |
-        cd /opencv-contrib-build
+        cd /build
         cmake -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules /opencv
     - name: Build OpenCV
       run: |
-        cd /opencv-contrib-build
+        cd /build
         ninja
     - name: Accuracy:aruco
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_aruco --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_aruco --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:bgsegm
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_bgsegm --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_bgsegm --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:bioinspired
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_bioinspired --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_bioinspired --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:calib3d
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_calib3d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_calib3d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:core
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_core --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_core --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:dnn
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_dnn --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_dnn --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:face
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_face --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_face --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:features2d
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_features2d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_features2d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:flann
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_flann --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_flann --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:fuzzy
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_fuzzy --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_fuzzy --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:hdf
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_hdf --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_hdf --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:highgui
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_highgui --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_highgui --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:img_hash
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_img_hash --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_img_hash --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:imgcodecs
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_imgcodecs --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_imgcodecs --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:imgproc
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_imgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_imgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:line_descriptor
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_line_descriptor --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_line_descriptor --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:ml
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_ml --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_ml --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:objdetect
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_objdetect --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_objdetect --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:optflow
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_optflow --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_optflow --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:phase_unwrapping
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_phase_unwrapping --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_phase_unwrapping --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:photo
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_photo --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_photo --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:reg
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_reg --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_reg --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:rgbd
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_rgbd --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_rgbd --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:sfm
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_sfm --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_sfm --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:shape
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_shape --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_shape --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:stereo
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_stereo --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_stereo --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:stitching
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_stitching --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_stitching --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:structured_light
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_structured_light --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_structured_light --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:superres
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_superres --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_superres --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:text
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_text --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_text --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:tracking
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_tracking --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_tracking --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:video
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_video --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_video --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:videoio
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_videoio --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_videoio --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:videostab
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_videostab --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_videostab --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:xfeatures2d
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_xfeatures2d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_xfeatures2d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:ximgproc
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_ximgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_ximgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:xphoto
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_test_xphoto --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_test_xphoto --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:bioinspired
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_bioinspired --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_bioinspired --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:calib3d
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:core
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:dnn
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:features2d
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:imgcodecs
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:imgproc
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:line_descriptor
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_line_descriptor --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_line_descriptor --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:objdetect
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:optflow
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_optflow --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_optflow --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:photo
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:reg
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_reg --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_reg --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:stereo
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_stereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_stereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:stitching
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:superres
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:tracking
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_tracking --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_tracking --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:video
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:videoio
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:xfeatures2d
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_xfeatures2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_xfeatures2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:ximgproc
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_ximgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_ximgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:xphoto
-      run: cd /opencv-contrib-build && xvfb-run -a bin/opencv_perf_xphoto --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_xphoto --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Python3
       run: |
         cd /opencv/modules/python/test
         python3 ./test.py --repo ../../../ -v
     - name: Java
-      run: cd /opencv-contrib-build && xvfb-run -a python3 /opencv/modules/ts/misc/run.py . -a -t java
+      run: cd /build && xvfb-run -a python3 /opencv/modules/ts/misc/run.py . -a -t java
     - name: Save Unit Test Results
       uses: actions/upload-artifact@v3
       if: always()
       with:
         name: junit-html
-        path: /opencv-contrib-build/java_test/testResults/junit-noframes.html
+        path: /build/java_test/testResults/junit-noframes.html
     - name: Pylint
-      run: cd /opencv-contrib-build && cmake --build . --config release --target check_pylint -- -j4
+      run: cd /build && cmake --build . --config release --target check_pylint -- -j4
