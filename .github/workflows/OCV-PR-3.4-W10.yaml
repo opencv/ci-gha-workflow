@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - '.github/workflows/OCV-PR-3.4-W10.yaml'
   workflow_call:
 
 env:
@@ -23,9 +25,9 @@ jobs:
         shell: cmd
     steps:
     - name: Setup infra environment
-      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       shell: bash
-      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV; fi
+      run: echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
@@ -138,6 +140,7 @@ jobs:
         cd ${{ github.workspace }}\build
         set PATH=%PATH%;${{ github.workspace }}\build\bin
         ${{ github.workspace }}\opencv\modules\ts\misc\run.py . -a -t java
+
   BuildContrib:
     runs-on: opencv-cn-win
     defaults:
@@ -145,9 +148,9 @@ jobs:
         shell: cmd
     steps:
     - name: Setup infra environment
-      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       shell: bash
-      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV; fi
+      run: echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
