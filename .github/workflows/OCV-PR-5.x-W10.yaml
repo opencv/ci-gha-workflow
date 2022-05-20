@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - '.github/workflows/OCV-PR-5.x-W10.yaml'
   workflow_call:
 
 env:
@@ -23,9 +25,9 @@ jobs:
         shell: cmd
     steps:
     - name: Setup infra environment
-      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       shell: bash
-      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV; fi
+      run: echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
@@ -142,6 +144,7 @@ jobs:
         cd ${{ github.workspace }}\build
         set PATH=%PATH%;${{ github.workspace }}\build\bin
         ${{ github.workspace }}\opencv\modules\ts\misc\run.py . -a -t java
+
   BuildContrib:
     runs-on: opencv-cn-win
     defaults:
@@ -149,9 +152,9 @@ jobs:
         shell: cmd
     steps:
     - name: Setup infra environment
-      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       shell: bash
-      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV; fi
+      run: echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
@@ -178,7 +181,7 @@ jobs:
         OPENCV_CONTRIB_FORK=$(git ls-remote --heads "git@github.com:${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}") || true
         if [[ ! -z "$OPENCV_CONTRIB_FORK" ]]; then
           echo "Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch"
-          cd /opencv_contrib
+          cd opencv_contrib
           git config user.email "opencv.ci"
           git config user.name "opencv.ci"
           git pull -v "git@github.com:${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}"

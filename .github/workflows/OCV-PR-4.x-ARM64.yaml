@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - '.github/workflows/OCV-PR-4.x-ARM64.yaml'
   workflow_call:
 
 env:
@@ -34,8 +36,8 @@ jobs:
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     steps:
     - name: Setup infra environment
-      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
-      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV; fi
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
@@ -168,8 +170,8 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
     steps:
     - name: Setup infra environment
-      if: ${{ github.event.repository.name != 'opencv-gha-workflow' }}
-      run: if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' ]]; then echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV; fi
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
     - name: PR info
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
