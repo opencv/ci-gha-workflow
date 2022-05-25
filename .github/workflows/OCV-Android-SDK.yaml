@@ -1,4 +1,4 @@
-name: OCV PR:4.x AndroidSDK
+name: OCV AndroidSDK
 
 on:
   pull_request:
@@ -14,7 +14,8 @@ env:
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
-  OPENCV_DOCKER_WORKDIR: '/opencv'
+  OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
+  CCACHE_DIR: '/home/ci/.ccache'
 
 jobs:
   BuildAndTest:
@@ -38,7 +39,7 @@ jobs:
         echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
         echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
     - name: Clean
-      run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
+      run: (test -d "${{ env.OPENCV_DOCKER_WORKDIR }}" && find "${{ env.OPENCV_DOCKER_WORKDIR }}" -mindepth 1 -delete) || /bin/true
     - name: Fetch opencv
       run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
@@ -52,26 +53,30 @@ jobs:
 
     - name: Build OpenCV for Android SDK
       run: |
-        cd /build
-        python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_sdk.py" --build_doc --config "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/ndk-18.config.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" /build
+        mkdir -p /home/ci/build
+        cd /home/ci/build
+        python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_sdk.py" --build_doc --config "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/ndk-18-api-level-21.config.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" /home/ci/build
 
     - name: Test CMake
-      run: cd /build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_cmake_build.py" OpenCV-android-sdk/sdk/native/jni
+      run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_cmake_build.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" OpenCV-android-sdk/sdk/native/jni
 
     - name: Test Ant
-      run: cd /build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_ant_build.py" OpenCV-android-sdk/sdk/java OpenCV-android-sdk/samples
+      if: github.base_ref == '3.4'
+      run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_ant_build.py" OpenCV-android-sdk/sdk/java OpenCV-android-sdk/samples
 
     - name: Test NDK
-      run: cd /build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_ndk_build.py" OpenCV-android-sdk/sdk/native/jni
+      if: github.base_ref == '3.4'
+      run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_ndk_build.py" OpenCV-android-sdk/sdk/native/jni
 
     - name: Test Gradle
-      run: cd /build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk
+      if: github.base_ref != '3.4'
+      run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk
 
-    #- name: Create Package
-      #run: cd build && zip -r -9, -y OpenCV4Android.zip OpenCV-android-sdk
-      #uses: actions/upload-artifact@v3
-      #if: always()
-      #with:
-        #name: OpenCV4AndroidSDK
-        #path: /build/OpenCV4Android.zip
-
+    - name: Create Package
+      run: cd /home/ci/build && zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
+    - name: Release Package
+      uses: actions/upload-artifact@v3
+      if: github.event_name == 'release'
+      with:
+        name: OpenCV4AndroidSDK
+        path: /home/ci/build/OpenCV4Android.zip
