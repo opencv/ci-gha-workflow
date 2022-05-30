@@ -1,0 +1,54 @@
+name: OCV PR:4.x iOS
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-4.x-iOS.yaml'
+  workflow_call:
+  schedule:
+  - cron: "0 0 * * *"
+
+env:
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  GIT_CACHE: /Users/xperience/git_cache
+
+jobs:
+  Build:
+    runs-on: macOS-M1
+    steps:
+    - name: Setup infra environment
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
+    - name: PR info
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      run: cd ${{ github.workspace }} && find . -mindepth 1 -delete
+    - name: Fetch opencv
+      run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE }}/opencv.git https://github.com/opencv/opencv.git opencv
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        cd ${{ github.workspace }}/opencv
+        git config user.email "opencv.ci"
+        git config user.name "opencv.ci"
+        git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+    - name: Build OpenCV iOS Framework
+      run: |
+        cd ${{ github.workspace }} && python3 opencv/platforms/ios/build_framework.py ios
+    - name: Create Artifact
+      run: cd ${{ github.workspace }}/ios && zip -r -9 -y opencv-4.x-ios-framework.zip opencv2.framework
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      if: ${{ github.event_name == 'schedule' || env.RUNNER_DEBUG == 1 }}
+      with:
+        name: OpenCViOSFramework
+        path: ${{ github.workspace }}/ios/opencv-4.x-ios-framework.zip
