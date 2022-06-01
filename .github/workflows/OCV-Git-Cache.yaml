@@ -1,0 +1,35 @@
+name: OCV Git cache
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-Git-Cache.yaml'
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  Update:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64]
+    steps:
+      - name: Setup GIT_CACHE_PATH Environment variable
+        run: |
+          if [[ "${{ matrix.os }}" == *"opencv-cn-mac"* ]]
+          then
+            echo "GIT_CACHE_PATH=/Users/opencv-cn/Workspace/opencv-ci/git_cache" >> $GITHUB_ENV
+          fi
+      - name: Update Git cache
+        run: |
+          for repository in opencv opencv_contrib opencv_extra
+          do
+            cd $GIT_CACHE_PATH/$repository.git
+            git fetch --tags --force --progress -- https://github.com/opencv/$repository.git +refs/pull/*:refs/remotes/origin/pr/*
+          done
