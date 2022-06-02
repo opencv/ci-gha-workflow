@@ -1,0 +1,430 @@
+name: OCV Contrib PR:5.x macOS x86_64
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-Contrib-PR-5.x-macOS-x86_64.yaml'
+  workflow_call:
+
+env:
+  OPENCV_CI_HOME: '/Users/opencv-cn/Workspace/opencv-ci'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/Users/opencv-cn/Workspace/opencv-ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  ANT_HOME: '/usr/share/ant'
+  GIT_CACHE: '/Users/opencv-cn/Workspace/opencv-ci/git_cache'
+  PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
+  OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
+  OPENCV_CONTRIB_DOCKER_WORKDIR: '${{ github.workspace }}/opencv_contrib'
+  DNN_MODELS: '/Users/opencv-cn/Workspace/opencv-ci/dnn_models'
+  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*'
+
+jobs:
+  BuildAndTest:
+    runs-on: opencv-cn-mac-x86-64
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Setup infra environment
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
+    - name: PR info
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      run: find . -mindepth 1 -delete
+      working-directory: ${{ github.workspace }}
+    - name: Fetch opencv_contrib
+      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE }}/opencv_contrib.git https://github.com/opencv/opencv_contrib.git
+      working-directory: ${{ github.workspace }}
+    - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        git config --global --add safe.directory .
+        git config user.email "opencv.ci"
+        git config user.name "opencv.ci"
+        git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+      working-directory: ${{ github.workspace }}/opencv_contrib
+    - name: Clone opencv
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE }}/opencv.git https://github.com/opencv/opencv.git
+      working-directory: ${{ github.workspace }}
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        OPENCV_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_FORK" ]]; then
+          echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          git config user.email "opencv.ci"
+          git config user.name "opencv.ci"
+          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+      working-directory: ${{ github.workspace }}/opencv
+    - name: Clone opencv_extra
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE }}/opencv_extra.git https://github.com/opencv/opencv_extra.git
+      working-directory: ${{ github.workspace }}
+    - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
+          echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          git config user.email "opencv.ci"
+          git config user.name "opencv.ci"
+          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+      working-directory: ${{ github.workspace }}/opencv_extra
+    - name: Extra DNN models update
+      run: |
+        DOWNLOAD_MODELS_FILE='download_models.py'
+        LATEST_SAVED_HASH=$(cat ${{ env.DNN_MODELS }}/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
+        LATEST_HASH=$(sha256sum opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
+        if [[ $LATEST_HASH == $LATEST_SAVED_HASH ]]; then
+          echo "DNN models are up to date"
+          echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
+        else
+          echo "Updating DNN models list"
+          echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.OPENCV_CI_HOME }}/new-dnn-models" >> $GITHUB_ENV && OPENCV_DNN_TEST_DATA_PATH='${{ env.OPENCV_CI_HOME }}/new-dnn-models'
+          mkdir -p "$OPENCV_DNN_TEST_DATA_PATH"
+          rsync -a --exclude=$DOWNLOAD_MODELS_FILE ${{ env.DNN_MODELS }}/* $OPENCV_DNN_TEST_DATA_PATH
+          cp opencv_extra/testdata/dnn/download_models.py $OPENCV_DNN_TEST_DATA_PATH/dnn
+          cd $OPENCV_DNN_TEST_DATA_PATH/dnn && python3 download_models.py
+        fi
+      working-directory: ${{ github.workspace }}
+    - name: Configure OpenCV
+      run: |
+        export PKG_CONFIG_PATH="/usr/local/opt/ffmpeg@4/lib/pkgconfig"
+        export JAVA_HOME="/usr/local/Cellar/openjdk/15.0.2/libexec/openjdk.jdk/Contents/Home"
+        cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules opencv
+      working-directory: ${{ github.workspace }}
+    - name: Build OpenCV
+      id: build-opencv
+      run: |
+        ninja
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:3d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_3d
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:aruco
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_aruco
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:barcode
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_barcode
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:bgsegm
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_bgsegm
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:bioinspired
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_bioinspired
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:calib
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_calib
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:core
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_core
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:dnn
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_dnn
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:dnn_superres
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_dnn_superres
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:face
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_face
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:features2d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_features2d
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:flann
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_flann
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:fuzzy
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_fuzzy
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:gapi
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_gapi
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:hdf
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_hdf
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:highgui
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_highgui
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:img_hash
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_img_hash
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:imgcodecs
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_imgcodecs
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:imgproc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_imgproc
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:intensity_transform
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_intensity_transform
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:line_descriptor
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_line_descriptor
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:mcc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_mcc
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:ml
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_ml
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:objdetect
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_objdetect
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:optflow
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_optflow
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:phase_unwrapping
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_phase_unwrapping
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:photo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_photo
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:quality
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_quality
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:rapid
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_rapid
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:reg
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_reg
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:rgbd
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_rgbd
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:saliency
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_saliency
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:sfm
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_sfm
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:shape
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_shape
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:stereo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_stereo
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:stitching
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_stitching
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:structured_light
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_structured_light
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:superres
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_superres
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:text
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_text
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:tracking
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_tracking
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:video
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_video
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:videoio
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_videoio
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:videostab
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_videostab
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:wechat_qrcode
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_wechat_qrcode
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:xfeatures2d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_xfeatures2d
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:ximgproc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_ximgproc
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:xphoto
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_xphoto
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:xstereo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_xstereo
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:3d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:aruco
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_aruco --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:bioinspired
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_bioinspired --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:calib
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_calib --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:core
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:dnn
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:dnn_superres
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_dnn_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:features2d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:gapi
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:imgcodecs
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:imgproc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:line_descriptor
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_line_descriptor --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:objdetect
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:optflow
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_optflow --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:photo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:reg
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_reg --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:stereo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_stereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:stitching
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:superres
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:tracking
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_tracking --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:video
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:videoio
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:xfeatures2d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_xfeatures2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:ximgproc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_ximgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:xphoto
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_xphoto --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:xstereo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_xstereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
+      working-directory: ${{ github.workspace }}/build
+    - name: Python3
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        python3 ./test.py --repo ../../../ -v
+      working-directory: ${{ github.workspace }}/opencv/modules/python/test
+    - name: Java
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: python3 ../opencv/modules/ts/misc/run.py . -a -t java
+      working-directory: ${{ github.workspace }}/build
+    - name: Save Unit Test Results
+      uses: actions/upload-artifact@v3
+      if: ${{ success() && steps.build-opencv.outcome == 'success' }}
+      with:
+        name: junit-html
+        path: build/java_test/testResults/junit-noframes.html
+    - name: Pylint
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cmake --build . --config release --target check_pylint -- -j4
+      working-directory: ${{ github.workspace }}/build
