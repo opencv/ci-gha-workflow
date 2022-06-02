@@ -331,8 +331,7 @@ jobs:
       working-directory: ${{ github.workspace }}/build
     - name: Performance:videoio
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_videoio --perf_impl=
-      plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       working-directory: ${{ github.workspace }}/build
     - name: Performance:xfeatures2d
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
