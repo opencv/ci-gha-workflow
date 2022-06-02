@@ -67,75 +67,107 @@ jobs:
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         cmake -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ github.workspace }}\opencv
     - name: Build OpenCV
+      id: build-opencv
       run: |
         cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         ninja
     - name: Accuracy:calib3d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_calib3d.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:core
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_core.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:dnn
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:features2d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_features2d.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:flann
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_flann.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:highgui
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_highgui.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:imgcodecs
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_imgcodecs.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:imgproc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_imgproc.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:ml
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_ml.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:objdetect
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_objdetect.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:photo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_photo.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:shape
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_shape.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:stitching
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_stitching.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:superres
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_superres.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:video
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_video.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:videoio
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_videoio.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:videostab
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_videostab.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:calib3d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_calib3d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:core
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_core.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:dnn
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_dnn.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:features2d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_features2d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:imgcodecs
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgcodecs.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:imgproc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgproc.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:objdetect
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_objdetect.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:photo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_photo.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:stitching
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_stitching.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:superres
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_superres.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:video
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_video.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:videoio
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_videoio.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Python3
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd ${{ github.workspace }}\opencv\modules\python\test
         set PYTHONPATH=%PYTHONPATH%;${{ github.workspace }}\build\python_loader;${{ github.workspace }}\build\lib\python3
         set PATH=%PATH%;${{ github.workspace }}\build\bin;${{ github.workspace }}\build\lib\python3
         python test.py --repo ..\..\..\ -v
     - name: Java
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd ${{ github.workspace }}\build
         set PATH=%PATH%;${{ github.workspace }}\build\bin
