@@ -7,6 +7,9 @@ on:
     paths:
       - '.github/workflows/OCV-Android-SDK.yaml'
   workflow_call:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 
 env:
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
@@ -76,7 +79,7 @@ jobs:
       run: cd /home/ci/build && zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
     - name: Release Package
       uses: actions/upload-artifact@v3
-      if: github.event_name == 'release'
+      if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
       with:
         name: OpenCV4AndroidSDK
         path: /home/ci/build/OpenCV4Android.zip
