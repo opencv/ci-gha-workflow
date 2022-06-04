@@ -121,6 +121,10 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_flann --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       working-directory: ${{ github.workspace }}/build
+    # - name: Accuracy:gapi
+    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+    #   run: ./bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    #   working-directory: ${{ github.workspace }}/build
     - name: Accuracy:highgui
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_highgui --gtest_filter=${{ env.GTEST_FILTER_STRING }}
@@ -181,6 +185,10 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       working-directory: ${{ github.workspace }}/build
+    # - name: Performance:gapi
+    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+    #   run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    #   working-directory: ${{ github.workspace }}/build
     - name: Performance:imgcodecs
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}

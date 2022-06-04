@@ -20,7 +20,7 @@ env:
   DNN_MODELS: '/Users/opencv-cn/Workspace/opencv-ci/dnn_models'
   PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:OCL_Video/PyrLKOpticalFlow.Mat/0:OCL_Video/PyrLKOpticalFlow.Mat/1:OCL_Video/PyrLKOpticalFlow.Mat/2:OCL_Video/PyrLKOpticalFlow.Mat/3:OCL_Video/PyrLKOpticalFlow.Mat/4:OCL_Video/PyrLKOpticalFlow.Mat/5:OCL_ResizeFixture_Resize.Resize/26:OCL_ResizeFixture_Resize.Resize/27:OCL_ResizeFixture_Resize.Resize/42:OCL_ResizeFixture_Resize.Resize/43:OCL_ResizeFixture_Resize.Resize/74:OCL_ResizeFixture_Resize.Resize/75:OCL_ResizeFixture_Resize.Resize/90:OCL_ResizeFixture_Resize.Resize/91:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/0:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/1:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/2:videoio_dynamic.basic_write'
+  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:OCL_Video/PyrLKOpticalFlow.Mat/0:OCL_Video/PyrLKOpticalFlow.Mat/1:OCL_Video/PyrLKOpticalFlow.Mat/2:OCL_Video/PyrLKOpticalFlow.Mat/3:OCL_Video/PyrLKOpticalFlow.Mat/4:OCL_Video/PyrLKOpticalFlow.Mat/5:OCL_ResizeFixture_Resize.Resize/26:OCL_ResizeFixture_Resize.Resize/27:OCL_ResizeFixture_Resize.Resize/42:OCL_ResizeFixture_Resize.Resize/43:OCL_ResizeFixture_Resize.Resize/74:OCL_ResizeFixture_Resize.Resize/75:OCL_ResizeFixture_Resize.Resize/90:OCL_ResizeFixture_Resize.Resize/91:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/0:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/1:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/2:videoio_dynamic.basic_write:GOTURN.memory_usage:DaSiamRPN.memory_usage'
 
 jobs:
   BuildAndTest:
@@ -117,6 +117,10 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_flann --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       working-directory: ${{ github.workspace }}/build
+    # - name: Accuracy:gapi
+    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+    #   run: ./bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    #   working-directory: ${{ github.workspace }}/build
     - name: Accuracy:highgui
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_highgui --gtest_filter=${{ env.GTEST_FILTER_STRING }}
@@ -169,6 +173,10 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       working-directory: ${{ github.workspace }}/build
+    # - name: Performance:gapi
+    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+    #   run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    #   working-directory: ${{ github.workspace }}/build
     - name: Performance:imgcodecs
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
@@ -208,7 +216,7 @@ jobs:
       working-directory: ${{ github.workspace }}/build
     - name: Save Unit Test Results
       uses: actions/upload-artifact@v3
-      if: ${{ always() }}
+      if: ${{ success() && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html
         path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html
