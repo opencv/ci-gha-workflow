@@ -20,12 +20,6 @@ jobs:
       matrix:
         os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64]
     steps:
-      - name: Setup GIT_CACHE_PATH Environment variable
-        run: |
-          if [[ "${{ matrix.os }}" == *"opencv-cn-mac"* ]]
-          then
-            echo "GIT_CACHE_PATH=/Users/opencv-cn/Workspace/opencv-ci/git_cache" >> $GITHUB_ENV
-          fi
       - name: Update Git cache
         run: |
           for repository in opencv opencv_contrib opencv_extra
