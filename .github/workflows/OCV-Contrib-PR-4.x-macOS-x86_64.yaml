@@ -21,7 +21,7 @@ env:
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
   OPENCV_CONTRIB_DOCKER_WORKDIR: '${{ github.workspace }}/opencv_contrib'
   DNN_MODELS: '/Users/opencv-cn/Workspace/opencv-ci/dnn_models'
-  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:Tracking/DistanceAndOverlap.Scaled_Data_TLD/2'
+  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:Tracking/DistanceAndOverlap.Scaled_Data_TLD/2:Tracking/DistanceAndOverlap.TLD/2'
 
 jobs:
   BuildAndTest:
@@ -403,12 +403,13 @@ jobs:
         python3 ./test.py --repo ../../../ -v
       working-directory: ${{ github.workspace }}/opencv/modules/python/test
     - name: Java
+      id: java-test
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: python3 ../opencv/modules/ts/misc/run.py . -a -t java
       working-directory: ${{ github.workspace }}/build
     - name: Save Unit Test Results
       uses: actions/upload-artifact@v3
-      if: ${{ success() && steps.build-opencv-contrib.outcome == 'success' }}
+      if: ${{ steps.java-test.outcome == 'success' && steps.build-opencv-contrib.outcome == 'success' }}
       with:
         name: junit-html
         path: build/java_test/testResults/junit-noframes.html

@@ -20,7 +20,7 @@ env:
   DNN_MODELS: '/Users/opencv-cn/Workspace/opencv-ci/dnn_models'
   PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:OCL_Video/PyrLKOpticalFlow.Mat/0:OCL_Video/PyrLKOpticalFlow.Mat/1:OCL_Video/PyrLKOpticalFlow.Mat/2:OCL_Video/PyrLKOpticalFlow.Mat/3:OCL_Video/PyrLKOpticalFlow.Mat/4:OCL_Video/PyrLKOpticalFlow.Mat/5:OCL_ResizeFixture_Resize.Resize/26:OCL_ResizeFixture_Resize.Resize/27:OCL_ResizeFixture_Resize.Resize/42:OCL_ResizeFixture_Resize.Resize/43:OCL_ResizeFixture_Resize.Resize/74:OCL_ResizeFixture_Resize.Resize/75:OCL_ResizeFixture_Resize.Resize/90:OCL_ResizeFixture_Resize.Resize/91:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:Perf_Objdetect_QRCode.detect/2:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/0:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/1:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/2:OCL_OCL_Video/Mog2_Update.Accuracy/*:OCL_OCL_Video/Mog2_getBackgroundImage.Accuracy/*:OCL_KNN_Apply_KNN/*:OCL_KNN_GetBackgroundImage_KNN.KNN/*:OCL_MOG2_Apply_Mog2.Mog2/*:OCL_MOG2_GetBackgroundImage_Mog2.Mog2/*:KNN_Apply_KNN.KNN/*:KNN_GetBackgroundImage_KNN.KNN/*:MOG2_Apply_Mog2.Mog2/*:MOG2_GetBackgroundImage_Mog2.Mog2/*'
+  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:OCL_Video/PyrLKOpticalFlow.Mat/0:OCL_Video/PyrLKOpticalFlow.Mat/1:OCL_Video/PyrLKOpticalFlow.Mat/2:OCL_Video/PyrLKOpticalFlow.Mat/3:OCL_Video/PyrLKOpticalFlow.Mat/4:OCL_Video/PyrLKOpticalFlow.Mat/5:OCL_ResizeFixture_Resize.Resize/26:OCL_ResizeFixture_Resize.Resize/27:OCL_ResizeFixture_Resize.Resize/42:OCL_ResizeFixture_Resize.Resize/43:OCL_ResizeFixture_Resize.Resize/74:OCL_ResizeFixture_Resize.Resize/75:OCL_ResizeFixture_Resize.Resize/90:OCL_ResizeFixture_Resize.Resize/91:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:Perf_Objdetect_QRCode.detect/2:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/0:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/1:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/2:OCL_OCL_Video/Mog2_Update.Accuracy/*:OCL_OCL_Video/Mog2_getBackgroundImage.Accuracy/*:OCL_KNN_Apply_KNN.KNN/*:OCL_KNN_GetBackgroundImage_KNN.KNN/*:OCL_MOG2_Apply_Mog2.Mog2/*:OCL_MOG2_GetBackgroundImage_Mog2.Mog2/*:KNN_Apply_KNN.KNN/*:KNN_GetBackgroundImage_KNN.KNN/*:MOG2_Apply_Mog2.Mog2/*:MOG2_GetBackgroundImage_Mog2.Mog2/*'
 
 jobs:
   BuildAndTest:
@@ -220,12 +220,13 @@ jobs:
         python3 ./test.py --repo ../../../ -v
       working-directory: ${{ github.workspace }}/opencv/modules/python/test
     - name: Java
+      id: java-test
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: python3 ../opencv/modules/ts/misc/run.py . -a -t java
       working-directory: ${{ github.workspace }}/build
     - name: Save Unit Test Results
       uses: actions/upload-artifact@v3
-      if: ${{ success() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html
         path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html
