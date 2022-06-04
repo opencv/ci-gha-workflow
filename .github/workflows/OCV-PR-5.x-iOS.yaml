@@ -23,7 +23,7 @@ jobs:
     runs-on: macOS-M1
     steps:
       - name: Setup infra environment
-        if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+        if: ${{ github.event.repository.name == 'ci-gha-workflow' || github.event_name == 'schedule' }}
         run: echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
       - name: PR info
         run: |
