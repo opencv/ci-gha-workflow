@@ -33,7 +33,7 @@ jobs:
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
     steps:
     - name: Setup infra environment
-      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' || github.event_name == 'schedule' }}
       run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
     - name: PR info
       run: |
