@@ -264,8 +264,15 @@ jobs:
         set PATH=%PATH%;${{ github.workspace }}\build\bin;${{ github.workspace }}\build\lib\python3
         python test.py --repo ..\..\..\ -v
     - name: Java
+      id: java-test
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: |
         cd ${{ github.workspace }}\build
         set PATH=%PATH%;${{ github.workspace }}\build\bin
         ${{ github.workspace }}\opencv\modules\ts\misc\run.py . -a -t java
+    - name: Save Unit Test Results
+      uses: actions/upload-artifact@v3
+      if: ${{ steps.java-test.outcome == 'success' && steps.build-opencv-contrib.outcome == 'success' }}
+      with:
+        name: junit-html
+        path: ${{ github.workspace }}\build\java_test\testResults\junit-noframes.html
