@@ -36,7 +36,7 @@ jobs:
       - name: Fetch opencv
         run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE }}/opencv.git https://github.com/opencv/opencv.git opencv
       - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
-        if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+        if: ${{ github.event.repository.name != 'ci-gha-workflow' || (github.event.repository.name != 'ci-gha-workflow' && github.event_name != 'schedule') }}
         run: |
           cd ${{ github.workspace }}/opencv
           git config user.email "opencv.ci"
