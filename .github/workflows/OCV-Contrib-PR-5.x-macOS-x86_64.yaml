@@ -17,7 +17,7 @@ env:
   ANT_HOME: '/usr/share/ant'
   PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:Tracking/DistanceAndOverlap.TLD/2:Tracking/DistanceAndOverlap.Scaled_Data_TLD/2'
+  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:Tracking/DistanceAndOverlap.TLD/2:Tracking/DistanceAndOverlap.Scaled_Data_TLD/2:InterpolatorTest.RICReferenceAccuracy'
 
 jobs:
   BuildAndTest:
