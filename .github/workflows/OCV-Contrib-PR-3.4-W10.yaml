@@ -16,6 +16,7 @@ env:
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
   OPENCV_TEST_DATA_PATH: ${{ github.workspace }}\opencv_extra\testdata
   GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:Samples.findFile'
+  DOWNLOAD_DNN_MODELS_FILE: 'download_models.py'
 
 jobs:
   BuildAndTest:
@@ -77,6 +78,27 @@ jobs:
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
+    - name: Check DNN models update
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        LATEST_SAVED_HASH=$(cat $DNN_MODELS\\dnn\\latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
+        LATEST_HASH=$(sha256sum opencv_extra\\testdata\\dnn\\${{ env.DOWNLOAD_DNN_MODELS_FILE }} | awk '{print $1}')
+        if [[ "$LATEST_SAVED_HASH" == "$LATEST_HASH" ]]; then
+          echo "MATCHER=true" >> $GITHUB_ENV && MATCHER=true
+        fi
+        if [[ $MATCHER == 'true' ]]; then
+          echo "OPENCV_DNN_TEST_DATA_PATH=$DNN_MODELS" >> $GITHUB_ENV
+        else
+          echo "OPENCV_DNN_TEST_DATA_PATH=${{ github.workspace }}\\opencv_extra\\testdata" >> $GITHUB_ENV
+        fi
+    - name: Extra DNN models update
+      if: ${{ env.MATCHER != 'true' }}
+      run: |
+        dir /b /a-d %DNN_MODELS%\\dnn\\|findstr /b ${{ env.DOWNLOAD_DNN_MODELS_FILE }} >excluded.tmp
+        xcopy %DNN_MODELS%\\dnn\\* "%OPENCV_DNN_TEST_DATA_PATH%\\dnn\\" /EXCLUDE:excluded.tmp /S /y
+        cd %OPENCV_DNN_TEST_DATA_PATH%\\dnn
+        python ${{ env.DOWNLOAD_DNN_MODELS_FILE }}
     - name: Configure OpenCV
       run: |
         mkdir ${{ github.workspace }}\build && cd ${{ github.workspace }}\build
