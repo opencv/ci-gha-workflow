@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/Users/opencv-cn/Workspace/opencv-ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -40,7 +40,7 @@ jobs:
       run: find . -mindepth 1 -delete
       working-directory: ${{ github.workspace }}
     - name: Fetch opencv_contrib
-      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE_PATH/opencv_contrib.git https://github.com/opencv/opencv_contrib.git
+      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv_contrib.git https://github.com/opencv/opencv_contrib.git
       working-directory: ${{ github.workspace }}
     - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
@@ -51,7 +51,7 @@ jobs:
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
       working-directory: ${{ github.workspace }}/opencv_contrib
     - name: Clone opencv
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE_PATH/opencv.git https://github.com/opencv/opencv.git
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git
       working-directory: ${{ github.workspace }}
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
@@ -67,7 +67,7 @@ jobs:
         fi
       working-directory: ${{ github.workspace }}/opencv
     - name: Clone opencv_extra
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE_PATH/opencv_extra.git https://github.com/opencv/opencv_extra.git
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv_extra.git https://github.com/opencv/opencv_extra.git
       working-directory: ${{ github.workspace }}
     - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
@@ -101,9 +101,6 @@ jobs:
       working-directory: ${{ github.workspace }}
     - name: Configure OpenCV
       run: |
-        export JAVA_HOME="/opt/homebrew/Cellar/openjdk/18.0.1/libexec/openjdk.jdk/Contents/Home"
-        export PYTHON3_INCLUDE_DIR="/opt/homebrew/opt/python@3.9/Frameworks/Python.framework/Versions/3.9/include/python3.9"
-        export PYTHON3_LIBRARY="/opt/homebrew/Cellar/python@3.9/3.9.13_1/Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib"
         cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules opencv
       working-directory: ${{ github.workspace }}
     - name: Build OpenCV
@@ -411,7 +408,3 @@ jobs:
       with:
         name: junit-html
         path: build/java_test/testResults/junit-noframes.html
-    - name: Pylint
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cmake --build . --config release --target check_pylint -- -j4
-      working-directory: ${{ github.workspace }}/build
