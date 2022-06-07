@@ -46,7 +46,7 @@ jobs:
     - name: Fetch opencv
       run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
-      if: ${{ github.event.repository.name != 'ci-gha-workflow' || (github.event.repository.name != 'ci-gha-workflow' && github.event_name != 'schedule') }}
+      if: ${{ startsWith(github.event.repository.name, 'opencv') && github.event_name == 'pull_request' }}
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}
         git config --global --add safe.directory ${{ env.OPENCV_DOCKER_WORKDIR }}
