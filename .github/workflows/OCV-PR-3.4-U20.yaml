@@ -194,7 +194,7 @@ jobs:
       run: cd /build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
     - name: Save Unit Test Results
       uses: actions/upload-artifact@v3
-      if: ${{ steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html
         path: /build/java_test/testResults/junit-noframes.html
