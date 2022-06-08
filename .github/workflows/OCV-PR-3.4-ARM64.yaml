@@ -91,76 +91,109 @@ jobs:
       run: |
         cmake -G Ninja -B /build ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Build OpenCV
+      id: build-opencv
       run: |
         cd /build
         ninja
     - name: Accuracy:calib3d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_calib3d
     - name: Accuracy:core
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_core
     - name: Accuracy:dnn
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_dnn
     - name: Accuracy:features2d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_features2d
     - name: Accuracy:flann
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_flann
     - name: Accuracy:highgui
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_highgui
     - name: Accuracy:imgcodecs
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_imgcodecs
     - name: Accuracy:imgproc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_imgproc
     - name: Accuracy:ml
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_ml
     - name: Accuracy:objdetect
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_objdetect --gtest_filter="-Objdetect_QRCode_Close.regression/0:Objdetect_QRCode_Close.regression/4"
     - name: Accuracy:photo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_photo --gtest_filter="-Photo_CalibrateDebevec.regression"
     - name: Accuracy:shape
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_shape
     - name: Accuracy:stitching
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_stitching
     - name: Accuracy:superres
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_superres
     - name: Accuracy:video
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_video
     - name: Accuracy:videoio
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_videoio
     - name: Accuracy:videostab
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_test_videostab
     - name: Performance:calib3d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:core
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:dnn
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:features2d
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:imgcodecs
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:imgproc
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:objdetect
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter="-Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.decodeMulti*:Perf_Objdetect_QRCode_Multi.detectMulti*"
     - name: Performance:photo
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:stitching
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:superres
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:video
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Performance:videoio
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     - name: Python3
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/python/test
         python3 ./test.py --repo ../../../ -v
     - name: Java
+      id: java-test
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
     - name: Save Unit Test Results
       uses: actions/upload-artifact@v3
-      if: always()
+      if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html
         path: /build/java_test/testResults/junit-noframes.html
