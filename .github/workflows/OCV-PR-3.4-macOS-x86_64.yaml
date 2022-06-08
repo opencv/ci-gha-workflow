@@ -26,21 +26,26 @@ jobs:
         shell: bash
     steps:
     - name: Setup infra environment
+      timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       run: echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV
     - name: PR info
+      timeout-minutes: 60
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
         echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
         echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
         echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
     - name: Clean
+      timeout-minutes: 60
       run: find . -mindepth 1 -delete
       working-directory: ${{ github.workspace }}
     - name: Fetch opencv
+      timeout-minutes: 60
       run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git
       working-directory: ${{ github.workspace }}
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         git config --global --add safe.directory .
@@ -49,9 +54,11 @@ jobs:
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
       working-directory: ${{ github.workspace }}/opencv
     - name: Clone opencv_extra
+      timeout-minutes: 60
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv_extra.git https://github.com/opencv/opencv_extra.git
       working-directory: ${{ github.workspace }}
     - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
@@ -65,6 +72,7 @@ jobs:
         fi
       working-directory: ${{ github.workspace }}/opencv_extra
     - name: Extra DNN models update
+      timeout-minutes: 60
       run: |
         DOWNLOAD_MODELS_FILE='download_models.py'
         LATEST_SAVED_HASH=$(cat $DNN_MODELS/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
@@ -82,141 +90,175 @@ jobs:
         fi
       working-directory: ${{ github.workspace }}
     - name: Configure OpenCV
+      timeout-minutes: 60
       run: |
         cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} opencv
       working-directory: ${{ github.workspace }}
     - name: Build OpenCV
+      timeout-minutes: 60
       id: build-opencv
       run: |
         ninja
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:calib3d
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_calib3d
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:core
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_core
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:dnn
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_dnn
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:features2d
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_features2d
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:flann
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_flann
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:highgui
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_highgui
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:imgcodecs
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_imgcodecs
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:imgproc
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_imgproc
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:ml
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_ml
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:objdetect
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_objdetect
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:photo
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_photo
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:shape
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_shape
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:stitching
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_stitching
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:superres
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_superres
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:video
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_video
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:videoio
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_videoio
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:videostab
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_videostab
       working-directory: ${{ github.workspace }}/build
     - name: Performance:calib3d
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:core
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:dnn
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:features2d
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:imgcodecs
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:imgproc
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:objdetect
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:photo
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:stitching
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:superres
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:video
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:videoio
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Python3
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         python3 ./test.py --repo ../../../ -v
       working-directory: ${{ github.workspace }}/opencv/modules/python/test
     - name: Java
+      timeout-minutes: 60
       id: java-test
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: python3 ../opencv/modules/ts/misc/run.py . -a -t java
       working-directory: ${{ github.workspace }}/build
     - name: Save Unit Test Results
+      timeout-minutes: 60
       uses: actions/upload-artifact@v3
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
@@ -230,21 +272,26 @@ jobs:
         shell: bash
     steps:
     - name: Setup infra environment
+      timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       run: echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV
     - name: PR info
+      timeout-minutes: 60
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
         echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
         echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
         echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
     - name: Clean
+      timeout-minutes: 60
       run: find . -mindepth 1 -delete
       working-directory: ${{ github.workspace }}
     - name: Fetch opencv
+      timeout-minutes: 60
       run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git
       working-directory: ${{ github.workspace }}
     - name: Merge opencv with a test branch
+      timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         git config --global --add safe.directory .
@@ -253,9 +300,11 @@ jobs:
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
         working-directory: ${{ github.workspace }}/opencv
     - name: Clone opencv_contrib
+      timeout-minutes: 60
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv_contrib.git https://github.com/opencv/opencv_contrib.git
       working-directory: ${{ github.workspace }}
     - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         OPENCV_CONTRIB_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}") || true
@@ -269,10 +318,12 @@ jobs:
         fi
       working-directory: ${{ github.workspace }}/opencv_contrib
     - name: Configure OpenCV Contrib
+      timeout-minutes: 60
       run: |
         cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules opencv
       working-directory: ${{ github.workspace }}
     - name: Build OpenCV Contrib
+      timeout-minutes: 60
       run: |
         ninja
       working-directory: ${{ github.workspace }}/build
