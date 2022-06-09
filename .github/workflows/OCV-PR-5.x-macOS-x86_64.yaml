@@ -108,6 +108,8 @@ jobs:
     - name: Accuracy:calib
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      env:
+        OPENCV_OPENCL_CACHE_ENABLE: 0
       run: ./bin/opencv_test_calib
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:core
