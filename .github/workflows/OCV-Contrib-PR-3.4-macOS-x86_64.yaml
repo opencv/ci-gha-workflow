@@ -137,6 +137,8 @@ jobs:
     - name: Accuracy:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      env:
+        OPENCV_OPENCL_CACHE_ENABLE: 0
       run: ./bin/opencv_test_calib3d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:core
