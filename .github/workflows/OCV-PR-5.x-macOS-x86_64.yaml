@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DWITH_OPENCL=OFF -DWITH_OPENCLAMDFFT=OFF -DWITH_OPENCLAMDBLAS=OFF -DWITH_VA_INTEL=OFF -DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -108,6 +108,8 @@ jobs:
     - name: Accuracy:calib
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      env:
+        OPENCV_OPENCL_CACHE_ENABLE: 0
       run: ./bin/opencv_test_calib
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:core
