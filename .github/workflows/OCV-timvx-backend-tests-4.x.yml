@@ -21,18 +21,22 @@ jobs:
     container: docker.io/yuentau/ocv_ubuntu:20.04
     steps:
       - name: Setup infra environment
+        timeout-minutes: 60
         if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
         shell: bash
         run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
       - name: info
+        timeout-minutes: 60
         run: |
           echo "PR Author: ${{ env.PR_AUTHOR }}"
           echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
           echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
       - name: clean
+        timeout-minutes: 60
         shell: bash
         run: find . -mindepth 1 -delete
       - name: fetch opencv
+        timeout-minutes: 20
         uses: actions/checkout@v3
         with:
           repository: opencv/opencv
@@ -40,6 +44,7 @@ jobs:
           fetch-depth: 0
           path: opencv
       - name: merge opencv with test branch
+        timeout-minutes: 60
         if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
         shell: bash
         run: |
@@ -48,9 +53,11 @@ jobs:
           git config user.name "opencv.ci"
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
       - name: configure
+        timeout-minutes: 60
         run: |
           cmake -B build -DWITH_TIMVX=ON -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DBUILD_PERF_TESTS=ON -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DWITH_OPENCL=OFF opencv
       - name: build
+        timeout-minutes: 120
         run: cmake --build build --target install -j $(nproc)
 
   khadas-vim3-tests:
@@ -61,14 +68,17 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64, khadas-vim3]
     steps:
       - name: info
+        timeout-minutes: 60
         run: |
           echo "PR Author: ${{ env.PR_AUTHOR }}"
           echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
           echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
       - name: clean
+        timeout-minutes: 60
         shell: bash
         run: find . -mindepth 1 -delete
       - name: fetch opencv
+        timeout-minutes: 20
         uses: actions/checkout@v3
         with:
           repository: opencv/opencv
@@ -76,6 +86,7 @@ jobs:
           fetch-depth: 0
           path: opencv
       - name: merge opencv with test branch
+        timeout-minutes: 60
         shell: bash
         run: |
           cd opencv
@@ -83,11 +94,13 @@ jobs:
           git config user.name "opencv.ci"
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
       - name: fetch opencv_extra
+        timeout-minutes: 20
         uses: actions/checkout@v3
         with:
           repository: opencv/opencv_extra
           path: opencv_extra
       - name: merge opencv_extra with test branch
+        timeout-minutes: 60
         shell: bash
         run: |
           RET=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
@@ -100,10 +113,13 @@ jobs:
             echo "no merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
           fi
       - name: configure
+        timeout-minutes: 60
         run: |
           cmake -B build -D CMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=./install -DWITH_TIMVX=ON -DWITH_OPENCL=OFF -DWITH_EIGEN=OFF opencv
       - name: build
+        timeout-minutes: 120
         run: cmake --build build --target opencv_test_dnn -j 4
       - name: unit tests for int8 layers
+        timeout-minutes: 30
         run: |
           OPENCV_TEST_DATA_PATH=./opencv_extra/testdata ./build/bin/opencv_test_dnn --gtest_filter="Test_Int8_layers.*/1"

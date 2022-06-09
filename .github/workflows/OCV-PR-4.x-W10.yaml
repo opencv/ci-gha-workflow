@@ -25,20 +25,25 @@ jobs:
         shell: cmd
     steps:
     - name: Setup infra environment
+      timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       shell: bash
       run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
     - name: PR info
+      timeout-minutes: 60
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
         echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
         echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
         echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
     - name: Clean
+      timeout-minutes: 60
       run: cd ${{ github.workspace }} && rm -rf *
     - name: Fetch opencv
+      timeout-minutes: 60
       run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv.git git@github.com:opencv/opencv.git
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         cd ${{ github.workspace }}\opencv
@@ -46,8 +51,10 @@ jobs:
         git config user.name "opencv.ci"
         git pull -v "git@github.com:${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Fetch opencv_extra
+      timeout-minutes: 60
       run: cd ${{ github.workspace }} && git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv_extra.git git@github.com:opencv/opencv_extra.git
     - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       shell: bash
       run: |
@@ -62,98 +69,128 @@ jobs:
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
     - name: Configure OpenCV
+      timeout-minutes: 60
       run: |
         mkdir ${{ github.workspace }}\build && cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         cmake -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ github.workspace }}\opencv
     - name: Build OpenCV
+      timeout-minutes: 60
       id: build-opencv
       run: |
         cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         ninja
     - name: Accuracy:calib3d
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_calib3d.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:core
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_core.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:dnn
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:features2d
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_features2d.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:flann
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_flann.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:gapi
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_gapi.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:highgui
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_highgui.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:imgcodecs
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_imgcodecs.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:imgproc
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_imgproc.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:ml
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_ml.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:objdetect
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_objdetect.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:photo
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_photo.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:stitching
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_stitching.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:video
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_video.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Accuracy:videoio
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_videoio.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:calib3d
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_calib3d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:core
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_core.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:dnn
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_dnn.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:features2d
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_features2d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:gapi
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_gapi.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:imgcodecs
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgcodecs.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:imgproc
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgproc.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:objdetect
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_objdetect.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:photo
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_photo.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:stitching
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_stitching.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:video
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_video.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Performance:videoio
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_perf_videoio.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
     - name: Python3
+      timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd ${{ github.workspace }}\opencv\modules\python\test
@@ -161,6 +198,7 @@ jobs:
         set PATH=%PATH%;${{ github.workspace }}\build\bin;${{ github.workspace }}\build\lib\python3
         python test.py --repo ..\..\..\ -v
     - name: Java
+      timeout-minutes: 60
       id: java-test
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
@@ -168,6 +206,7 @@ jobs:
         set PATH=%PATH%;${{ github.workspace }}\build\bin
         ${{ github.workspace }}\opencv\modules\ts\misc\run.py . -a -t java
     - name: Save Unit Test Results
+      timeout-minutes: 60
       uses: actions/upload-artifact@v3
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
@@ -181,20 +220,25 @@ jobs:
         shell: cmd
     steps:
     - name: Setup infra environment
+      timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       shell: bash
       run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
     - name: PR info
+      timeout-minutes: 60
       run: |
         echo "PR Author: ${{ env.PR_AUTHOR }}"
         echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
         echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
         echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
     - name: Clean
+      timeout-minutes: 60
       run: cd ${{ github.workspace }} && rm -rf *
     - name: Fetch opencv
+      timeout-minutes: 60
       run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv.git git@github.com:opencv/opencv.git
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         cd ${{ github.workspace }}\opencv
@@ -202,8 +246,10 @@ jobs:
         git config user.name "opencv.ci"
         git pull -v "git@github.com:${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Fetch opencv_contrib
+      timeout-minutes: 60
       run: cd ${{ github.workspace }} && git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv_contrib.git --depth 1 git@github.com:opencv/opencv_contrib.git
     - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       shell: bash
       run: |
@@ -218,11 +264,13 @@ jobs:
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_contrib does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
     - name: Configure OpenCV Contrib
+      timeout-minutes: 60
       run: |
         mkdir ${{ github.workspace }}\build && cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         cmake -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ${{ github.workspace }}\opencv
     - name: Build OpenCV Contrib
+      timeout-minutes: 60
       run: |
         cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"

@@ -21,6 +21,7 @@ jobs:
         os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64]
     steps:
       - name: Update Git cache
+        timeout-minutes: 60
         run: |
           for repository in opencv opencv_contrib opencv_extra
           do
