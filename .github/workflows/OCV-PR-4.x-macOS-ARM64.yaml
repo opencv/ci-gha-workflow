@@ -17,7 +17,8 @@ env:
   ANT_HOME: '/usr/share/ant'
   PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:OCL_Video/PyrLKOpticalFlow.Mat/0:OCL_Video/PyrLKOpticalFlow.Mat/1:OCL_Video/PyrLKOpticalFlow.Mat/2:OCL_Video/PyrLKOpticalFlow.Mat/3:OCL_Video/PyrLKOpticalFlow.Mat/4:OCL_Video/PyrLKOpticalFlow.Mat/5:OCL_ResizeFixture_Resize.Resize/26:OCL_ResizeFixture_Resize.Resize/27:OCL_ResizeFixture_Resize.Resize/42:OCL_ResizeFixture_Resize.Resize/43:OCL_ResizeFixture_Resize.Resize/74:OCL_ResizeFixture_Resize.Resize/75:OCL_ResizeFixture_Resize.Resize/90:OCL_ResizeFixture_Resize.Resize/91:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/0:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/1:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/2:videoio_dynamic.basic_write:GOTURN.memory_usage:DaSiamRPN.memory_usage'
+  #GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:OCL_Video/PyrLKOpticalFlow.Mat/0:OCL_Video/PyrLKOpticalFlow.Mat/1:OCL_Video/PyrLKOpticalFlow.Mat/2:OCL_Video/PyrLKOpticalFlow.Mat/3:OCL_Video/PyrLKOpticalFlow.Mat/4:OCL_Video/PyrLKOpticalFlow.Mat/5:OCL_ResizeFixture_Resize.Resize/26:OCL_ResizeFixture_Resize.Resize/27:OCL_ResizeFixture_Resize.Resize/42:OCL_ResizeFixture_Resize.Resize/43:OCL_ResizeFixture_Resize.Resize/74:OCL_ResizeFixture_Resize.Resize/75:OCL_ResizeFixture_Resize.Resize/90:OCL_ResizeFixture_Resize.Resize/91:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/0:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/1:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/2:videoio_dynamic.basic_write:GOTURN.memory_usage:DaSiamRPN.memory_usage'
+  OPENCV_OPENCL_CACHE_ENABLE: 0
 
 jobs:
   BuildAndTest:
@@ -104,137 +105,137 @@ jobs:
     - name: Accuracy:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_calib3d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_calib3d
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_core --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_core
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:dnn
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_dnn --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_dnn
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:features2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_features2d --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_features2d
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:flann
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_flann --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_flann
       working-directory: ${{ github.workspace }}/build
     # - name: Accuracy:gapi
     #   timeout-minutes: 60
     #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: ./bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    #   run: ./bin/opencv_test_gapi
     #   working-directory: ${{ github.workspace }}/build
     - name: Accuracy:highgui
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_highgui --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_highgui
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_imgcodecs --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_imgcodecs
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_imgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_imgproc
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:ml
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_ml --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_ml
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:objdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_objdetect --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_objdetect
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:photo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_photo --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_photo
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:stitching
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_stitching --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_stitching
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:video
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_video --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_video
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_videoio --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_test_videoio
       working-directory: ${{ github.workspace }}/build
     - name: Performance:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:dnn
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:features2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     # - name: Performance:gapi
     #   timeout-minutes: 60
     #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+    #   run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
     #   working-directory: ${{ github.workspace }}/build
     - name: Performance:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:objdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:photo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:stitching
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:video
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Performance:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: ./bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1
       working-directory: ${{ github.workspace }}/build
     - name: Python3
       timeout-minutes: 60
