@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF -DWITH_OPENCL=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -17,7 +17,7 @@ env:
   ANT_HOME: '/usr/share/ant'
   PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:Tracking/DistanceAndOverlap.Scaled_Data_TLD/2:Objdetect_QRCode_Close.regression/0:DenseOpticalFlow_PCAFlow.ReferenceAccuracy:TSDF_GPU.fetch_points_normals:TSDF_GPU.fetch_normals:TSDF_GPU.valid_points:KinectFusion.lowDense:KinectFusion.highDense:KinectFusion.inequal:KinectFusion.OCL:OCL_Video/PyrLKOpticalFlow.Mat/0:OCL_Video/PyrLKOpticalFlow.Mat/1:OCL_Video/PyrLKOpticalFlow.Mat/2:OCL_Video/PyrLKOpticalFlow.Mat/3:OCL_Video/PyrLKOpticalFlow.Mat/4:OCL_Video/PyrLKOpticalFlow.Mat/5:videoio_dynamic.basic_write:OCL_ResizeFixture_Resize.Resize/26:OCL_ResizeFixture_Resize.Resize/27:OCL_ResizeFixture_Resize.Resize/42:OCL_ResizeFixture_Resize.Resize/43:OCL_ResizeFixture_Resize.Resize/74:OCL_ResizeFixture_Resize.Resize/75:OCL_ResizeFixture_Resize.Resize/90:OCL_ResizeFixture_Resize.Resize/91:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:Tracking_Boosting.Boosting/0:Tracking_Boosting.Boosting/1:Tracking_Boosting.Boosting/2:Tracking_TLD.TLD/0:Tracking_TLD.TLD/1:Tracking_TLD.TLD/2:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/0:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/1:OCL_PyrLKOpticalFlowFixture_PyrLKOpticalFlow.PyrLKOpticalFlow/2:GOTURN.memory_usage:DaSiamRPN.memory_usage'
+  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:GOTURN.memory_usage:DaSiamRPN.memory_usage:videoio_dynamic.basic_write:Tracking_Boosting.Boosting/0:Tracking_Boosting.Boosting/1:Tracking_Boosting.Boosting/2:Tracking_TLD.TLD/0:Tracking_TLD.TLD/1:Tracking_TLD.TLD/2'
 
 jobs:
   BuildAndTest:

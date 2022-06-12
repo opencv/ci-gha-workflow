@@ -88,6 +88,7 @@ jobs:
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
     - name: Check DNN models update
+      timeout-minutes: 60
       shell: bash
       working-directory: ${{ github.workspace }}
       run: |
@@ -102,6 +103,7 @@ jobs:
           echo "OPENCV_DNN_TEST_DATA_PATH=${{ github.workspace }}\\opencv_extra\\testdata" >> $GITHUB_ENV
         fi
     - name: Extra DNN models update
+      timeout-minutes: 60
       if: ${{ env.MATCHER != 'true' }}
       run: |
         dir /b /a-d %DNN_MODELS%\\dnn\\|findstr /b ${{ env.DOWNLOAD_DNN_MODELS_FILE }} >excluded.tmp
