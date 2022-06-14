@@ -32,7 +32,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-ubuntu:20.04
+      image: quay.io/opencv-ci/opencv-ubuntu:20.04-coverage
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
@@ -188,7 +188,7 @@ jobs:
     - name: Filter test coverage
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /home/ci/build && lcov --remove /home/ci/build/opencv_test_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/home/ci/build/modules/java_bindings_generator/*' '*/home/ci/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv/*' -o /home/ci/build/opencv_test_filtered.info
+      run: cd /home/ci/build && lcov --remove /home/ci/build/opencv_test_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/home/ci/build/modules/java_bindings_generator/*' '*/home/ci/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv_contrib/*' -o /home/ci/build/opencv_test_filtered.info
     - name: Generate test coverage report
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -274,7 +274,7 @@ jobs:
     - name: Filter perf coverage
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /home/ci/build && lcov --remove /home/ci/build/opencv_perf_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/home/ci/build/modules/java_bindings_generator/*' '*/home/ci/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv/*' -o /home/ci/build/opencv_perf_filtered.info
+      run: cd /home/ci/build && lcov --remove /home/ci/build/opencv_perf_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/home/ci/build/modules/java_bindings_generator/*' '*/home/ci/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv_contrib/*' -o /home/ci/build/opencv_perf_filtered.info
     - name: Generate perf coverage report
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
