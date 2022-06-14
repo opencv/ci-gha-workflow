@@ -12,7 +12,7 @@ on:
     - cron: '0 0 * * *'
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DENABLE_COVERAGE=ON'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DENABLE_COVERAGE=ON -DBUILD_SHARED_LIBS=ON -DCPU_DISPATCH= -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DCPU_BASELINE=HOST -DENABLE_CCACHE=OFF -DENABLE_PRECOMPILED_HEADERS=OFF -DWITH_GDAL=ON -DBUILD_PERF_TESTS=ON -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -98,7 +98,7 @@ jobs:
     - name: Init coverage
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && lcov --directory /build --capture --initial -o /build/opencv_base.info
+      run: cd /build && lcov --directory /build --capture --initial -o /build/opencv_test_base.info
     - name: Accuracy:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -177,29 +177,115 @@ jobs:
       with:
         name: junit-html
         path: /build/java_test/testResults/junit-noframes.html
-    - name: Run coverage-aggregation
+    - name: Run test coverage-aggregation
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /build && lcov --directory /build --capture -o /build/opencv_test.info
-    - name: Combine coverage
+    - name: Combine test coverage
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && lcov -a /build/opencv_base.info -a /build/opencv_test.info -o /build/opencv_total.info
-    - name: Filter coverage
+      run: cd /build && lcov -a /build/opencv_test_base.info -a /build/opencv_test.info -o /build/opencv_test_total.info
+    - name: Filter test coverage
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && lcov --remove /build/opencv_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/build/modules/java_bindings_generator/*' '*/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv/*' -o /build/opencv_filtered.info
-    - name: Generate coverage report
+      run: cd /build && lcov --remove /build/opencv_test_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/build/modules/java_bindings_generator/*' '*/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv/*' -o /build/opencv_test_filtered.info
+    - name: Generate test coverage report
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      id: coverage-report
+      id: coverage-test-report
       run: |
         cd /build
-        genhtml --prefix /build --prefix /opencv --prefix opencv_extra -t "OpenCV: ${{ env.TARGET_BRANCH_NAME }}-$GITHUB_SHA" -o /build/coverage_html /build/opencv_filtered.info
+        genhtml --prefix /build --prefix /opencv --prefix opencv_extra -t "OpenCV: ${{ env.TARGET_BRANCH_NAME }}-$GITHUB_SHA" -o /build/test_coverage_html /build/opencv_test_filtered.info
     - name: Upload coverage
       timeout-minutes: 60
       uses: actions/upload-artifact@v3
-      if: ${{ always() && steps.coverage-report.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.coverage-test-report.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: coverage-html
-        path: /build/coverage_html
+        path: /build/test_coverage_html
+    - name: Clean coverage
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && rm -rf coverage_html tmp*.gcno
+    - name: Zero coverage
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && lcov --directory /build --zerocounters
+    - name: Init coverage
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && lcov --directory /build --capture --initial -o /build/opencv_perf_base.info
+    - name: Performance:calib3d
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:core
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:dnn
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:features2d
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:imgcodecs
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:imgproc
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:objdetect
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:photo
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:stitching
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:video
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Performance:videoio
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2
+    - name: Run perf coverage-aggregation
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && lcov --directory /build --capture -o /build/opencv_perf.info
+    - name: Combine perf coverage
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && lcov -a /build/opencv_perf_base.info -a /build/opencv_perf.info -o /build/opencv_perf_total.info
+    - name: Filter perf coverage
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd /build && lcov --remove /build/opencv_perf_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/build/modules/java_bindings_generator/*' '*/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv/*' -o /build/opencv_perf_filtered.info
+    - name: Generate perf coverage report
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      id: coverage-perf-report
+      run: |
+        cd /build
+        genhtml --prefix /build --prefix /opencv --prefix opencv_extra -t "OpenCV: ${{ env.TARGET_BRANCH_NAME }}-$GITHUB_SHA" -o /build/perf_coverage_html /build/opencv_perf_filtered.info
+    - name: Upload perf coverage
+      timeout-minutes: 60
+      uses: actions/upload-artifact@v3
+      if: ${{ always() && steps.coverage-perf-report.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+      with:
+        name: coverage-html
+        path: /build/perf_coverage_html
