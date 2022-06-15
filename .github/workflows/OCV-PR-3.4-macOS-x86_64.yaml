@@ -300,7 +300,7 @@ jobs:
         git config user.email "opencv.ci"
         git config user.name "opencv.ci"
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
-        working-directory: ${{ github.workspace }}/opencv
+      working-directory: ${{ github.workspace }}/opencv
     - name: Clone opencv_contrib
       timeout-minutes: 60
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv_contrib.git https://github.com/opencv/opencv_contrib.git
