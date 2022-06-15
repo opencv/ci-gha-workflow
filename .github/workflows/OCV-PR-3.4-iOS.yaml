@@ -16,11 +16,10 @@ env:
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
-  GIT_CACHE: /Users/xperience/git_cache
 
 jobs:
   Build:
-    runs-on: macOS-M1
+    runs-on: opencv-cn-mac-x86-64
     steps:
       - name: Setup infra environment
         timeout-minutes: 60
@@ -38,7 +37,7 @@ jobs:
         run: cd ${{ github.workspace }} && find . -mindepth 1 -delete
       - name: Fetch opencv
         timeout-minutes: 60
-        run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE }}/opencv.git https://github.com/opencv/opencv.git opencv
+        run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git opencv
       - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
         timeout-minutes: 60
         if: ${{ startsWith(github.event.repository.name, 'opencv') && github.event_name == 'pull_request' }}
@@ -48,7 +47,7 @@ jobs:
           git config user.name "opencv.ci"
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
       - name: Build OpenCV iOS Framework
-        timeout-minutes: 60
+        timeout-minutes: 120
         run: |
           cd ${{ github.workspace }} && python3 opencv/platforms/ios/build_framework.py ios
       - name: Create Artifact
