@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-Contrib-PR-3.4-ARM64.yaml'
+      - '.github/workflows/OCV-timvx-backend-tests-4.x.yml'
   workflow_call:
 
 env:

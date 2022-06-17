@@ -430,7 +430,3 @@ jobs:
       with:
         name: junit-html
         path: /build/java_test/testResults/junit-noframes.html
-    - name: Pylint
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd /build && cmake --build . --config release --target check_pylint -- -j4
