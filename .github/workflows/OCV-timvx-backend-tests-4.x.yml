@@ -17,25 +17,24 @@ env:
 jobs:
   x86-simulator-build-test:
     runs-on: ubuntu-20.04
-    # Docker image from https://hub.docker.com/r/yuentau/ocv_ubuntu
-    container: docker.io/yuentau/ocv_ubuntu:20.04
+    container: quay.io/opencv-ci/opencv-ubuntu:20.04
     steps:
       - name: Setup infra environment
         timeout-minutes: 60
         if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
         shell: bash
         run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
-      - name: info
+      - name: PR info
         timeout-minutes: 60
         run: |
           echo "PR Author: ${{ env.PR_AUTHOR }}"
           echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
           echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
-      - name: clean
+      - name: Clean
         timeout-minutes: 60
         shell: bash
         run: find . -mindepth 1 -delete
-      - name: fetch opencv
+      - name: Fetch opencv
         timeout-minutes: 20
         uses: actions/checkout@v3
         with:
@@ -43,7 +42,7 @@ jobs:
           ref: ${{ env.TARGET_BRANCH_NAME }}
           fetch-depth: 0
           path: opencv
-      - name: merge opencv with test branch
+      - name: Merge opencv with test branch
         timeout-minutes: 60
         if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
         shell: bash
@@ -52,11 +51,11 @@ jobs:
           git config user.email "opencv.ci"
           git config user.name "opencv.ci"
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
-      - name: configure
+      - name: Configure
         timeout-minutes: 60
         run: |
           cmake -B build -DWITH_TIMVX=ON -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DBUILD_PERF_TESTS=ON -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DWITH_OPENCL=OFF opencv
-      - name: build
+      - name: Build OpenCV
         timeout-minutes: 120
         run: cmake --build build --target install -j $(nproc)
 
