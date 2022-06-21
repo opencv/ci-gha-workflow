@@ -23,6 +23,7 @@ env:
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   DNN_MODELS: '/home/ci/dnn-models'
+  CCACHE_DIR: '/home/ci/.ccache'
 
 jobs:
   BuildAndTest:
