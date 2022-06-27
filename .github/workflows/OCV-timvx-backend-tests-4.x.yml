@@ -19,6 +19,9 @@ jobs:
     runs-on: ubuntu-20.04
     container: quay.io/opencv-ci/opencv-ubuntu:20.04
     steps:
+      - name: Define proper HOME path
+        timeout-minutes: 60
+        run: echo "HOME=/root" >> $GITHUB_ENV
       - name: Setup infra environment
         timeout-minutes: 60
         if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
