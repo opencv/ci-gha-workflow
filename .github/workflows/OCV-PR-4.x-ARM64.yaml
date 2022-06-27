@@ -35,6 +35,9 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     steps:
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/root" >> $GITHUB_ENV
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
@@ -231,6 +234,9 @@ jobs:
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
     steps:
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/root" >> $GITHUB_ENV
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
