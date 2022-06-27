@@ -28,7 +28,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-ubuntu:20.04-arm64
+      image: quay.io/opencv-ci/opencv-ubuntu-20.04-arm64:20220621
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
@@ -57,9 +57,6 @@ jobs:
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}
-        git config --global --add safe.directory ${{ env.OPENCV_DOCKER_WORKDIR }}
-        git config user.email "opencv.ci"
-        git config user.name "opencv.ci"
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv_extra
       timeout-minutes: 60
@@ -72,8 +69,6 @@ jobs:
         if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
           echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
           cd /opencv_extra
-          git config user.email "opencv.ci"
-          git config user.name "opencv.ci"
           git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
@@ -230,7 +225,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-ubuntu:20.04-arm64
+      image: quay.io/opencv-ci/opencv-ubuntu-20.04-arm64:20220621
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
@@ -258,9 +253,6 @@ jobs:
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}
-        git config --global --add safe.directory ${{ env.OPENCV_DOCKER_WORKDIR }}
-        git config user.email "opencv.ci"
-        git config user.name "opencv.ci"
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv_contrib
       timeout-minutes: 60
@@ -273,8 +265,6 @@ jobs:
         if [[ ! -z "$OPENCV_CONTRIB_FORK" ]]; then
           echo "Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch"
           cd /opencv_contrib
-          git config user.email "opencv.ci"
-          git config user.name "opencv.ci"
           git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}"
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_contrib does not have branch ${{ env.SOURCE_BRANCH_NAME }}"

@@ -43,8 +43,6 @@ jobs:
         if: ${{ startsWith(github.event.repository.name, 'opencv') && github.event_name == 'pull_request' }}
         run: |
           cd ${{ github.workspace }}/opencv
-          git config user.email "opencv.ci"
-          git config user.name "opencv.ci"
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
       - name: Build OpenCV iOS Framework
         timeout-minutes: 120

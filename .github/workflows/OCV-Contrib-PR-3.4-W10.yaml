@@ -48,8 +48,6 @@ jobs:
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         cd ${{ github.workspace }}\opencv_contrib
-        git config user.email "opencv.ci"
-        git config user.name "opencv.ci"
         git pull -v "git@github.com:${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Fetch opencv
       timeout-minutes: 60
@@ -63,8 +61,6 @@ jobs:
         if [[ ! -z "$OPENCV_FORK" ]]; then
           echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
           cd opencv
-          git config user.email "opencv.ci"
-          git config user.name "opencv.ci"
           git pull -v "git@github.com:${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
@@ -81,8 +77,6 @@ jobs:
         if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
           echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
           cd opencv_extra
-          git config user.email "opencv.ci"
-          git config user.name "opencv.ci"
           git pull -v "git@github.com:${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
