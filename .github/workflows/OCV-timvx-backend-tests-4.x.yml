@@ -17,7 +17,7 @@ env:
 jobs:
   x86-simulator-build-test:
     runs-on: ubuntu-20.04
-    container: quay.io/opencv-ci/opencv-ubuntu:20.04
+    container: quay.io/opencv-ci/opencv-ubuntu-20.04:20220628
     steps:
       - name: Define proper HOME path
         timeout-minutes: 60
@@ -51,8 +51,6 @@ jobs:
         shell: bash
         run: |
           cd opencv
-          git config user.email "opencv.ci"
-          git config user.name "opencv.ci"
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
       - name: Configure
         timeout-minutes: 60
