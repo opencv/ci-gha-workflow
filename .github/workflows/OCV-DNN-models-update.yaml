@@ -1,0 +1,60 @@
+name: OCV DNN Models Update
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-DNN-models-update.yaml'
+  schedule:
+    - cron: '0 23 * * *'
+
+env:
+  DOWNLOAD_DNN_MODELS_FILE: 'download_models.py'
+
+jobs:
+  Update:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64]
+        branch: ['3.4', '4.x', '5.x']
+    steps:
+      - name: Clean
+        run: rm -rf ./* && rm -rf ./.??*
+      - name: Clone opencv_extra
+        run: git clone --single-branch --branch ${{ matrix.branch }} --reference $GIT_CACHE_PATH/opencv_extra.git https://github.com/opencv/opencv_extra.git opencv_extra
+      - name: Update DNN models on Linux / macOS
+        if: ${{ matrix.os != 'opencv-cn-win' }}
+        timeout-minutes: 60
+        run: |
+          LATEST_SAVED_HASH=$(cat ${DNN_MODELS}/dnn/latest-hash-${{ matrix.branch }}.txt)
+          LATEST_HASH=$(sha256sum opencv_extra/testdata/dnn/${{ env.DOWNLOAD_DNN_MODELS_FILE }} | awk '{print $1}')
+          if [[ "$LATEST_SAVED_HASH" == "$LATEST_HASH" ]]; then
+            echo "No changes"
+          else
+            echo "Changes happened. Downloading models:"
+            cp opencv_extra/testdata/dnn/${{ env.DOWNLOAD_DNN_MODELS_FILE }} $DNN_MODELS/dnn/${{ matrix.branch }}_${{ env.DOWNLOAD_DNN_MODELS_FILE }}
+            cd $DNN_MODELS/dnn
+            python3 ${{ matrix.branch }}_${{ env.DOWNLOAD_DNN_MODELS_FILE }}
+            echo $LATEST_HASH | tee ${DNN_MODELS}/dnn/latest-hash-${{ matrix.branch }}.txt
+          fi
+      - name: Update DNN models on Windows
+        if: ${{ matrix.os == 'opencv-cn-win' }}
+        timeout-minutes: 60
+        run: |
+          LATEST_SAVED_HASH=$(cat $DNN_MODELS\\dnn\\latest-hash-${{ matrix.branch }}.txt)
+          LATEST_HASH=$(sha256sum opencv_extra\\testdata\\dnn\\${{ env.DOWNLOAD_DNN_MODELS_FILE }} | awk '{print $1}')
+          if [[ "$LATEST_SAVED_HASH" == "$LATEST_HASH" ]]; then
+            echo "No changes"
+          else
+            echo "Changes happened. Downloading models:"
+            cp opencv_extra\\testdata\\dnn\\${{ env.DOWNLOAD_DNN_MODELS_FILE }} $DNN_MODELS\\dnn\\${{ matrix.branch }}_${{ env.DOWNLOAD_DNN_MODELS_FILE }}
+            cd $DNN_MODELS\\dnn
+            python ${{ matrix.branch }}_${{ env.DOWNLOAD_DNN_MODELS_FILE }}
+            echo $LATEST_HASH | tee ${DNN_MODELS}\\dnn\\latest-hash-${{ matrix.branch }}.txt
+          fi
