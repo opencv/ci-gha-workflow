@@ -17,7 +17,7 @@ env:
   ANT_HOME: '/usr/share/ant'
   PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:GOTURN.memory_usage:DaSiamRPN.memory_usage:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:videoio_dynamic.basic_write'
+  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:GOTURN.memory_usage:DaSiamRPN.memory_usage:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:videoio_dynamic.basic_write:videoio/videocapture_acceleration.read/64:videoio/videocapture_acceleration.read/65:videoio/videocapture_acceleration.read/66:videoio/videocapture_acceleration.read/67'
 
 jobs:
   BuildAndTest:
