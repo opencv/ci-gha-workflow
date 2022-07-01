@@ -24,7 +24,7 @@ jobs:
       - name: Setup environment
         timeout-minutes: 60
         run: |
-          if [[ ${{ github.event.repository.name }} == 'ci-gha-workflow' || ${{ github.event_name }} == 'schedule' ]]; then
+          if [[ "${{ github.event.repository.name }}" == "ci-gha-workflow" || "${{ github.event_name }}" == "schedule" ]]; then
             echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV
           else
             echo "BUILD_PRECOMMIT=1" >> $GITHUB_ENV
