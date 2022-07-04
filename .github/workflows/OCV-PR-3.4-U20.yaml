@@ -35,6 +35,9 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
     - name: Define proper HOME path
       timeout-minutes: 60
       run: echo "HOME=/root" >> $GITHUB_ENV
@@ -255,6 +258,9 @@ jobs:
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
     steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
     - name: Define proper HOME path
       timeout-minutes: 60
       run: echo "HOME=/root" >> $GITHUB_ENV
