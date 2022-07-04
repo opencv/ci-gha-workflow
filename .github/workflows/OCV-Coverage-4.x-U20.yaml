@@ -12,7 +12,7 @@ on:
     - cron: '0 0 * * *'
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DENABLE_COVERAGE=ON -DBUILD_SHARED_LIBS=ON -DCPU_DISPATCH= -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DCPU_BASELINE=HOST -DENABLE_CCACHE=OFF -DENABLE_PRECOMPILED_HEADERS=OFF -DWITH_GDAL=ON -DBUILD_PERF_TESTS=ON -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DCMAKE_BUILD_TYPE=Debug -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DENABLE_COVERAGE=ON -DBUILD_SHARED_LIBS=ON -DCPU_DISPATCH= -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DCPU_BASELINE=HOST -DENABLE_CCACHE=OFF -DENABLE_PRECOMPILED_HEADERS=OFF -DWITH_GDAL=ON -DBUILD_PERF_TESTS=ON -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -192,7 +192,7 @@ jobs:
     - name: Filter test coverage
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /home/ci/build && lcov --remove /home/ci/build/opencv_test_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/home/ci/build/modules/java_bindings_generator/*' '*/home/ci/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv_contrib/*' -o /home/ci/build/opencv_test_filtered.info
+      run: cd /home/ci/build && lcov --remove /home/ci/build/opencv_test_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/home/ci/build/modules/java_bindings_generator/*' '*/home/ci/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv_contrib/*' '/home/ci/build/build/*' -o /home/ci/build/opencv_test_filtered.info
     - name: Generate test coverage report
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -278,7 +278,7 @@ jobs:
     - name: Filter perf coverage
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /home/ci/build && lcov --remove /home/ci/build/opencv_perf_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/home/ci/build/modules/java_bindings_generator/*' '*/home/ci/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv_contrib/*' -o /home/ci/build/opencv_perf_filtered.info
+      run: cd /home/ci/build && lcov --remove /home/ci/build/opencv_perf_total.info '/usr/include/*' '/usr/lib/*' '/usr/local/include/*' '*/opencv/apps/*' '*/opencv/samples/*' '*/opencv/3rdparty/*' '*/opencv/modules/ts/*' '*/opencv/modules/*/perf/*' '*/opencv/modules/*/test/*' '*/opencv/modules/*/samples/*' '*/home/ci/build/modules/java_bindings_generator/*' '*/home/ci/build/modules/python_bindings_generator/*' '*/opencv_contrib/modules/*/perf/*' '*/opencv_contrib/modules/*/test/*' '*/opencv_contrib/modules/*/samples/*' '*/opencv_contrib/*' '/home/ci/build/build/*' -o /home/ci/build/opencv_perf_filtered.info
     - name: Generate perf coverage report
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
