@@ -25,6 +25,9 @@ jobs:
       run:
         shell: bash
     steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash $GIT_CACHE/print_system_information.sh
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
@@ -257,6 +260,9 @@ jobs:
       run:
         shell: bash
     steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash $GIT_CACHE/print_system_information.sh
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
