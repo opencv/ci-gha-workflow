@@ -113,7 +113,10 @@ jobs:
       timeout-minutes: 60
       id: build-opencv-contrib
       run: |
-        ninja -j $PARALLEL_JOBS
+        ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
+      working-directory: ${{ github.workspace }}/build
+    - name: Warnings check
+      run: python3 $GIT_CACHE/warnings-handling.py
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:aruco
       timeout-minutes: 60

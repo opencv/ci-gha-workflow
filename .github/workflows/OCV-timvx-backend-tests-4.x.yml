@@ -17,7 +17,7 @@ env:
 jobs:
   x86-simulator-build-test:
     runs-on: ubuntu-20.04
-    container: quay.io/opencv-ci/opencv-ubuntu-20.04:20220628
+    container: quay.io/opencv-ci/opencv-ubuntu-20.04:20220707
     steps:
       - name: Define proper HOME path
         timeout-minutes: 60

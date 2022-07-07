@@ -119,7 +119,9 @@ jobs:
       run: |
         cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-        ninja -j %PARALLEL_JOBS%
+        ninja -j %PARALLEL_JOBS% | tee ${{ github.workspace }}\build\build-log.txt
+    # - name: Warnings check
+    #   run: cd ${{ github.workspace }}\build && python %GIT_CACHE%\warnings-handling.py
     - name: Accuracy:aruco
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
