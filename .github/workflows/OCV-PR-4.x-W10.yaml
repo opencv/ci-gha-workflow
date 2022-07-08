@@ -103,115 +103,115 @@ jobs:
       run: |
         cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-        ninja
+        ninja -j %PARALLEL_JOBS%
     - name: Accuracy:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_calib3d.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_calib3d.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_core.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_core.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:dnn
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:features2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_features2d.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_features2d.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:flann
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_flann.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_flann.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:gapi
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_gapi.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_gapi.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:highgui
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_highgui.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_highgui.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_imgcodecs.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_imgcodecs.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_imgproc.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_imgproc.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:ml
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_ml.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_ml.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:objdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_objdetect.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_objdetect.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:photo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_photo.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_photo.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:stitching
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_stitching.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_stitching.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:video
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_video.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_video.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_videoio.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_videoio.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Performance:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_calib3d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_calib3d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_core.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_core.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:dnn
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_dnn.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_dnn.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:features2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_features2d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_features2d.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:gapi
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_gapi.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_gapi.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgcodecs.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgcodecs.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgproc.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_imgproc.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:objdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_objdetect.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_objdetect.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:photo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_photo.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_photo.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:stitching
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_stitching.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_stitching.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:video
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_video.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_video.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Performance:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_perf_videoio.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_perf_videoio.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
     - name: Python3
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -296,4 +296,4 @@ jobs:
       run: |
         cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-        ninja
+        ninja -j %PARALLEL_JOBS%
