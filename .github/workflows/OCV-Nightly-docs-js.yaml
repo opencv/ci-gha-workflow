@@ -6,24 +6,21 @@ on:
       - main
     paths:
       - '.github/workflows/OCV-Nightly-docs-js.yaml'
-  workflow_call:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_SHARED_LIBS=ON -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DOPENCV_JS_LOCATION=/home/ci/build/js/bin/opencv.js -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON -DBUILD_DOCS=ON -DBUILD_PERF_TESTS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_SHARED_LIBS=ON -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DOPENCV_JS_LOCATION=/home/ci/build/js/bin/opencv.js -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON -DBUILD_DOCS=ON -DBUILD_PERF_TESTS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
-  GIT_CACHE_DOCKER: '/home/ci/git_cache'
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
-  PARALLEL_JOBS: 8
 
 jobs:
   BuildAndTest:
-    runs-on: opencv-cn-lin-x86-64
+    runs-on: ubuntu-20.04
     defaults:
       run:
         shell: bash
@@ -34,14 +31,7 @@ jobs:
     container:
       image: quay.io/opencv-ci/opencv-docs-js:20220711
       options: --user ci
-      volumes:
-        - /home/opencv-cn/git_cache:/home/ci/git_cache
-        - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
-        - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
     steps:
-    - name: Brief system information
-      timeout-minutes: 60
-      run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
     - name: Define proper HOME path
       timeout-minutes: 60
       run: echo "HOME=/home/ci" >> $GITHUB_ENV
@@ -61,10 +51,10 @@ jobs:
       run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
     - name: Fetch opencv
       timeout-minutes: 60
-      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Clone opencv_contrib
       timeout-minutes: 60
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
     - name: Build js
       timeout-minutes: 60
       run: |
@@ -80,7 +70,7 @@ jobs:
       id: build-opencv
       run: |
         cd $HOME/build
-        cmake --build . --config release --target doxygen -- -j${{ env.PARALLEL_JOBS }}
+        cmake --build . --config release --target doxygen -- -j$(nproc)
     - name: Pack docs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
