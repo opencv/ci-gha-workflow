@@ -1,11 +1,11 @@
-name: OCV PR:docs
+name: OCV PR:5.x docs
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-PR-docs.yaml'
+      - '.github/workflows/OCV-PR-5.x-docs.yaml'
   workflow_call:
 
 env:
@@ -23,7 +23,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-docs:20220711
+      image: quay.io/opencv-ci/opencv-docs-22.04:20220713
       options: --user ci
     steps:
     - name: Define proper HOME path
@@ -32,7 +32,7 @@ jobs:
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
-      run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
+      run: echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
     - name: PR info
       timeout-minutes: 60
       run: |
