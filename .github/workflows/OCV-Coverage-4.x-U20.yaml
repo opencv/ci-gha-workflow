@@ -9,10 +9,10 @@ on:
   workflow_call:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 * * 6'
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DCMAKE_BUILD_TYPE=Debug -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DENABLE_COVERAGE=ON -DBUILD_SHARED_LIBS=ON -DCPU_DISPATCH= -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DCPU_BASELINE=HOST -DENABLE_CCACHE=OFF -DENABLE_PRECOMPILED_HEADERS=OFF -DWITH_GDAL=ON -DBUILD_PERF_TESTS=ON -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DCMAKE_BUILD_TYPE=Debug -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DENABLE_COVERAGE=ON -DBUILD_SHARED_LIBS=ON -DCPU_DISPATCH= -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DCPU_BASELINE=HOST -DENABLE_CCACHE=OFF -DENABLE_PRECOMPILED_HEADERS=OFF -DWITH_GDAL=ON -DBUILD_PERF_TESTS=ON -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DCPU_BASELINE=SSE,SSE2,SSE3,SSSE3,SSE4.1,POPCNT,SSE4.2,FP16,AVX,AVX2'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -28,7 +28,7 @@ env:
 jobs:
   BuildAndTest:
     runs-on: opencv-cn-lin-x86-64
-    timeout-minutes: 1200
+    timeout-minutes: 1440
     defaults:
       run:
         shell: bash
@@ -124,7 +124,7 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /home/ci/build && xvfb-run -a bin/opencv_test_flann --test_threads=2 --configuration=Debug
     - name: Accuracy:gapi
-      timeout-minutes: 60
+      timeout-minutes: 180
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /home/ci/build && xvfb-run -a bin/opencv_test_gapi --test_threads=2 --configuration=Debug
     - name: Accuracy:highgui
@@ -236,7 +236,7 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /home/ci/build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2 --configuration=Debug
     - name: Performance:gapi
-      timeout-minutes: 60
+      timeout-minutes: 180
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd /home/ci/build && xvfb-run -a bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1  --test_threads=2 --configuration=Debug
     - name: Performance:imgcodecs
