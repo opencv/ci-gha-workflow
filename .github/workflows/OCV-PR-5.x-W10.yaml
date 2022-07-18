@@ -314,16 +314,6 @@ jobs:
       run: |
         cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-<<<<<<< HEAD
-<<<<<<< HEAD
-        ninja -j %PARALLEL_JOBS%
-=======
-        ninja | tee ${{ github.workspace }}\build\build-log.txt
+        ninja -j %PARALLEL_JOBS% | tee ${{ github.workspace }}\build\build-log.txt
     # - name: Warnings check
     #   run: cd ${{ github.workspace }}\build && python %GIT_CACHE%\warnings-handling.py
->>>>>>> eeb7d13 (Warnings handling)
-=======
-        ninja | tee ${{ github.workspace }}\build\build-log.txt
-    # - name: Warnings check
-    #   run: cd ${{ github.workspace }}\build && python %GIT_CACHE%\warnings-handling.py
->>>>>>> eeb7d13950971d2e600c5d332cde2ce17a1aeb10
