@@ -30,7 +30,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-ubuntu-20.04:20220707
+      image: quay.io/opencv-ci/opencv-ubuntu-20.04:20220718
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv_contrib:/home/ci/.ccache
@@ -125,6 +125,7 @@ jobs:
         cd /build
         ninja -j ${{ env.PARALLEL_JOBS }} | tee /build/build-log.txt
     - name: Warnings check
+      timeout-minutes: 60
       run: cd /build && python3 $HOME/scripts/warnings-handling.py
     - name: Accuracy:aruco
       timeout-minutes: 60

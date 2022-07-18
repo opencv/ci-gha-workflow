@@ -97,9 +97,10 @@ jobs:
       run: |
         ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
       working-directory: ${{ github.workspace }}/build
-    - name: Warnings check
-      run: python3 $GIT_CACHE/warnings-handling.py
-      working-directory: ${{ github.workspace }}/build
+    # - name: Warnings check
+    #   timeout-minutes: 60
+    #   run: python3 $GIT_CACHE/warnings-handling.py
+    #   working-directory: ${{ github.workspace }}/build
     - name: Accuracy:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -326,6 +327,7 @@ jobs:
       run: |
         ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
       working-directory: ${{ github.workspace }}/build
-    - name: Warnings check
-      run: python3 $GIT_CACHE/warnings-handling.py
-      working-directory: ${{ github.workspace }}/build
+    # - name: Warnings check
+    #   timeout-minutes: 60
+    #   run: python3 $GIT_CACHE/warnings-handling.py
+    #   working-directory: ${{ github.workspace }}/build
