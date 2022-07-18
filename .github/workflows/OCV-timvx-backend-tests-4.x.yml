@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Define proper HOME path
         timeout-minutes: 60
-        run: echo "HOME=/root" >> $GITHUB_ENV
+        run: echo "HOME=/home/ci" >> $GITHUB_ENV
       - name: Setup infra environment
         timeout-minutes: 60
         if: ${{ github.event.repository.name == 'ci-gha-workflow' }}

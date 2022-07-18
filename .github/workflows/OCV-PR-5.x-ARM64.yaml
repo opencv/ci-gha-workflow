@@ -16,9 +16,9 @@ env:
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
   ANT_HOME: '/usr/share/ant'
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
-  PYTHONPATH: /build/python_loader:$PYTHONPATH
-  OPENCV_TEST_DATA_PATH: '/opencv_extra/testdata'
-  OPENCV_DOCKER_WORKDIR: '/opencv'
+  PYTHONPATH: /home/ci/build/python_loader:$PYTHONPATH
+  OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
+  OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   DNN_MODELS: '/home/ci/dnn-models'
   PARALLEL_JOBS: 16
 
@@ -36,12 +36,12 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     steps:
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/home/ci" >> $GITHUB_ENV
     - name: Brief system information
       timeout-minutes: 60
       run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
-    - name: Define proper HOME path
-      timeout-minutes: 60
-      run: echo "HOME=/root" >> $GITHUB_ENV
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
@@ -67,7 +67,7 @@ jobs:
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv_extra
       timeout-minutes: 60
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git https://github.com/opencv/opencv_extra.git /opencv_extra
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git https://github.com/opencv/opencv_extra.git $HOME/opencv_extra
     - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
       timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
@@ -75,7 +75,7 @@ jobs:
         OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
         if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
           echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
-          cd /opencv_extra
+          cd $HOME/opencv_extra
           git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
@@ -85,7 +85,7 @@ jobs:
       run: |
         DOWNLOAD_MODELS_FILE='download_models.py'
         LATEST_SAVED_HASH=$(cat ${{ env.DNN_MODELS }}/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
-        LATEST_HASH=$(sha256sum /opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
+        LATEST_HASH=$(sha256sum $HOME/opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
         if [[ $LATEST_HASH == $LATEST_SAVED_HASH ]]; then
           echo "DNN models are up to date"
           echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
@@ -94,138 +94,138 @@ jobs:
           echo "OPENCV_DNN_TEST_DATA_PATH=/home/ci/new-dnn-models" >> $GITHUB_ENV && OPENCV_DNN_TEST_DATA_PATH='/home/ci/new-dnn-models'
           mkdir -p "$OPENCV_DNN_TEST_DATA_PATH"
           rsync -a --exclude=$DOWNLOAD_MODELS_FILE ${{ env.DNN_MODELS }}/* $OPENCV_DNN_TEST_DATA_PATH
-          cp /opencv_extra/testdata/dnn/download_models.py $OPENCV_DNN_TEST_DATA_PATH/dnn
+          cp $HOME/opencv_extra/testdata/dnn/download_models.py $OPENCV_DNN_TEST_DATA_PATH/dnn
           cd $OPENCV_DNN_TEST_DATA_PATH/dnn && python3 download_models.py
         fi
     - name: Configure OpenCV
       timeout-minutes: 60
       run: |
-        cmake -G Ninja -B /build ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+        cmake -G Ninja -B $HOME/build ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Build OpenCV
       timeout-minutes: 60
       id: build-opencv
       run: |
-        cd /build
-        ninja -j ${{ env.PARALLEL_JOBS }} | tee /build/build-log.txt
+        cd $HOME/build
+        ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
     - name: Warnings check
       timeout-minutes: 60
-      run: cd /build && python3 $HOME/scripts/warnings-handling.py
+      run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
     - name: Accuracy:3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_3d --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_3d --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:calib
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_calib --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_calib --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_core --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_core --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:dnn
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_dnn --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:features2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_features2d --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_features2d --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:flann
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_flann --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_flann --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:highgui
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_highgui --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_highgui --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_imgcodecs --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_imgcodecs --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_imgproc --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_imgproc --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:ml
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_ml --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_ml --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:objdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_objdetect --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter="-Objdetect_QRCode_Close.regression/0:Objdetect_QRCode_Close.regression/4"
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_objdetect --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter="-Objdetect_QRCode_Close.regression/0:Objdetect_QRCode_Close.regression/4"
     - name: Accuracy:photo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_photo --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter="-Photo_CalibrateDebevec.regression"
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_photo --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter="-Photo_CalibrateDebevec.regression"
     - name: Accuracy:stereo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_stereo --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_stereo --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:stitching
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_stitching --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_stitching --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:video
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_video --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_video --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_test_videoio --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_videoio --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:calib
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_calib --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_calib --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:dnn
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:features2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:objdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }} --gtest_filter="-Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.decodeMulti*:Perf_Objdetect_QRCode_Multi.detectMulti*"
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }} --gtest_filter="-Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.decodeMulti*:Perf_Objdetect_QRCode_Multi.detectMulti*"
     - name: Performance:photo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:stereo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_stereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_stereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:stitching
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:video
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Python3
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -236,14 +236,14 @@ jobs:
       timeout-minutes: 60
       id: java-test
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd /build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
+      run: cd $HOME/build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
     - name: Save Unit Test Results
       timeout-minutes: 60
       uses: actions/upload-artifact@v3
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html
-        path: /build/java_test/testResults/junit-noframes.html
+        path: $HOME/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
     runs-on: opencv-cn-lin-arm64
@@ -257,12 +257,12 @@ jobs:
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
     steps:
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/home/ci" >> $GITHUB_ENV
     - name: Brief system information
       timeout-minutes: 60
       run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
-    - name: Define proper HOME path
-      timeout-minutes: 60
-      run: echo "HOME=/root" >> $GITHUB_ENV
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
@@ -288,7 +288,7 @@ jobs:
         git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv_contrib
       timeout-minutes: 60
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git https://github.com/opencv/opencv_contrib.git /opencv_contrib
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
     - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
       timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
@@ -296,7 +296,7 @@ jobs:
         OPENCV_CONTRIB_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}") || true
         if [[ ! -z "$OPENCV_CONTRIB_FORK" ]]; then
           echo "Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch"
-          cd /opencv_contrib
+          cd $HOME/opencv_contrib
           git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}"
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_contrib does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
@@ -304,12 +304,12 @@ jobs:
     - name: Configure OpenCV Contrib
       timeout-minutes: 60
       run: |
-        cmake -G Ninja -B /build ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=/opencv_contrib/modules ${{ env.OPENCV_DOCKER_WORKDIR }}
+        cmake -G Ninja -B $HOME/build ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=$HOME/opencv_contrib/modules ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Build OpenCV Contrib
       timeout-minutes: 60
       run: |
-        cd /build
-        ninja -j ${{ env.PARALLEL_JOBS }} | tee /build/build-log.txt
+        cd $HOME/build
+        ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
     - name: Warnings check
       timeout-minutes: 60
-      run: cd /build && python3 $HOME/scripts/warnings-handling.py
+      run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
