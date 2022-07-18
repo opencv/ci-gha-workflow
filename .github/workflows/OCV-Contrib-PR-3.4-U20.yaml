@@ -37,12 +37,12 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     steps:
-    - name: Define proper HOME path
-      timeout-minutes: 60
-      run: echo "HOME=/home/ci" >> $GITHUB_ENV
     - name: Brief system information
       timeout-minutes: 60
       run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/home/ci" >> $GITHUB_ENV
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
@@ -376,7 +376,7 @@ jobs:
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv-contrib.outcome == 'success' }}
       with:
         name: junit-html
-        path: $HOME/build/java_test/testResults/junit-noframes.html
+        path: /home/ci/build/java_test/testResults/junit-noframes.html
     - name: Pylint
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
