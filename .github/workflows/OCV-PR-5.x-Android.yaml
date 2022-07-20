@@ -27,7 +27,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-androidsdk-28:20220704
+      image: quay.io/opencv-ci/opencv-androidsdk-28:20220720
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
@@ -69,17 +69,8 @@ jobs:
       - name: Test CMake
         timeout-minutes: 60
         run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_cmake_build.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" OpenCV-android-sdk/sdk/native/jni
-      - name: Test Ant
-        timeout-minutes: 60
-        if: github.base_ref == '3.4'
-        run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_ant_build.py" OpenCV-android-sdk/sdk/java OpenCV-android-sdk/samples
-      - name: Test NDK
-        timeout-minutes: 60
-        if: github.base_ref == '3.4'
-        run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_ndk_build.py" OpenCV-android-sdk/sdk/native/jni
       - name: Test Gradle
         timeout-minutes: 60
-        if: github.base_ref != '3.4'
         run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk
       - name: Create Package
         timeout-minutes: 60
