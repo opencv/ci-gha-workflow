@@ -1,0 +1,84 @@
+name: OCV PR:5.x AndroidSDK
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-5.x-Android.yaml'
+  workflow_call:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+env:
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  GIT_CACHE_DOCKER: '/home/ci/git_cache'
+  OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
+  CCACHE_DIR: '/home/ci/.ccache'
+
+jobs:
+  BuildAndTest:
+    runs-on: opencv-cn-lin-x86-64
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: quay.io/opencv-ci/opencv-androidsdk-28:20220720
+      volumes:
+        - /home/opencv-cn/git_cache:/home/ci/git_cache
+        - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
+    steps:
+      - name: Setup environment
+        timeout-minutes: 60
+        run: |
+          if [[ "${{ github.event.repository.name }}" == "ci-gha-workflow" || "${{ github.event_name }}" == "schedule" ]]; then
+            echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
+          else
+            echo "BUILD_PRECOMMIT=1" >> $GITHUB_ENV
+          fi
+      - name: PR info
+        timeout-minutes: 60
+        run: |
+          echo "PR Author: ${{ env.PR_AUTHOR }}"
+          echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+          echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+          echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+      - name: Clean
+        timeout-minutes: 60
+        run: (test -d "${{ env.OPENCV_DOCKER_WORKDIR }}" && find "${{ env.OPENCV_DOCKER_WORKDIR }}" -mindepth 1 -delete) || /bin/true
+      - name: Fetch opencv
+        timeout-minutes: 60
+        run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+      - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+        timeout-minutes: 60
+        if: ${{ startsWith(github.event.repository.name, 'opencv') && github.event_name == 'pull_request' }}
+        run: |
+          cd ${{ env.OPENCV_DOCKER_WORKDIR }}
+          git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+      - name: Build OpenCV for Android SDK
+        timeout-minutes: 120
+        run: |
+          mkdir -p /home/ci/build
+          cd /home/ci/build
+          sed -i 's+https\\://services.gradle.org/distributions/gradle-@GRADLE_VERSION@-all.zip+file\\:/opt/gradle/gradle-@GRADLE_VERSION@-bin.zip+g' ${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/gradle-wrapper/gradle/wrapper/gradle-wrapper.properties.in
+          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_sdk.py" --build_doc --config "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/ndk-18-api-level-21.config.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" /home/ci/build
+      - name: Test CMake
+        timeout-minutes: 60
+        run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_cmake_build.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" OpenCV-android-sdk/sdk/native/jni
+      - name: Test Gradle
+        timeout-minutes: 60
+        run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk
+      - name: Create Package
+        timeout-minutes: 60
+        run: cd /home/ci/build && zip -r -9 -y OpenCV5Android.zip OpenCV-android-sdk
+      - name: Release Package
+        timeout-minutes: 60
+        uses: actions/upload-artifact@v3
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
+        with:
+          name: OpenCV5AndroidSDK
+          path: /home/ci/build/OpenCV5Android.zip
