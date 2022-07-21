@@ -27,11 +27,17 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-androidsdk-28:20220720
+      image: quay.io/opencv-ci/opencv-androidsdk-28:20220721
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
     steps:
+      - name: Brief system information
+        timeout-minutes: 60
+        run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
+      - name: Define proper HOME path
+        timeout-minutes: 60
+        run: echo "HOME=/home/ci" >> $GITHUB_ENV
       - name: Setup environment
         timeout-minutes: 60
         run: |
