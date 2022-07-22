@@ -96,8 +96,12 @@ jobs:
       timeout-minutes: 60
       id: build-opencv
       run: |
-        ninja -j $PARALLEL_JOBS
+        ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
       working-directory: ${{ github.workspace }}/build
+    # - name: Warnings check
+    #   timeout-minutes: 60
+    #   run: python3 $GIT_CACHE/warnings-handling.py
+    #   working-directory: ${{ github.workspace }}/build
     - name: Accuracy:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -321,5 +325,9 @@ jobs:
     - name: Build OpenCV Contrib
       timeout-minutes: 60
       run: |
-        ninja -j $PARALLEL_JOBS
+        ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
       working-directory: ${{ github.workspace }}/build
+    # - name: Warnings check
+    #   timeout-minutes: 60
+    #   run: python3 $GIT_CACHE/warnings-handling.py
+    #   working-directory: ${{ github.workspace }}/build
