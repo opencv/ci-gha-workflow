@@ -21,6 +21,8 @@ env:
 
 jobs:
   BuildAndTest:
+    # Temporary disabled this job
+    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-mac-arm64
     defaults:
       run:
@@ -265,6 +267,8 @@ jobs:
         path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
+    # Temporary disabled this job
+    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-mac-arm64
     defaults:
       run:
