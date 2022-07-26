@@ -19,8 +19,6 @@ env:
 
 jobs:
   Build:
-    # Temporary disabled this job
-    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-mac-x86-64
     steps:
       - name: Setup environment

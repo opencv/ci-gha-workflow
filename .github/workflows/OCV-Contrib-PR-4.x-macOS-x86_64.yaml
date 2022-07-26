@@ -21,8 +21,6 @@ env:
 
 jobs:
   BuildAndTest:
-    # Temporary disabled this job
-    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-mac-x86-64
     defaults:
       run:
