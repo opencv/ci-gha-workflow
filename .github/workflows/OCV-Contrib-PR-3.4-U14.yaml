@@ -1,15 +1,15 @@
-name: OCV Contrib PR:3.4 U20
+name: OCV Contrib PR:3.4 U14
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-Contrib-PR-3.4-U20.yaml'
+      - '.github/workflows/OCV-Contrib-PR-3.4-U14.yaml'
   workflow_call:
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
+  EXTRA_CMAKE_OPTIONS: '-DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DOPENCV_ENABLE_NONFREE=ON -DCMAKE_INSTALL_PREFIX=../install -DBUILD_SHARED_LIBS=ON -DWITH_IPP=ON  -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DWITH_GDAL=ON -DBUILD_PERF_TESTS=ON -DBUILD_EXAMPLES=ON -DBUILD_DOCS=OFF -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DBUILD_TESTS=ON'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -30,7 +30,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-ubuntu-20.04:20220720
+      image: quay.io/opencv-ci/opencv-ubuntu-14.04:20220726
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv_contrib:/home/ci/.ccache
@@ -117,13 +117,13 @@ jobs:
       timeout-minutes: 60
       run: |
         cd $HOME/build
-        cmake -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules $HOME/opencv
+        cmake ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules $HOME/opencv
     - name: Build OpenCV
       timeout-minutes: 60
       id: build-opencv-contrib
       run: |
         cd $HOME/build
-        ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
+        cmake --build . --config release --target install -- -j${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
@@ -377,7 +377,3 @@ jobs:
       with:
         name: junit-html
         path: /home/ci/build/java_test/testResults/junit-noframes.html
-    - name: Pylint
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && cmake --build . --config release --target check_pylint -- -j4
