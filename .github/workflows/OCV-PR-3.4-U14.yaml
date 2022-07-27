@@ -107,7 +107,10 @@ jobs:
       id: build-opencv
       run: |
         cd $HOME/build
-        cmake --build . --config release --target install -- -j${{ env.PARALLEL_JOBS }}
+        cmake --build . --config release --target install -- -j${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
+    - name: Warnings check
+      timeout-minutes: 60
+      run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
     - name: Accuracy:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -308,4 +311,7 @@ jobs:
       timeout-minutes: 60
       run: |
         cd $HOME/build
-        cmake --build . --config release --target install -- -j${{ env.PARALLEL_JOBS }}
+        cmake --build . --config release --target install -- -j${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
+    - name: Warnings check
+      timeout-minutes: 60
+      run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
