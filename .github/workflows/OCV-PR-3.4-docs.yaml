@@ -1,0 +1,105 @@
+name: OCV PR:3.4 docs
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-3.4-docs.yaml'
+  workflow_call:
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DOPENCV_ENABLE_NONFREE=ON -DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON  -DBUILD_PERF_TESTS=ON -DWITH_IPP=OFF'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
+
+jobs:
+  BuildAndTest:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: quay.io/opencv-ci/opencv-docs-20.04:20220728
+      options: --user ci
+    steps:
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/home/ci" >> $GITHUB_ENV
+    - name: Setup infra environment
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV
+    - name: PR info
+      timeout-minutes: 60
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      timeout-minutes: 60
+      run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
+    - name: Fetch opencv
+      timeout-minutes: 60
+      run: |
+        git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+        cd ${{ env.OPENCV_DOCKER_WORKDIR }}
+        echo "LATEST_COMMIT_OPENCV=$(git log -n 1 ${{ env.TARGET_BRANCH_NAME }} --pretty=format:'%H')" >> $GITHUB_ENV
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        cd ${{ env.OPENCV_DOCKER_WORKDIR }}
+        git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+    - name: Clone opencv_contrib
+      timeout-minutes: 60
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
+    - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        OPENCV_CONTRIB_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_CONTRIB_FORK" ]]; then
+          echo "Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          cd $HOME/opencv_contrib
+          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_contrib" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv_contrib does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+    - name: Whitespace OpenCV
+      timeout-minutes: 60
+      run: |
+        cd ${{ env.OPENCV_DOCKER_WORKDIR }}
+        git diff --check ${{ env.LATEST_COMMIT_OPENCV }} --
+    - name: Patch size OpenCV
+      timeout-minutes: 60
+      run: |
+        cd ${{ env.OPENCV_DOCKER_WORKDIR }}
+        git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV }}..HEAD || true
+    - name: Configure OpenCV doxygen
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build
+        cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+    - name: Build OpenCV doxygen
+      timeout-minutes: 60
+      id: build-opencv
+      run: |
+        cd $HOME/build
+        cmake --build . --config release --target doxygen -- -j$(nproc)
+    - name: Pylint
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        cd $HOME/build
+        cmake --build . --config release --target check_pylint -- -j$(nproc)
+    - name: Flake8
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        cd $HOME/build
+        cmake --build . --config release --target check_flake8 -- -j$(nproc)

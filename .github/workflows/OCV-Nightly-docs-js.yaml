@@ -1,0 +1,86 @@
+name: OCV Nightly:docs
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-Nightly-docs-js.yaml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_SHARED_LIBS=ON -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DOPENCV_JS_LOCATION=/home/ci/build/js/bin/opencv.js -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON -DBUILD_DOCS=ON -DBUILD_PERF_TESTS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
+
+jobs:
+  BuildAndTest:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ['3.4', '4.x', '5.x']
+    container:
+      image: quay.io/opencv-ci/opencv-docs-js-20.04:20220728
+      options: --user ci
+    steps:
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/home/ci" >> $GITHUB_ENV
+    - name: Setup infra environment
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: echo "TARGET_BRANCH_NAME=${{ matrix.branch }}" >> $GITHUB_ENV
+    - name: PR info
+      timeout-minutes: 60
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      timeout-minutes: 60
+      run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
+    - name: Fetch opencv
+      timeout-minutes: 60
+      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+    - name: Clone opencv_contrib
+      timeout-minutes: 60
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
+    - name: Build js
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build
+        python ../opencv/platforms/js/build_js.py js
+    - name: Configure OpenCV doxygen
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build
+        cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+    - name: Build OpenCV doxygen
+      timeout-minutes: 60
+      id: build-opencv
+      run: |
+        cd $HOME/build
+        cmake --build . --config release --target doxygen -- -j$(nproc)
+    - name: Pack docs
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        cd $HOME/build
+        python $HOME/scripts/pack_docs.py doc release
+    - name: Upload arftifacts
+      timeout-minutes: 60
+      if: ${{ (always() && steps.build-opencv.outcome == 'success') && github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: OpenCVDocDoxygen${{ matrix.branch }}
+        path: $HOME/build/release/doc_doxygen.zip
