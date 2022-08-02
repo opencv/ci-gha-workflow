@@ -68,4 +68,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: OpenCVDocDoxygen${{ matrix.branch }}
-        path: $HOME/build/release/doc_doxygen.zip
+        path: /home/ci/build/release/doc_doxygen.zip
