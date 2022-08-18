@@ -274,7 +274,7 @@ jobs:
         git pull -v "git@github.com:${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Fetch opencv_contrib
       timeout-minutes: 60
-      run: cd ${{ github.workspace }} && git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv_contrib.git --depth 1 git@github.com:opencv/opencv_contrib.git
+      run: cd ${{ github.workspace }} && git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv_contrib.git git@github.com:opencv/opencv_contrib.git
     - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
       timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
