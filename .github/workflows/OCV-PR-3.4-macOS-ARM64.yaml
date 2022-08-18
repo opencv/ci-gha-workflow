@@ -17,7 +17,7 @@ env:
   ANT_HOME: '/usr/share/ant'
   PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/4:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/5:Perf_Objdetect_QRCode_Multi.decodeMulti/6:KNN_Apply_KNN.KNN/0:KNN_Apply_KNN.KNN/1:KNN_Apply_KNN.KNN/2:KNN_Apply_KNN.KNN/3:KNN_GetBackgroundImage_KNN.KNN/0:KNN_GetBackgroundImage_KNN.KNN/1:MOG2_Apply_Mog2.Mog2/0:MOG2_Apply_Mog2.Mog2/1:MOG2_Apply_Mog2.Mog2/2:MOG2_Apply_Mog2.Mog2/3:MOG2_GetBackgroundImage_Mog2.Mog2/0:MOG2_GetBackgroundImage_Mog2.Mog2/1'
+  GTEST_FILTER_STRING: '-Objdetect_QRCode_Close.regression/0:KNN_Apply_KNN.KNN/0:KNN_Apply_KNN.KNN/1:KNN_Apply_KNN.KNN/2:KNN_Apply_KNN.KNN/3:KNN_GetBackgroundImage_KNN.KNN/0:KNN_GetBackgroundImage_KNN.KNN/1:MOG2_Apply_Mog2.Mog2/0:MOG2_Apply_Mog2.Mog2/1:MOG2_Apply_Mog2.Mog2/2:MOG2_Apply_Mog2.Mog2/3:MOG2_GetBackgroundImage_Mog2.Mog2/0:MOG2_GetBackgroundImage_Mog2.Mog2/1'
 
 jobs:
   BuildAndTest:
