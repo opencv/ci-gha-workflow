@@ -24,6 +24,8 @@ env:
 
 jobs:
   BuildAndTest:
+    # Temporarily disabled this job
+    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-lin-x86-64
     defaults:
       run:
@@ -251,6 +253,8 @@ jobs:
       run: cd $HOME/build && cmake --build . --config release --target check_pylint -- -j4
 
   BuildContrib:
+    # Temporarily disabled this job
+    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-lin-x86-64
     defaults:
       run:
