@@ -1,0 +1,28 @@
+name: test U20
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+env:
+  GIT_CACHE_DOCKER: '/home/ci/git_cache'
+
+jobs:
+  BuildAndTest:
+    runs-on: opencv-cn-lin-x86-64
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: quay.io/opencv-ci/opencv-ubuntu-20.04:20220720
+      volumes:
+        - /home/opencv-cn/git_cache:/home/ci/git_cache
+        - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
+        - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
+        - /home/opencv-cn/dnn-models:/home/ci/dnn-models
+    steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
