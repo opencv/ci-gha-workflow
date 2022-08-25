@@ -22,8 +22,6 @@ env:
 
 jobs:
   BuildAndTest:
-    # Temporarily disabled this job
-    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-lin-x86-64
     defaults:
       run:
@@ -83,10 +81,10 @@ jobs:
       - name: Create Package
         timeout-minutes: 60
         run: cd /home/ci/build && zip -r -9 -y OpenCV5Android.zip OpenCV-android-sdk
-      - name: Release Package
-        timeout-minutes: 60
-        uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
-        with:
-          name: OpenCV5AndroidSDK
-          path: /home/ci/build/OpenCV5Android.zip
+      # - name: Release Package
+      #   timeout-minutes: 60
+      #   uses: actions/upload-artifact@v3
+      #   if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
+      #   with:
+      #     name: OpenCV5AndroidSDK
+      #     path: /home/ci/build/OpenCV5Android.zip
