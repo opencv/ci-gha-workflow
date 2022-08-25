@@ -20,8 +20,6 @@ env:
 
 jobs:
   BuildAndTest:
-    # Temporarily disabled this job
-    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-mac-x86-64
     defaults:
       run:
@@ -272,17 +270,15 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: python3 ../opencv/modules/ts/misc/run.py . -a -t java
       working-directory: ${{ github.workspace }}/build
-    - name: Save Unit Test Results
-      timeout-minutes: 60
-      uses: actions/upload-artifact@v3
-      if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
-      with:
-        name: junit-html
-        path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html
+    # - name: Save Unit Test Results
+    #   timeout-minutes: 60
+    #   uses: actions/upload-artifact@v3
+    #   if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+    #   with:
+    #     name: junit-html
+    #     path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
-    # Temporarily disabled this job
-    if: ${{ github.event.repository.name == 'disabled' }}
     runs-on: opencv-cn-mac-x86-64
     defaults:
       run:
