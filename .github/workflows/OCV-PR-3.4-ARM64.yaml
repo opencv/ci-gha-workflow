@@ -237,13 +237,13 @@ jobs:
       id: java-test
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
-    # - name: Save Unit Test Results
-    #   timeout-minutes: 60
-    #   uses: actions/upload-artifact@v3
-    #   if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
-    #   with:
-    #     name: junit-html
-    #     path: /home/ci/build/java_test/testResults/junit-noframes.html
+    - name: Save Unit Test Results
+      timeout-minutes: 60
+      uses: actions/upload-artifact@v3
+      if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+      with:
+        name: junit-html
+        path: /home/ci/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
     runs-on: opencv-cn-lin-arm64
