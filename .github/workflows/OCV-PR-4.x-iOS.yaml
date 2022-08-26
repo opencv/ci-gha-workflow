@@ -55,10 +55,10 @@ jobs:
       - name: Create Artifact
         timeout-minutes: 10
         run: cd ${{ github.workspace }}/ios && zip -r -9 -y opencv-4.x-ios-framework.zip opencv2.framework
-      # - name: Upload Artifact
-      #   timeout-minutes: 60
-      #   uses: actions/upload-artifact@v3
-      #   if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
-      #   with:
-      #     name: OpenCViOSFramework
-      #     path: ${{ github.workspace }}/ios/opencv-4.x-ios-framework.zip
+      - name: Upload Artifact
+        timeout-minutes: 60
+        uses: actions/upload-artifact@v3
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
+        with:
+          name: OpenCViOSFramework
+          path: ${{ github.workspace }}/ios/opencv-4.x-ios-framework.zip
