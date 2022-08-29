@@ -55,11 +55,11 @@ jobs:
     - name: Cmake bindings x86
       timeout-minutes: 60
       env:
-        EXTRA_CMAKE_OPTIONS: '-DWITH_OBSENSOR=OFF -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-bindings-x86 -DBUILD_SHARED_LIBS=${{ matrix.build_shared_libs }} -DWITH_OPENCL=ON -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=OFF -DCPU_BASELINE=SSE3 -DWITH_LAPACK=OFF -DBUILD_PERF_TESTS=OFF -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=OFF -DWITH_TBB=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=ON'
+        EXTRA_CMAKE_OPTIONS: '-DWITH_OBSENSOR=OFF -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-bindings-x86 -DBUILD_SHARED_LIBS=OFF -DWITH_OPENCL=ON -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=OFF -DCPU_BASELINE=SSE3 -DWITH_LAPACK=OFF -DBUILD_PERF_TESTS=OFF -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=OFF -DWITH_TBB=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=ON'
       run: |
         mkdir ${{ github.workspace }}\build-bindings-32 && cd ${{ github.workspace }}\build-bindings-32
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
-        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ github.workspace }}\opencv
+        cmake -G ^"Visual Studio 16 2019^" -A Win32 ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ github.workspace }}\opencv
     - name: Compile bindings x86
       timeout-minutes: 60
       run: |
@@ -74,7 +74,7 @@ jobs:
     - name: Cmake bindings x64
       timeout-minutes: 60
       env:
-        EXTRA_CMAKE_OPTIONS: '-DWITH_OBSENSOR=OFF -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-bindings-x64 -DBUILD_SHARED_LIBS=${{ matrix.build_shared_libs }} -DWITH_OPENCL=ON -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=OFF -DCPU_BASELINE=SSE3 -DWITH_LAPACK=OFF -DBUILD_PERF_TESTS=OFF -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=OFF -DWITH_TBB=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=ON'
+        EXTRA_CMAKE_OPTIONS: '-DWITH_OBSENSOR=OFF -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-bindings-x64 -DBUILD_SHARED_LIBS=OFF -DWITH_OPENCL=ON -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=OFF -DCPU_BASELINE=SSE3 -DWITH_LAPACK=OFF -DBUILD_PERF_TESTS=OFF -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=OFF -DWITH_TBB=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=ON'
       run: |
         mkdir ${{ github.workspace }}\build-bindings-64 && cd ${{ github.workspace }}\build-bindings-64
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
