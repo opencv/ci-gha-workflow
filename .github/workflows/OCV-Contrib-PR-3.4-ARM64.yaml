@@ -20,7 +20,7 @@ env:
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
   DNN_MODELS: '/home/ci/dnn-models'
-  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:Objdetect_QRCode_Close.regression/0'
+  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*'
   PARALLEL_JOBS: 16
 
 jobs:
