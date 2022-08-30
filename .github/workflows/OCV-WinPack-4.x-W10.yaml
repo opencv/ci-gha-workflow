@@ -40,10 +40,94 @@ jobs:
         cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         cmake --build . --config debug --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
-    - name: Compile OpenCV release
+    - name: Compile OpenCV release 1
       timeout-minutes: 60
       run: |
         cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target gen_opencv_python_source -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Compile OpenCV release 2
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py35
+      timeout-minutes: 60
+      run: |
+        set PATH=c:\\Python-3.5\\;c:\\Python-3.5\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_35 && cd ${{ github.workspace }}\build\python_35
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" -DOpenCV_BINARY_DIR=${{ github.workspace }}\build ../../opencv/modules/python
+    - name: Compile py35
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_35
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py36
+      timeout-minutes: 60
+      run: |
+        set PATH=c:\\Python-3.6\\;c:\\Python-3.6\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_36 && cd ${{ github.workspace }}\build\python_36
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" -DOpenCV_BINARY_DIR=${{ github.workspace }}\build ../../opencv/modules/python
+    - name: Compile py36
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_36
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py37
+      timeout-minutes: 60
+      run: |
+        set PATH=c:\\Python-3.7\\;c:\\Python-3.7\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_37 && cd ${{ github.workspace }}\build\python_37
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" -DOpenCV_BINARY_DIR=${{ github.workspace }}\build ../../opencv/modules/python
+    - name: Compile py37
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_37
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py38
+      timeout-minutes: 60
+      run: |
+        set PATH=c:\\Python-3.8\\;c:\\Python-3.8\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_38 && cd ${{ github.workspace }}\build\python_38
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" -DOpenCV_BINARY_DIR=${{ github.workspace }}\build ../../opencv/modules/python
+    - name: Compile py38
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_38
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py39
+      timeout-minutes: 60
+      run: |
+        set PATH=c:\\Python-3.9\\;c:\\Python-3.9\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_39 && cd ${{ github.workspace }}\build\python_39
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" -DOpenCV_BINARY_DIR=${{ github.workspace }}\build ../../opencv/modules/python
+    - name: Compile py39
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_39
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py310
+      timeout-minutes: 60
+      run: |
+        set PATH=c:\\Python-3.10\\;c:\\Python-3.10\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_310 && cd ${{ github.workspace }}\build\python_310
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" -DOpenCV_BINARY_DIR=${{ github.workspace }}\build ../../opencv/modules/python
+    - name: Compile py310
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_310
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
     - name: Pack shared
