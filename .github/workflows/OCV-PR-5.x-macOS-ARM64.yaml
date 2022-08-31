@@ -132,11 +132,11 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_flann --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
-    # - name: Accuracy:gapi
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: ./bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS
-    #   working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS
+      working-directory: ${{ github.workspace }}/build
     - name: Accuracy:highgui
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -212,11 +212,11 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
-    # - name: Performance:gapi
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
-    #   working-directory: ${{ github.workspace }}/build
+    - name: Performance:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
+      working-directory: ${{ github.workspace }}/build
     - name: Performance:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
