@@ -69,18 +69,23 @@ jobs:
     - name: Clone opencv
       timeout-minutes: 60
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git $HOME/opencv
+    # - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+    #   timeout-minutes: 60
+    #   if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+    #   run: |
+    #     OPENCV_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
+    #     if [[ ! -z "$OPENCV_FORK" ]]; then
+    #       echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
+    #       cd $HOME/opencv
+    #       git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
+    #     else
+    #       echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+    #     fi
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
       timeout-minutes: 60
-      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
-        OPENCV_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
-        if [[ ! -z "$OPENCV_FORK" ]]; then
-          echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
           cd $HOME/opencv
-          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
-        else
-          echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
-        fi
+          git pull -v "https://github.com/anna-khakimova/opencv" "ak/fix_resize4lpi_tests"
     - name: Clone opencv_extra
       timeout-minutes: 60
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git https://github.com/opencv/opencv_extra.git $HOME/opencv_extra
