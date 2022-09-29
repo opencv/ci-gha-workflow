@@ -36,7 +36,7 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     outputs:
-      ocv-tests: ${{ steps.set-matrix.outputs.ocv-tests }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - name: Brief system information
       timeout-minutes: 60
@@ -118,9 +118,11 @@ jobs:
       id: set-matrix
       run: |
         cd $HOME/build/bin
-        source ./test.sh opencv_test
-        source ./test.sh opencv_perf
-        echo "::set-output name=accuracy::{\"node\":[$OCV_TESTS]}"
+        source /home/ci/scripts/dynamic_tests.sh opencv_test
+        source /home/ci/scripts/dynamic_tests.sh opencv_perf
+        env
+        echo $OCV_TESTS
+        echo "::set-output name=matrix::{\"test\":[$OCV_TESTS]}"
     - name: Upload a build folder
       uses: actions/upload-artifact@v3
       with:
@@ -257,8 +259,23 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && cmake --build . --config release --target check_pylint -- -j4
 
+  # check-matrix:
+  #   runs-on: ubuntu-latest
+  #   needs: BuildAndTest
+  #   steps:
+  #     - name: Install json2yaml
+  #       run: |
+  #         sudo npm install -g json2yaml
+
+  #     - name: Check matrix definition
+  #       run: |
+  #         matrix='${{ needs.BuildAndTest.outputs.matrix }}'
+  #         echo $matrix
+  #         echo $matrix | jq .
+  #         echo $matrix | json2yaml
+
   Tests:
-    needs: [BuildAndTest]
+    needs: BuildAndTest
     runs-on: opencv-cn-lin-x86-64
     defaults:
       run:
@@ -271,7 +288,7 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
     strategy:
-      matrix: ${{fromJSON(needs.BuildAndTest.outputs.ocv-tests)}}
+      matrix: ${{fromJSON(needs.BuildAndTest.outputs.matrix)}}
     steps:
     - name: Brief system information
       timeout-minutes: 60
@@ -341,12 +358,12 @@ jobs:
         path: /home/ci/build
     - name: Run Accuracy Test
       timeout-minutes: 60
-      if: contains("opencv_test", matrix)
-      run: cd $HOME/build && xvfb-run -a bin/${{ matrix }} --test_threads=${{ env.PARALLEL_JOBS }}
+      if: contains(matrix.test, 'opencv_test')
+      run: cd $HOME/build && xvfb-run -a bin/${{ matrix.test }} --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Run Performance Test
       timeout-minutes: 60
-      if: contains("opencv_perf", matrix)
-      run: cd $HOME/build && xvfb-run -a bin/${{ matrix }} --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+      if: contains(matrix.test, 'opencv_perf')
+      run: cd $HOME/build && xvfb-run -a bin/${{ matrix.test }} --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
 
   BuildContrib:
     runs-on: opencv-cn-lin-x86-64
