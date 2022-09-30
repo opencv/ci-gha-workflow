@@ -199,6 +199,16 @@ jobs:
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: ./bin/opencv_test_img_hash --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:img_aug
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: |
+        if [[ -f bin/opencv_test_imgaug ]]; then
+          ./bin/opencv_test_imgaug --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }}
+        else
+          echo "No Augmentation module"
+        fi
+      working-directory: ${{ github.workspace }}/build
     - name: Accuracy:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
