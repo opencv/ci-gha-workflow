@@ -243,7 +243,7 @@ jobs:
       uses: actions/upload-artifact@v3
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
-        name: junit-html
+        name: junit-html-ubuntu14-x86-64
         path: /home/ci/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
