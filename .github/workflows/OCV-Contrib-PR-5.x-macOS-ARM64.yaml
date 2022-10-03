@@ -504,5 +504,5 @@ jobs:
       uses: actions/upload-artifact@v3
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv-contrib.outcome == 'success' }}
       with:
-        name: junit-html
+        name: junit-html-macos-arm64
         path: build/java_test/testResults/junit-noframes.html
