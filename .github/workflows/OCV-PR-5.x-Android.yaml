@@ -22,7 +22,7 @@ env:
 
 jobs:
   BuildAndTest:
-    runs-on: opencv-cn-lin-x86-64
+    runs-on: opencv-cn-lin-x86-64-android
     defaults:
       run:
         shell: bash
@@ -31,6 +31,7 @@ jobs:
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
+        - /home/opencv-cn/gradle_cache:/home/ci/.gradle
     steps:
       - name: Brief system information
         timeout-minutes: 60
