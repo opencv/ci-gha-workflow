@@ -1,0 +1,247 @@
+name: OCV Contrib WinPack:4.x W10
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-Contrib-WinPack-4.x-W10.yaml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+env:
+  BRANCH_NAME: 4.x
+
+jobs:
+  Build:
+    runs-on: opencv-cn-win
+    defaults:
+      run:
+        shell: cmd
+    steps:
+    - name: Clean
+      timeout-minutes: 60
+      run: cd ${{ github.workspace }} && rm -rf *
+    - name: Clone opencv
+      timeout-minutes: 60
+      run: cd ${{ github.workspace }} && git clone --branch ${{ env.BRANCH_NAME }} --reference %GIT_CACHE%\opencv.git git@github.com:opencv/opencv.git
+    - name: Clone opencv_contrib
+      timeout-minutes: 60
+      run: cd ${{ github.workspace }} && git clone --branch ${{ env.BRANCH_NAME }} --reference %GIT_CACHE%\opencv_contrib.git git@github.com:opencv/opencv_contrib.git
+    - name: Cmake OpenCV
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install -DBUILD_SHARED_LIBS=ON -DBUILD_PERF_TESTS=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=ON -DINSTALL_PDB_COMPONENT_EXCLUDE_FROM_ALL=OFF -DCPU_BASELINE=SSE3 -DOPENCV_INSTALL_DATA_DIR_RELATIVE=${{ github.workspace }}\\opencv -DWITH_LAPACK=OFF -DVIDEOIO_PLUGIN_LIST=all -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=ON -DWITH_OPENCL=ON -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_TBB=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=OFF -DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        mkdir ${{ github.workspace }}\build && cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ${{ github.workspace }}\opencv
+    - name: Compile OpenCV debug
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config debug --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Compile OpenCV release 1
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target gen_opencv_python_source -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Compile OpenCV release 2
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py35
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        set PATH=c:\\Python-3.5\\;c:\\Python-3.5\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_35 && cd ${{ github.workspace }}\build\python_35
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} -DOpenCV_BINARY_DIR=${{ github.workspace }}\build -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ../../opencv/modules/python
+    - name: Compile py35
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_35
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py36
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        set PATH=c:\\Python-3.6\\;c:\\Python-3.6\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_36 && cd ${{ github.workspace }}\build\python_36
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} -DOpenCV_BINARY_DIR=${{ github.workspace }}\build -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ../../opencv/modules/python
+    - name: Compile py36
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_36
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py37
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        set PATH=c:\\Python-3.7\\;c:\\Python-3.7\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_37 && cd ${{ github.workspace }}\build\python_37
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} -DOpenCV_BINARY_DIR=${{ github.workspace }}\build -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ../../opencv/modules/python
+    - name: Compile py37
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_37
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py38
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        set PATH=c:\\Python-3.8\\;c:\\Python-3.8\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_38 && cd ${{ github.workspace }}\build\python_38
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} -DOpenCV_BINARY_DIR=${{ github.workspace }}\build -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ../../opencv/modules/python
+    - name: Compile py38
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_38
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py39
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        set PATH=c:\\Python-3.9\\;c:\\Python-3.9\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_39 && cd ${{ github.workspace }}\build\python_39
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} -DOpenCV_BINARY_DIR=${{ github.workspace }}\build -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ../../opencv/modules/python
+    - name: Compile py39
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_39
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py310
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        set PATH=c:\\Python-3.10\\;c:\\Python-3.10\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_310 && cd ${{ github.workspace }}\build\python_310
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} -DOpenCV_BINARY_DIR=${{ github.workspace }}\build -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ../../opencv/modules/python
+    - name: Compile py310
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_310
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Pack shared
+      timeout-minutes: 60
+      run: |
+        mkdir ${{ github.workspace }}\artifacts
+        cd ${{ github.workspace }}\install
+        7z a -bd -t7z -y -mx7 ../artifacts/install-vc-16.7z ./
+    - name: Cmake Java bindings x86
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-bindings-x86 -DBUILD_SHARED_LIBS=OFF -DWITH_OPENCL=ON -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=OFF -DCPU_BASELINE=SSE3 -DWITH_LAPACK=OFF -DBUILD_PERF_TESTS=OFF -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=OFF -DWITH_TBB=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=ON -DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        mkdir ${{ github.workspace }}\build-bindings-32 && cd ${{ github.workspace }}\build-bindings-32
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+        cmake -G ^"Visual Studio 16 2019^" -A Win32 ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ${{ github.workspace }}\opencv
+    - name: Compile Java bindings x86
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build-bindings-32
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+        cmake --build . --config debug --target modules/java/install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Pack Java bindings x86
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\install-bindings-x86
+        7z a -bd -t7z -y -mx7 ../artifacts/install-vc-16-static-32.7z ./
+    - name: Cmake Java bindings x64
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-bindings-x64 -DBUILD_SHARED_LIBS=OFF -DWITH_OPENCL=ON -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=OFF -DCPU_BASELINE=SSE3 -DWITH_LAPACK=OFF -DBUILD_PERF_TESTS=OFF -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=OFF -DWITH_TBB=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=ON -DBUILD_opencv_alphamat=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_cvv=OFF -DBUILD_opencv_dnns_easily_fooled=OFF -DBUILD_opencv_freetype=OFF -DBUILD_opencv_hdf=OFF -DBUILD_opencv_julia=OFF -DBUILD_opencv_matlab=OFF -DBUILD_opencv_ovis=OFF -DBUILD_opencv_rgbd=OFF -DBUILD_opencv_sfm=OFF -DBUILD_opencv_surface_matching=OFF -DBUILD_opencv_text=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_xphoto=OFF'
+      run: |
+        mkdir ${{ github.workspace }}\build-bindings-64 && cd ${{ github.workspace }}\build-bindings-64
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}\opencv_contrib\modules ${{ github.workspace }}\opencv
+    - name: Compile Java bindings x64
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build-bindings-64
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config debug --target modules/java/install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Pack Java bindings x64
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\install-bindings-x64
+        7z a -bd -t7z -y -mx7 ../artifacts/install-vc-16-static-64.7z ./
+    - name: Create WinPack
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\artifacts
+        %CI_SCRIPTS%\winpack_create.cmd
+    - name: Save WinPack
+      timeout-minutes: 60
+      uses: actions/upload-artifact@v3
+      with:
+        name: WinPack
+        path: artifacts\distrib.7z.exe
+
+  Test:
+    needs: [Build]
+    runs-on: opencv-cn-win
+    defaults:
+      run:
+        shell: cmd
+    strategy:
+      fail-fast: false
+      matrix:
+        build_shared_libs: ['ON', 'OFF']
+    steps:
+    - name: Clean
+      timeout-minutes: 60
+      run: cd ${{ github.workspace }} && rm -rf *
+    - name: Download WinPack
+      timeout-minutes: 60
+      uses: actions/download-artifact@v3
+      with:
+        name: WinPack
+    - name: Unzip WinPack
+      timeout-minutes: 60
+      run: |
+        %CI_SCRIPTS%\winpack_unpack.cmd
+    - name: Configure OpenCV
+      timeout-minutes: 60
+      env:
+        EXTRA_CMAKE_OPTIONS: '-DBUILD_SHARED_LIBS=${{ matrix.build_shared_libs }} -DOpenCV_DIR=${{ github.workspace }}\\distrib\\opencv\\build'
+      run: |
+        mkdir ${{ github.workspace }}\build
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ github.workspace }}\\distrib\\opencv\\sources\\samples
+    - name: Build OpenCV release
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Build OpenCV debug
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config debug -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
