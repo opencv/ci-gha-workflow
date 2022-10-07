@@ -31,6 +31,7 @@ jobs:
         shell: bash
     container:
       image: quay.io/opencv-ci/opencv-ubuntu-14.04:20220901
+      options: -m 8G
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv_contrib:/home/ci/.ccache
