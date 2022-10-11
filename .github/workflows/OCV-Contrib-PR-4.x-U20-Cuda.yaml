@@ -101,115 +101,114 @@ jobs:
         cmake -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules $HOME/opencv
     - name: Build OpenCV
       timeout-minutes: 60
-      id: build-opencv
+      id: build-opencv-contrib
       run: |
         cd $HOME/build
         ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
     # Tests are not stable, failures after 'CUDA/GpuMat_SetTo.Zero' test happen everytime
     # - name: Accuracy:cudaarithm
     #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+    #   if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
     #   run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaarithm --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:cudabgsegm
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudabgsegm --test_threads=${{ env.PARALLEL_JOBS }}
     # All tests fail if '-DWITH_NVCUVID=ON' flag is set
     # - name: Accuracy:cudacodec
     #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+    #   if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
     #   run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudacodec --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:cudafeatures2d
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudafeatures2d --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:cudafilters
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudafilters --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:cudaimgproc
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaimgproc --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       env:
         GTEST_FILTER_STRING: '-CUDA_ImgProc/HoughLinesProbabilistic.Accuracy/1:CUDA_ImgProc/HoughLinesProbabilistic.Accuracy/2:CUDA_ImgProc/HoughLinesProbabilistic.Accuracy/3:CUDA_ImgProc/HoughCircles.Accuracy/0'
     - name: Accuracy:cudalegacy
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudalegacy --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:cudaobjdetect
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaobjdetect --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:cudaoptflow
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaoptflow --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       env:
         GTEST_FILTER_STRING: '-CUDA_OptFlow/NvidiaOpticalFlow_1_0.Regression/0:CUDA_OptFlow/NvidiaOpticalFlow_1_0.OpticalFlowNan/0:CUDA_OptFlow/NvidiaOpticalFlow_2_0.Regression/0:CUDA_OptFlow/NvidiaOpticalFlow_2_0.OpticalFlowNan/0'
     - name: Accuracy:cudastereo
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudastereo --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:cudawarping
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudawarping --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:cudev
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudev --test_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail
-    # - name: Performance:cudaarithm
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaarithm --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # - name: Performance:cudabgsegm
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudabgsegm --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:cudaarithm
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaarithm --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      env:
+        GTEST_FILTER_STRING: '-Sz_Type_AngleInDegrees_PolarToCart.PolarToCart/0:Sz_Type_AngleInDegrees_PolarToCart.PolarToCart/4'
+    - name: Performance:cudabgsegm
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudabgsegm --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     # All tests fail if '-DWITH_NVCUVID=ON' flag is set
     # - name: Performance:cudacodec
     #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudacodec --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail
-    # - name: Performance:cudafeatures2d
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudafeatures2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # Most tests fail
-    # - name: Performance:cudafilters
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudafilters --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail
-    # - name: Performance:cudaimgproc
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaimgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail
-    # - name: Performance:cudalegacy
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudalegacy --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail
-    # - name: Performance:cudaobjdetect
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaobjdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail
-    # - name: Performance:cudaoptflow
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaoptflow --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail
-    # - name: Performance:cudastereo
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudastereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail
-    # - name: Performance:cudawarping
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudawarping --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    #   if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudacodec --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:cudafeatures2d
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudafeatures2d --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:cudafilters
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudafilters --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:cudaimgproc
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaimgproc --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      env:
+        GTEST_FILTER_STRING: '-Sz_Depth_Code_CvtColor.CvtColor/17:Sz_Depth_Code_CvtColor.CvtColor/38:Sz_Depth_Code_CvtColor.CvtColor/39:Sz_Depth_Code_CvtColor.CvtColor/40:Sz_Depth_Code_CvtColor.CvtColor/41:Sz_Depth_Code_CvtColor.CvtColor/59:Sz_Depth_Code_CvtColor.CvtColor/80:Sz_Depth_Code_CvtColor.CvtColor/81:Sz_Depth_Code_CvtColor.CvtColor/82:Sz_Depth_Code_CvtColor.CvtColor/83:Sz_Depth_Code_CvtColor.CvtColor/101:Sz_Depth_Code_CvtColor.CvtColor/122:Sz_Depth_Code_CvtColor.CvtColor/123:Sz_Depth_Code_CvtColor.CvtColor/124:Sz_Depth_Code_CvtColor.CvtColor/125:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/12:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/13:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/14:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/15:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/28:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/29:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/30:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/31:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/44:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/45:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/46:Sz_Depth_Code_CvtColorBayer.CvtColorBayer/47:Image_HoughLinesP.HoughLinesP/0:Image_HoughLinesP.HoughLinesP/1:Sz_TemplateSz_Cn_Method_MatchTemplate8U.MatchTemplate8U/46:Sz_TemplateSz_Cn_Method_MatchTemplate8U.MatchTemplate8U/47:Sz_TemplateSz_Cn_Method_MatchTemplate8U.MatchTemplate8U/52:Sz_TemplateSz_Cn_Method_MatchTemplate8U.MatchTemplate8U/53'
+    - name: Performance:cudalegacy
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudalegacy --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:cudaobjdetect
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaobjdetect --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:cudaoptflow
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaoptflow --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      env:
+        GTEST_FILTER_STRING: '-ImagePair_Gray_NPts_WinSz_Levels_Iters_PyrLKOpticalFlowSparse.PyrLKOpticalFlowSparse/0:ImagePair_Gray_NPts_WinSz_Levels_Iters_PyrLKOpticalFlowSparse.PyrLKOpticalFlowSparse/1:ImagePair_Gray_NPts_WinSz_Levels_Iters_PyrLKOpticalFlowSparse.PyrLKOpticalFlowSparse/2:ImagePair_Gray_NPts_WinSz_Levels_Iters_PyrLKOpticalFlowSparse.PyrLKOpticalFlowSparse/3'
+    - name: Performance:cudastereo
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudastereo --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:cudawarping
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudawarping --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      env:
+        GTEST_FILTER_STRING: '-Sz_Depth_Cn_Inter_Rotate.Rotate/7:Sz_Depth_Cn_Inter_Rotate.Rotate/34:Sz_Depth_Cn_Inter_Rotate.Rotate/55'
