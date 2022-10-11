@@ -108,4 +108,6 @@ jobs:
     - name: Accuracy:dnn
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      env:
+        GTEST_FILTER_STRING: '-Test_ONNX_layers.Convolution3D/1:Test_ONNX_layers.Convolution3D_bias/1:Test_ONNX_layers.Shape/0:Test_ONNX_layers.Shape/1:Test_ONNX_layers.Power/0:Test_ONNX_layers.Power/1:Test_ONNX_layers.Elementwise_Log/0:Test_ONNX_layers.Elementwise_Log/1:Test_ONNX_layers.Elementwise_not/0:Test_ONNX_layers.Elementwise_not/1:Test_ONNX_layers.Compare_EQ/0:Test_ONNX_layers.Compare_EQ/1:Test_ONNX_layers.Compare_GT/0:Test_ONNX_layers.Compare_GT/1:Test_ONNX_layers.Compare_LT/0:Test_ONNX_layers.Compare_LT/1:Test_ONNX_layers.Compare_GTorEQ/0:Test_ONNX_layers.Compare_GTorEQ/1:Test_ONNX_layers.Compare_LEorEQ/0:Test_ONNX_layers.Compare_LEorEQ/1:Test_ONNX_layers.Eltwise3D/0:Test_ONNX_layers.Eltwise3D/1:Test_ONNX_layers.PoolConv3D/1:Test_ONNX_layers.Div/0:Test_ONNX_layers.Div/1:Test_ONNX_layers.Split/0:Test_ONNX_layers.Split/1:Test_ONNX_layers.SubFromConst/0:Test_ONNX_layers.SubFromConst/1:Test_ONNX_layers.YOLOv7/0:Test_ONNX_layers.YOLOv7/1:Test_ONNX_layers.YOLOv7/2:Test_TensorFlow_layers.Convolution3D/1:Test_TensorFlow_layers.concat_3d/1'
