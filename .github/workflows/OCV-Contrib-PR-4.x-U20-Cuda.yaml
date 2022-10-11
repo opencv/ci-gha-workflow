@@ -164,10 +164,10 @@ jobs:
     #   timeout-minutes: 60
     #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
     #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudaarithm --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    - name: Performance:cudabgsegm
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudabgsegm --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    # - name: Performance:cudabgsegm
+    #   timeout-minutes: 60
+    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudabgsegm --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     # All tests fail if '-DWITH_NVCUVID=ON' flag is set
     # - name: Performance:cudacodec
     #   timeout-minutes: 60
