@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_CUDA=ON -DWITH_NVCUVID=ON -DCUDA_ARCH_BIN=6.1 -DWITH_VA=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_CUDA=ON -DWITH_NVCUVID=ON -DCUDA_ARCH_BIN=6.1 -DWITH_VA=OFF -DCUDA_CUDA_LIBRARY=/lib/x86_64-linux-gnu/libcuda.so.1 -DCUDA_nvcuvid_LIBRARY=/lib/x86_64-linux-gnu/libnvcuvid.so.1'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -34,6 +34,8 @@ jobs:
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /usr/local/cuda:/usr/local/cuda
+        - /lib/x86_64-linux-gnu/libnvidia-encode.so.1:/lib/x86_64-linux-gnu/libnvidia-encode.so.1
+        - /lib/x86_64-linux-gnu/libnvcuvid.so.1:/lib/x86_64-linux-gnu/libnvcuvid.so.1
     steps:
     - name: Brief system information
       timeout-minutes: 60
@@ -106,6 +108,8 @@ jobs:
         cd $HOME/build
         ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
     # Tests are not stable, failures after 'CUDA/GpuMat_SetTo.Zero' test happen everytime
+    # The issue in CUDA_Event/AsyncEvent.Timing/*
+    # https://github.com/opencv/opencv_contrib/issues/3361
     # - name: Accuracy:cudaarithm
     #   timeout-minutes: 60
     #   if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -114,11 +118,12 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudabgsegm --test_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail if '-DWITH_NVCUVID=ON' flag is set
-    # - name: Accuracy:cudacodec
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudacodec --test_threads=${{ env.PARALLEL_JOBS }}
+    - name: Accuracy:cudacodec
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudacodec --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      env:
+        GTEST_FILTER_STRING: '-CUDA_Codec/CheckKeyFrame.Reader/8:CUDA_Codec/CheckKeyFrame.Reader/9:CUDA_Codec/Video.Reader/8:CUDA_Codec/Video.Reader/9'
     - name: Accuracy:cudafeatures2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -169,11 +174,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudabgsegm --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    # All tests fail if '-DWITH_NVCUVID=ON' flag is set
-    # - name: Performance:cudacodec
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudacodec --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:cudacodec
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudacodec --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:cudafeatures2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
