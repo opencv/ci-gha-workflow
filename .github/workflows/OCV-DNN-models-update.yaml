@@ -9,6 +9,10 @@ on:
   schedule:
     - cron: '0 23 * * *'
 
+concurrency:
+  group: OCV-DNN-models-update-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   DOWNLOAD_DNN_MODELS_FILE: 'download_models.py'
 

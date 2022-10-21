@@ -8,6 +8,10 @@ on:
       - '.github/workflows/OCV-PR-3.4-W10.yaml'
   workflow_call:
 
+concurrency:
+  group: OCV-PR-3.4-W10-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   EXTRA_CMAKE_OPTIONS: '-DCL_Z_OPTION=/Z7 -DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DCMAKE_BUILD_TYPE=Release'
   OPENCV_TEST_DATA_PATH: ${{ github.workspace }}\opencv_extra\testdata

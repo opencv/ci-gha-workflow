@@ -10,6 +10,10 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+concurrency:
+  group: OCV-Nightly-docs-js-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   EXTRA_CMAKE_OPTIONS: '-DBUILD_SHARED_LIBS=ON -DWITH_IPP=OFF -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DOPENCV_JS_LOCATION=/home/ci/build/js/bin/opencv.js -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON -DBUILD_DOCS=ON -DBUILD_PERF_TESTS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules'
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'

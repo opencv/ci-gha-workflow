@@ -9,6 +9,10 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+concurrency:
+  group: OCV-Git-Cache-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   Update:
     runs-on: ${{ matrix.os }}
