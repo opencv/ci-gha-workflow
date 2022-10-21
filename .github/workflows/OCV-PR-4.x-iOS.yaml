@@ -11,6 +11,10 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+concurrency:
+  group: OCV-PR-4.x-iOS-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}

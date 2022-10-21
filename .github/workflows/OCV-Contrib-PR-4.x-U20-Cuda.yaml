@@ -8,6 +8,10 @@ on:
       - '.github/workflows/OCV-Contrib-PR-4.x-U20-Cuda.yaml'
   workflow_call:
 
+concurrency:
+  group: OCV-Contrib-PR-4.x-U20-Cuda-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_CUDA=ON -DWITH_NVCUVID=ON -DCUDA_ARCH_BIN=6.1 -DWITH_VA=OFF -DCUDA_CUDA_LIBRARY=/lib/x86_64-linux-gnu/libcuda.so.1 -DCUDA_nvcuvid_LIBRARY=/lib/x86_64-linux-gnu/libnvcuvid.so.1'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}

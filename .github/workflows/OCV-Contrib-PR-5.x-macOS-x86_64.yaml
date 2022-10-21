@@ -8,6 +8,10 @@ on:
       - '.github/workflows/OCV-Contrib-PR-5.x-macOS-x86_64.yaml'
   workflow_call:
 
+concurrency:
+  group: OCV-Contrib-PR-5.x-macOS-x86_64-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}

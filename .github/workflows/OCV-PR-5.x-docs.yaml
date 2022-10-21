@@ -8,6 +8,10 @@ on:
       - '.github/workflows/OCV-PR-5.x-docs.yaml'
   workflow_call:
 
+concurrency:
+  group: OCV-PR-5.x-docs-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   EXTRA_CMAKE_OPTIONS: '-DOPENCV_ENABLE_NONFREE=ON -DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON  -DBUILD_PERF_TESTS=ON -DWITH_IPP=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}

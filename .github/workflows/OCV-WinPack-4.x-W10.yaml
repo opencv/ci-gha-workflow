@@ -10,6 +10,10 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+concurrency:
+  group: OCV-WinPack-4.x-W10-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   BRANCH_NAME: 4.x
 
