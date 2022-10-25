@@ -73,18 +73,23 @@ jobs:
     - name: Clone opencv
       timeout-minutes: 60
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git $HOME/opencv
+    # - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+    #   timeout-minutes: 60
+    #   if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+    #   run: |
+    #     OPENCV_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
+    #     if [[ ! -z "$OPENCV_FORK" ]]; then
+    #       echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
+    #       cd $HOME/opencv
+    #       git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
+    #     else
+    #       echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+    #     fi
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
       timeout-minutes: 60
-      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
-        OPENCV_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
-        if [[ ! -z "$OPENCV_FORK" ]]; then
-          echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
           cd $HOME/opencv
-          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
-        else
-          echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
-        fi
+          git pull -v "https://github.com/anna-khakimova/opencv" "ak/fix_resize4lpi_tests"
     - name: Clone opencv_extra
       timeout-minutes: 60
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git https://github.com/opencv/opencv_extra.git $HOME/opencv_extra
@@ -179,6 +184,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_fuzzy --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }}
+    - name: Accuracy:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }}
     - name: Accuracy:hdf
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -349,6 +358,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}

@@ -131,11 +131,11 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_flann --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
-    # - name: Accuracy:gapi
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: ./bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS
-    #   working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS
+      working-directory: ${{ github.workspace }}/build
     - name: Accuracy:highgui
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -201,11 +201,11 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
-    # - name: Performance:gapi
-    #   timeout-minutes: 60
-    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-    #   run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
-    #   working-directory: ${{ github.workspace }}/build
+    - name: Performance:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
+      working-directory: ${{ github.workspace }}/build
     - name: Performance:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -289,10 +289,15 @@ jobs:
       timeout-minutes: 60
       run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git
       working-directory: ${{ github.workspace }}
-    - name: Merge opencv with a test branch
+    # - name: Merge opencv with a test branch
+    #   timeout-minutes: 60
+    #   if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+    #   run: git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+    #   working-directory: ${{ github.workspace }}/opencv
+    - name: Merge opencv with test branch
       timeout-minutes: 60
-      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
-      run: git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+      run: |
+          git pull -v "https://github.com/anna-khakimova/opencv" "ak/fix_resize4lpi_tests"
       working-directory: ${{ github.workspace }}/opencv
     - name: Clone opencv_contrib
       timeout-minutes: 60
