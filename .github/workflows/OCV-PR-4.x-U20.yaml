@@ -14,8 +14,6 @@ concurrency:
 
 env:
   EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
-  PR_NUMBER_NEW: ${{ github.event.number }}
-  PR_NUMBER_OLD: ${{ github.event.pull_request.number }}
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -55,8 +53,6 @@ jobs:
     - name: PR info
       timeout-minutes: 60
       run: |
-        echo "PR number (new approach): ${{ env.PR_NUMBER_NEW }}"
-        echo "PR number (old approach): ${{ env.PR_NUMBER_OLD }}"
         echo "PR Author: ${{ env.PR_AUTHOR }}"
         echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
         echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
