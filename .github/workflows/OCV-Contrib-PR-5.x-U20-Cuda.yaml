@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: OCV-Contrib-PR-5.x-U20-Cuda-${{ github.event.number }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:

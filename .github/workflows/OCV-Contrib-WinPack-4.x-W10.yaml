@@ -11,7 +11,7 @@ on:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: OCV-Contrib-WinPack-4.x-W10-${{ github.event.number }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
