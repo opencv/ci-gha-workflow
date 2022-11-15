@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: OCV-PR-5.x-U20-${{ github.event.pull_request.number }}
+  group: OCV-PR-5.x-U20-${{ github.event.number }}
   cancel-in-progress: true
 
 env:

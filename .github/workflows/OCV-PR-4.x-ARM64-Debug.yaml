@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: OCV-PR-4.x-ARM64-debug-${{ github.event.pull_request.number }}
+  group: OCV-PR-4.x-ARM64-debug-${{ github.event.number }}
   cancel-in-progress: true
 
 env:

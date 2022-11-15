@@ -11,7 +11,7 @@ on:
   schedule:
     - cron: '0 0 * * 6'
 concurrency:
-  group: OCV-Coverage-4.x-U20-${{ github.event.pull_request.number }}
+  group: OCV-Coverage-4.x-U20-${{ github.event.number }}
   cancel-in-progress: true
 
 env:

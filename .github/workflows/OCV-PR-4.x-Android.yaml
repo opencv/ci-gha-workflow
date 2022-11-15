@@ -12,7 +12,7 @@ on:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: OCV-PR-4.x-Android-${{ github.event.pull_request.number }}
+  group: OCV-PR-4.x-Android-${{ github.event.number }}
   cancel-in-progress: true
 
 env:

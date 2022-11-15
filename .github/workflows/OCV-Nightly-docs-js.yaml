@@ -11,7 +11,7 @@ on:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: OCV-Nightly-docs-js-${{ github.event.pull_request.number }}
+  group: OCV-Nightly-docs-js-${{ github.event.number }}
   cancel-in-progress: true
 
 env:
