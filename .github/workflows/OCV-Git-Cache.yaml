@@ -10,7 +10,7 @@ on:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: OCV-Git-Cache-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

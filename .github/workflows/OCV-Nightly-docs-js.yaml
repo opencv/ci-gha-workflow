@@ -11,7 +11,7 @@ on:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: OCV-Nightly-docs-js-${{ github.ref }}
   cancel-in-progress: true
 
 env:

@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: OCV-PR-3.4-docs-${{ github.ref }}
   cancel-in-progress: true
 
 env:
