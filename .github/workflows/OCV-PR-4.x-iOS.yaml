@@ -12,7 +12,7 @@ on:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: OCV-PR-4.x-iOS-${{ github.ref }}
   cancel-in-progress: true
 
 env:

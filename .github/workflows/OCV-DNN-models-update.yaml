@@ -10,7 +10,7 @@ on:
     - cron: '0 23 * * *'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: OCV-DNN-models-update-${{ github.ref }}
   cancel-in-progress: true
 
 env:
