@@ -241,18 +241,17 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
-        cd ${{ github.workspace }}\opencv\modules\python\test
-        set PYTHONPATH=%PYTHONPATH%;${{ github.workspace }}\build\python_loader;${{ github.workspace }}\build\lib\python3
-        set PATH=%PATH%;${{ github.workspace }}\build\bin;${{ github.workspace }}\build\lib\python3
-        python test.py --repo ..\..\..\ -v
+        set PATH=%PATH%;${{ github.workspace }}\build\bin
+        ${{ github.workspace }}\opencv\modules\ts\misc\run.py . -a -t python3
+      working-directory: ${{ github.workspace }}/build
     - name: Java
       timeout-minutes: 60
       id: java-test
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
-        cd ${{ github.workspace }}\build
         set PATH=%PATH%;${{ github.workspace }}\build\bin
         ${{ github.workspace }}\opencv\modules\ts\misc\run.py . -a -t java
+      working-directory: ${{ github.workspace }}/build
     - name: Save Unit Test Results
       timeout-minutes: 60
       uses: actions/upload-artifact@v3
