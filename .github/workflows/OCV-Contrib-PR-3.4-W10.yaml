@@ -360,7 +360,7 @@ jobs:
         cd ${{ github.workspace }}\opencv\modules\python\test
         set PYTHONPATH=%PYTHONPATH%;${{ github.workspace }}\build\python_loader;${{ github.workspace }}\build\lib\python3
         set PATH=%PATH%;${{ github.workspace }}\build\bin;${{ github.workspace }}\build\lib\python3
-        python test.py --repo ..\..\..\ -v
+        python test.py --repo ${{ github.workspace }}\opencv -v
     - name: Java
       timeout-minutes: 60
       id: java-test

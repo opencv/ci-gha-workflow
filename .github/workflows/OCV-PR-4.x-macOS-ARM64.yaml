@@ -245,7 +245,7 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
-        python3 ./test.py --repo ../../../ -v
+        python3 ./test.py --repo ${{ github.workspace }}/opencv -v
       working-directory: ${{ github.workspace }}/opencv/modules/python/test
     - name: Java
       timeout-minutes: 60
