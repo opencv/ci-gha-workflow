@@ -237,7 +237,7 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/python/test
-        python3 ./test.py --repo ../../../ -v
+        python3 ./test.py --repo $HOME/opencv -v
     - name: Java
       timeout-minutes: 60
       id: java-test
