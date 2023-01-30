@@ -24,7 +24,7 @@ env:
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
   DNN_MODELS: '/home/ci/dnn-models'
-  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:Objdetect_QRCode_Close.regression/0:Perf_Objdetect_QRCode.detect/2:Perf_Objdetect_QRCode_Multi.detectMulti/0:Perf_Objdetect_QRCode_Multi.detectMulti/1:Perf_Objdetect_QRCode_Multi.detectMulti/3:Perf_Objdetect_QRCode_Multi.detectMulti/5:Perf_Objdetect_QRCode_Multi.detectMulti/6:Perf_Objdetect_QRCode_Multi.decodeMulti/0:Perf_Objdetect_QRCode_Multi.decodeMulti/1:Perf_Objdetect_QRCode_Multi.decodeMulti/3:Perf_Objdetect_QRCode_Multi.decodeMulti/6'
+  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*
   PARALLEL_JOBS: 16
 
 jobs:
