@@ -228,12 +228,20 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
-    - name: Python3
+    - name: Python3 Bindings
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
         python3 $HOME/opencv/modules/python/test/test.py --repo $HOME/opencv -v
+    - name: Python3 Apps
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        cd $HOME/build
+        if [ -f "$HOME/opencv/apps/python_app_test.py" ]; then
+          python3 "$HOME/opencv/apps/python_app_test.py" --repo $HOME/opencv -v
+        fi
     - name: Java
       timeout-minutes: 60
       id: java-test
