@@ -1,0 +1,131 @@
+name: OCV PR:4.x macOS ARM64 Vulkan
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-4.x-macOS-ARM64-Vulkan.yaml'
+  workflow_call:
+
+concurrency:
+  group: OCV-PR-4.x-macOS-ARM64-Vulkan-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF -DWITH_OPENCL=OFF -DWITH_VULKAN=ON'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  ANT_HOME: '/usr/share/ant'
+  PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
+  OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
+  GTEST_FILTER_STRING: '-GOTURN.memory_usage:DaSiamRPN.memory_usage:videoio_dynamic.basic_write:videoio/videocapture_acceleration.read/64:videoio/videocapture_acceleration.read/65:videoio/videocapture_acceleration.read/66:videoio/videocapture_acceleration.read/67'
+  OPENCV_VULKAN_RUNTIME: '/opt/VulkanSDK/1.3.239.0/MoltenVK/dylib/macOS/libMoltenVK.dylib'
+
+jobs:
+  BuildAndTest:
+    runs-on: opencv-cn-mac-arm64
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash $GIT_CACHE/print_system_information.sh
+    - name: Setup infra environment
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: |
+        echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
+    - name: Setup test environment
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        echo "EXTRA_GTEST_OPTIONS=--skip_unstable=1" >> $GITHUB_ENV
+    - name: PR info
+      timeout-minutes: 60
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      timeout-minutes: 60
+      run: find . -mindepth 1 -delete
+      working-directory: ${{ github.workspace }}
+    - name: Fetch opencv
+      timeout-minutes: 60
+      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git
+      working-directory: ${{ github.workspace }}
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+      working-directory: ${{ github.workspace }}/opencv
+    - name: Clone opencv_extra
+      timeout-minutes: 60
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv_extra.git https://github.com/opencv/opencv_extra.git
+      working-directory: ${{ github.workspace }}
+    - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
+          echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+      working-directory: ${{ github.workspace }}/opencv_extra
+    - name: Extra DNN models update
+      timeout-minutes: 60
+      run: |
+        DOWNLOAD_MODELS_FILE='download_models.py'
+        LATEST_SAVED_HASH=$(cat $DNN_MODELS/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
+        LATEST_HASH=$(sha256sum opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
+        if [[ $LATEST_HASH == $LATEST_SAVED_HASH ]]; then
+          echo "DNN models are up to date"
+          echo "OPENCV_DNN_TEST_DATA_PATH=$DNN_MODELS" >> $GITHUB_ENV
+        else
+          echo "Updating DNN models list"
+          echo "OPENCV_DNN_TEST_DATA_PATH=${{ github.workspace }}/new-dnn-models" >> $GITHUB_ENV && OPENCV_DNN_TEST_DATA_PATH="${{ github.workspace }}/new-dnn-models"
+          mkdir -p "$OPENCV_DNN_TEST_DATA_PATH"
+          rsync -a --exclude=$DOWNLOAD_MODELS_FILE $DNN_MODELS/* $OPENCV_DNN_TEST_DATA_PATH
+          cp opencv_extra/testdata/dnn/download_models.py $OPENCV_DNN_TEST_DATA_PATH/dnn
+          cd $OPENCV_DNN_TEST_DATA_PATH/dnn && python3 download_models.py
+        fi
+      working-directory: ${{ github.workspace }}
+    - name: Configure OpenCV
+      timeout-minutes: 60
+      run: |
+        cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} opencv
+      working-directory: ${{ github.workspace }}
+    - name: Build OpenCV
+      timeout-minutes: 60
+      id: build-opencv
+      run: |
+        ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
+      working-directory: ${{ github.workspace }}/build
+    - name: Warnings check
+      timeout-minutes: 60
+      run: python3 $GIT_CACHE/warnings-handling.py
+      working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:dnn
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_test_dnn --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:dnn
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
+      working-directory: ${{ github.workspace }}/build
+    - name: Save Unit Test Results
+      timeout-minutes: 60
+      uses: actions/upload-artifact@v3
+      if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+      with:
+        name: junit-html-macos-arm64
+        path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html

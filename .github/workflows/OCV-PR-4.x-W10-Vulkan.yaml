@@ -1,0 +1,130 @@
+name: OCV PR:4.x W10 Vulkan
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-4.x-W10-Vulkan.yaml'
+  workflow_call:
+
+concurrency:
+  group: OCV-PR-4.x-W10-Vulkan-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DCL_Z_OPTION=/Z7 -DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DOPENCV_ENABLE_NONFREE=ON -DCMAKE_BUILD_TYPE=Release -DWITH_OPENCL=OFF -DWITH_VULKAN=ON'
+  OPENCV_TEST_DATA_PATH: ${{ github.workspace }}\opencv_extra\testdata
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  GTEST_FILTER_STRING: '-Samples.findFile:videoio/videocapture_acceleration.read/122:videoio/videocapture_acceleration.read/126'
+  DOWNLOAD_DNN_MODELS_FILE: 'download_models.py'
+  OPENCV_VULKAN_RUNTIME: 'C:\VulkanSDK\1.3.239.0\Bin\vulkan-1.dll'
+
+jobs:
+  BuildAndTest:
+    runs-on: opencv-cn-win
+    defaults:
+      run:
+        shell: cmd
+    steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash %GIT_CACHE%\print_system_information.sh
+    - name: Setup infra environment
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      shell: bash
+      run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
+    - name: PR info
+      timeout-minutes: 60
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      timeout-minutes: 60
+      run: cd ${{ github.workspace }} && rm -rf *
+    - name: Fetch opencv
+      timeout-minutes: 60
+      run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv.git git@github.com:opencv/opencv.git
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        cd ${{ github.workspace }}\opencv
+        git pull -v "git@github.com:${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+    - name: Fetch opencv_extra
+      timeout-minutes: 60
+      run: cd ${{ github.workspace }} && git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference %GIT_CACHE%\opencv_extra.git git@github.com:opencv/opencv_extra.git
+    - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      shell: bash
+      run: |
+        OPENCV_EXTRA_FORK=$(git ls-remote --heads "git@github.com:/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
+          echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          cd opencv_extra
+          git pull -v "git@github.com:${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+    - name: Check DNN models update
+      timeout-minutes: 60
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        LATEST_SAVED_HASH=$(cat $DNN_MODELS\\dnn\\latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
+        LATEST_HASH=$(sha256sum opencv_extra\\testdata\\dnn\\${{ env.DOWNLOAD_DNN_MODELS_FILE }} | awk '{print $1}')
+        if [[ "$LATEST_SAVED_HASH" == "$LATEST_HASH" ]]; then
+          echo "MATCHER=true" >> $GITHUB_ENV && MATCHER=true
+        fi
+        if [[ $MATCHER == 'true' ]]; then
+          echo "OPENCV_DNN_TEST_DATA_PATH=$DNN_MODELS" >> $GITHUB_ENV
+        else
+          echo "OPENCV_DNN_TEST_DATA_PATH=${{ github.workspace }}\\opencv_extra\\testdata" >> $GITHUB_ENV
+        fi
+    - name: Extra DNN models update
+      timeout-minutes: 60
+      if: ${{ env.MATCHER != 'true' }}
+      run: |
+        dir /b /a-d %DNN_MODELS%\\dnn\\|findstr /b ${{ env.DOWNLOAD_DNN_MODELS_FILE }} >excluded.tmp
+        xcopy %DNN_MODELS%\\dnn\\* "%OPENCV_DNN_TEST_DATA_PATH%\\dnn\\" /EXCLUDE:excluded.tmp /S /y
+        cd %OPENCV_DNN_TEST_DATA_PATH%\\dnn
+        python ${{ env.DOWNLOAD_DNN_MODELS_FILE }}
+    - name: Configure OpenCV
+      timeout-minutes: 60
+      run: |
+        mkdir ${{ github.workspace }}\build && cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ github.workspace }}\opencv
+    - name: Build OpenCV
+      timeout-minutes: 60
+      id: build-opencv
+      run: |
+        cd ${{ github.workspace }}\build
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        ninja -j %PARALLEL_JOBS% | tee ${{ github.workspace }}\build\build-log.txt
+    - name: Warnings check
+      timeout-minutes: 60
+      run: cd ${{ github.workspace }}\build && python %CI_SCRIPTS%\warnings-handling.py
+    - name: Accuracy:dnn
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
+    # TODO! After further optimizing the vulkan backend on the discrete graphics card, we can open the following perf_test.
+    # - name: Performance:dnn
+    #   timeout-minutes: 60
+    #   if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+    #   run: cd ${{ github.workspace }}\build && bin\opencv_perf_dnn.exe --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=%PARALLEL_JOBS%
+    - name: Save Unit Test Results
+      timeout-minutes: 60
+      uses: actions/upload-artifact@v3
+      if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+      with:
+        name: junit-html-windows10
+        path: ${{ github.workspace }}\build\java_test\testResults\junit-noframes.html
