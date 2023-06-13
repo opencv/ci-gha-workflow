@@ -148,7 +148,7 @@ jobs:
     - name: Accuracy:photo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_photo --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }} --gtest_filter="-Photo_CalibrateDebevec.regression"
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_photo --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:stereo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
