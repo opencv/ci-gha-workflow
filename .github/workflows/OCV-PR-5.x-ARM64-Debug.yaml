@@ -144,7 +144,7 @@ jobs:
     - name: Accuracy:objdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_objdetect --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }} --gtest_filter="-Objdetect_QRCode_Close.regression/0:Objdetect_QRCode_Close.regression/4"
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_objdetect --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:photo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
