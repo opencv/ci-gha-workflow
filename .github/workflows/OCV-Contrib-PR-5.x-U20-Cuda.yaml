@@ -51,6 +51,9 @@ jobs:
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       run: echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
+    - name: Setup test environment
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: echo "EXTRA_GTEST_OPTIONS=--skip_unstable=1" >> $GITHUB_ENV
     - name: PR info
       timeout-minutes: 60
       run: |
@@ -117,57 +120,57 @@ jobs:
     # - name: Accuracy:cudaarithm
     #   timeout-minutes: 60
     #   if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-    #   run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaarithm --test_threads=${{ env.PARALLEL_JOBS }}
+    #   run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaarithm --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:cudabgsegm
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudabgsegm --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudabgsegm --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:cudacodec
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudacodec --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudacodec --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       env:
         GTEST_FILTER_STRING: '-CUDA_Codec/CheckKeyFrame.Reader/8:CUDA_Codec/CheckKeyFrame.Reader/9:CUDA_Codec/Video.Reader/8:CUDA_Codec/Video.Reader/9'
     - name: Accuracy:cudafeatures2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudafeatures2d --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudafeatures2d --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:cudafilters
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudafilters --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudafilters --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:cudaimgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaimgproc --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaimgproc --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       env:
         GTEST_FILTER_STRING: '-CUDA_ImgProc/HoughLinesProbabilistic.Accuracy/1:CUDA_ImgProc/HoughLinesProbabilistic.Accuracy/2:CUDA_ImgProc/HoughLinesProbabilistic.Accuracy/3:CUDA_ImgProc/HoughCircles.Accuracy/0'
     - name: Accuracy:cudalegacy
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudalegacy --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudalegacy --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:cudaobjdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaobjdetect --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaobjdetect --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:cudaoptflow
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaoptflow --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudaoptflow --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       env:
         GTEST_FILTER_STRING: '-CUDA_OptFlow/NvidiaOpticalFlow_1_0.Regression/0:CUDA_OptFlow/NvidiaOpticalFlow_1_0.OpticalFlowNan/0:CUDA_OptFlow/NvidiaOpticalFlow_2_0.Regression/0:CUDA_OptFlow/NvidiaOpticalFlow_2_0.OpticalFlowNan/0'
     - name: Accuracy:cudastereo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudastereo --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudastereo --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:cudawarping
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudawarping --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudawarping --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:cudev
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudev --test_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudev --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Performance:cudaarithm
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
