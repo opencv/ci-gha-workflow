@@ -41,6 +41,7 @@ jobs:
         - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
         - /mnt/cache/binaries_cache:/home/ci/binaries_cache
         - /mnt/cache/dnn-models:/home/ci/dnn-models
+      options: '--user root'
     steps:
     - name: Brief system information
       timeout-minutes: 60
