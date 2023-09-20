@@ -41,6 +41,7 @@ jobs:
         - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
         - /mnt/cache/binaries_cache:/home/ci/binaries_cache
         - /mnt/cache/dnn-models:/home/ci/dnn-models
+        - /var/run/user/1100/docker.sock:/var/run/docker.sock
     steps:
     - name: Brief system information
       timeout-minutes: 60
