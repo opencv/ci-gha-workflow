@@ -13,17 +13,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
+  EXTRA_CMAKE_OPTIONS: '-DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
-  ANT_HOME: '/usr/share/ant'
+  CCACHE_DIR: '/home/ci/.ccache'
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
-  PYTHONPATH: /home/ci/build/python_loader:$PYTHONPATH
+  OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
-  DNN_MODELS: '/home/ci/dnn-models'
+  PYTHONPATH: '/home/ci/build/python_loader:$PYTHONPATH'
   PARALLEL_JOBS: 16
   TEST_RUNNER: '/opt/tools/qemu-riscv64 -cpu syntacore-scr9 -L /opt/riscv/sysroot'
   PERF_OPT: '${{ env.PERF_OPT }}'
@@ -40,7 +40,6 @@ jobs:
         - /mnt/cache/git_cache:/home/ci/git_cache
         - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
         - /mnt/cache/binaries_cache:/home/ci/binaries_cache
-        - /mnt/cache/dnn-models:/home/ci/dnn-models
     steps:
     - name: Brief system information
       timeout-minutes: 60
@@ -69,16 +68,29 @@ jobs:
       run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
     - name: Fetch opencv
       timeout-minutes: 60
-      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+      run: |
+        git clone \
+          --branch ${{ env.TARGET_BRANCH_NAME }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
+          https://github.com/opencv/opencv.git \
+          ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
       timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
-        cd ${{ env.OPENCV_DOCKER_WORKDIR }}
-        git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+        git -C ${{ env.OPENCV_DOCKER_WORKDIR }} \
+          pull \
+          -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" \
+          "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv_extra
       timeout-minutes: 60
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git https://github.com/opencv/opencv_extra.git $HOME/opencv_extra
+      run: |
+        git clone \
+          --single-branch \
+          --branch ${{ env.TARGET_BRANCH_NAME }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
+          https://github.com/opencv/opencv_extra.git \
+          $HOME/opencv_extra
     - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
       timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
@@ -91,27 +103,13 @@ jobs:
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
-    - name: Extra DNN models update
-      timeout-minutes: 60
-      run: |
-        DOWNLOAD_MODELS_FILE='download_models.py'
-        LATEST_SAVED_HASH=$(cat ${{ env.DNN_MODELS }}/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
-        LATEST_HASH=$(sha256sum $HOME/opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
-        if [[ $LATEST_HASH == $LATEST_SAVED_HASH ]]; then
-          echo "DNN models are up to date"
-          echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
-        else
-          echo "Updating DNN models list"
-          echo "OPENCV_DNN_TEST_DATA_PATH=/home/ci/new-dnn-models" >> $GITHUB_ENV && OPENCV_DNN_TEST_DATA_PATH='/home/ci/new-dnn-models'
-          mkdir -p "$OPENCV_DNN_TEST_DATA_PATH"
-          rsync -a --exclude=$DOWNLOAD_MODELS_FILE ${{ env.DNN_MODELS }}/* $OPENCV_DNN_TEST_DATA_PATH
-          cp $HOME/opencv_extra/testdata/dnn/download_models.py $OPENCV_DNN_TEST_DATA_PATH/dnn
-          cd $OPENCV_DNN_TEST_DATA_PATH/dnn && python3 download_models.py
-        fi
     - name: Configure OpenCV
       timeout-minutes: 60
       run: |
-        cmake -G Ninja -B $HOME/build ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+        cmake -G Ninja \
+          -S ${{ env.OPENCV_DOCKER_WORKDIR }} \
+          -B $HOME/build \
+          ${{ env.EXTRA_CMAKE_OPTIONS }} 
     - name: Build OpenCV
       timeout-minutes: 60
       id: build-opencv
@@ -124,19 +122,33 @@ jobs:
     - name: Accuracy:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && ${{ env.TEST_RUNNER }} bin/opencv_test_core --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: |
+        cd $HOME/build
+        ${{ env.TEST_RUNNER }} bin/opencv_test_core \
+          --test_threads=${{ env.PARALLEL_JOBS }} \
+          ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: |
+        cd $HOME/build
+        ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc \
+          --test_threads=${{ env.PARALLEL_JOBS }} \
+          ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Performance:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && ${{ env.TEST_RUNNER }} bin/opencv_perf_core ${{ env.PERF_OPT }}
+      run: |
+        cd $HOME/build
+        ${{ env.TEST_RUNNER }} bin/opencv_perf_core \
+          ${{ env.PERF_OPT }}
     - name: Performance:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && ${{ env.TEST_RUNNER }} bin/opencv_perf_imgproc ${{ env.PERF_OPT }}
+      run: |
+        cd $HOME/build
+        ${{ env.TEST_RUNNER }} bin/opencv_perf_imgproc \
+          ${{ env.PERF_OPT }}
 
 
   BuildContrib:
