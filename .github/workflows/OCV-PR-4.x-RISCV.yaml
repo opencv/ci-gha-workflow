@@ -24,7 +24,6 @@ env:
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   PYTHONPATH: '/home/ci/build/python_loader:$PYTHONPATH'
-  PARALLEL_JOBS: 16
   TEST_RUNNER: '/opt/tools/bin/qemu-riscv64 -cpu syntacore-scr9 -L /opt/riscv/sysroot'
   PERF_OPT: '--perf_min_samples=1 --perf_force_samples=1'
 
@@ -114,8 +113,7 @@ jobs:
       timeout-minutes: 60
       id: build-opencv
       run: |
-        cd $HOME/build
-        ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
+        ninja -C $HOME/build | tee $HOME/build/build-log.txt
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
@@ -125,7 +123,6 @@ jobs:
       run: |
         cd $HOME/build
         ${{ env.TEST_RUNNER }} bin/opencv_test_core \
-          --test_threads=${{ env.PARALLEL_JOBS }} \
           ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:imgproc
       timeout-minutes: 60
@@ -133,7 +130,6 @@ jobs:
       run: |
         cd $HOME/build
         ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc \
-          --test_threads=${{ env.PARALLEL_JOBS }} \
           ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Performance:core
       timeout-minutes: 60
@@ -162,7 +158,6 @@ jobs:
         - /mnt/cache/git_cache:/home/ci/git_cache
         - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
         - /mnt/cache/binaries_cache:/home/ci/binaries_cache
-        - /mnt/cache/dnn-models:/home/ci/dnn-models
     steps:
     - name: Brief system information
       timeout-minutes: 60
@@ -186,16 +181,29 @@ jobs:
       run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
     - name: Fetch opencv
       timeout-minutes: 60
-      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+      run: |
+        git clone \
+          --branch ${{ env.TARGET_BRANCH_NAME }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
+          https://github.com/opencv/opencv.git \
+          ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Merge opencv with a test branch
       timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
-        cd ${{ env.OPENCV_DOCKER_WORKDIR }}
-        git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+        git -C ${{ env.OPENCV_DOCKER_WORKDIR }} \
+          pull \
+          -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" \
+          "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv_contrib
       timeout-minutes: 60
-      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
+      run: |
+        git clone \
+          --single-branch \
+          --branch ${{ env.TARGET_BRANCH_NAME }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
+          https://github.com/opencv/opencv_contrib.git \
+          $HOME/opencv_contrib
     - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
       timeout-minutes: 60
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
@@ -211,12 +219,15 @@ jobs:
     - name: Configure OpenCV Contrib
       timeout-minutes: 60
       run: |
-        cmake -G Ninja -B $HOME/build ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=$HOME/opencv_contrib/modules ${{ env.OPENCV_DOCKER_WORKDIR }}
+        cmake -G Ninja \
+          -S ${{ env.OPENCV_DOCKER_WORKDIR }} \
+          -B $HOME/build \
+          -DOPENCV_EXTRA_MODULES_PATH=$HOME/opencv_contrib/modules \
+          ${{ env.EXTRA_CMAKE_OPTIONS }} 
     - name: Build OpenCV Contrib
       timeout-minutes: 60
       run: |
-        cd $HOME/build
-        ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
+        ninja -C $HOME/build | tee $HOME/build/build-log.txt
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
