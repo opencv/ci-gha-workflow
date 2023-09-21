@@ -25,7 +25,7 @@ env:
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   PYTHONPATH: '/home/ci/build/python_loader:$PYTHONPATH'
   PARALLEL_JOBS: 16
-  TEST_RUNNER: '/opt/tools/qemu-riscv64 -cpu syntacore-scr9 -L /opt/riscv/sysroot'
+  TEST_RUNNER: '/opt/tools/bin/qemu-riscv64 -cpu syntacore-scr9 -L /opt/riscv/sysroot'
   PERF_OPT: '--perf_min_samples=1 --perf_force_samples=1'
 
 jobs:
