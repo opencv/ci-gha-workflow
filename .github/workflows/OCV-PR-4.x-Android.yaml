@@ -1,4 +1,4 @@
-name: OCV PR:4.x AndroidSDK
+name: OCV PR:4.8.x AndroidSDK
 
 on:
   pull_request:

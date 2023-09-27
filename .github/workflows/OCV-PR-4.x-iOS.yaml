@@ -1,4 +1,4 @@
-name: OCV PR:4.x iOS
+name: OCV PR:4.8.x iOS
 
 on:
   pull_request:

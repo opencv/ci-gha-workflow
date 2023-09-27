@@ -1,4 +1,4 @@
-name: OCV WinPack:4.x W10
+name: OCV WinPack:4.8.x W10
 
 on:
   pull_request:
