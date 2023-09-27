@@ -93,7 +93,7 @@ jobs:
       timeout-minutes: 60
       run: |
         DOWNLOAD_MODELS_FILE='download_models.py'
-        LATEST_SAVED_HASH=$(cat ${{ env.DNN_MODELS }}/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
+        LATEST_SAVED_HASH=""
         LATEST_HASH=$(sha256sum $HOME/opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
         if [[ $LATEST_HASH == $LATEST_SAVED_HASH ]]; then
           echo "DNN models are up to date"

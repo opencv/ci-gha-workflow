@@ -78,7 +78,7 @@ jobs:
       shell: bash
       working-directory: ${{ github.workspace }}
       run: |
-        LATEST_SAVED_HASH=$(cat $DNN_MODELS\\dnn\\latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
+        LATEST_SAVED_HASH=""
         LATEST_HASH=$(sha256sum opencv_extra\\testdata\\dnn\\${{ env.DOWNLOAD_DNN_MODELS_FILE }} | awk '{print $1}')
         if [[ "$LATEST_SAVED_HASH" == "$LATEST_HASH" ]]; then
           echo "MATCHER=true" >> $GITHUB_ENV && MATCHER=true
