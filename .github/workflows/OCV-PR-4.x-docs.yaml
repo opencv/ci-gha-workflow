@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: OCV-PR-4.8.0-docs
+  group: OCV-PR-4.8.x-docs
   cancel-in-progress: true
 
 env:
@@ -38,7 +38,7 @@ jobs:
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
-      run: echo "TARGET_BRANCH_NAME=4.8.0" >> $GITHUB_ENV
+      run: echo "TARGET_BRANCH_NAME=4.8.x" >> $GITHUB_ENV
     - name: PR info
       timeout-minutes: 60
       run: |

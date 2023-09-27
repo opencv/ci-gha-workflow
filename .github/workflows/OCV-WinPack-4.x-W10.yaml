@@ -11,11 +11,11 @@ on:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: OCV-WinPack-4.8.0-W10
+  group: OCV-WinPack-4.8.x-W10
   cancel-in-progress: true
 
 env:
-  BRANCH_NAME: 4.8.0
+  BRANCH_NAME: 4.8.x
 
 jobs:
   Build:
