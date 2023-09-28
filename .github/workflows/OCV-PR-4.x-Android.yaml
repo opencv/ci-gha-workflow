@@ -23,7 +23,7 @@ env:
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   CCACHE_DIR: '/home/ci/.ccache'
-  OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cach'
+  OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
 
 jobs:
   BuildAndTest:
