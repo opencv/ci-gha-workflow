@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
+  EXTRA_CMAKE_OPTIONS: '-DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DCPU_BASELINE=RVV -DCPU_BASELINE_REQUIRE=RVV -DRISCV_RVV_SCALABLE=ON'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
