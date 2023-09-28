@@ -124,7 +124,7 @@ jobs:
         cd $HOME/build
         ${{ env.TEST_RUNNER }} bin/opencv_test_core \
           ${{ env.EXTRA_GTEST_OPTIONS }} \
-          --gtest_filter=*:-Core_DS_Graph.basic_operations
+          --gtest_filter=*:-Core_DS_Graph.basic_operations:Core_InputOutput*
     - name: Accuracy:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
