@@ -1,4 +1,4 @@
-name: OCV PR:4.x U20-OpenVINO
+name: OCV PR:4.x U20 OpenVINO
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: OCV-PR-4.x-U20-${{ github.ref }}
+  group: OCV-PR-4.x-U20-OpenVINO-${{ github.ref }}
   cancel-in-progress: true
 
 env:
