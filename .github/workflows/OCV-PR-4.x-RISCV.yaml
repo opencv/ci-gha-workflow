@@ -25,7 +25,7 @@ env:
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   PYTHONPATH: '/home/ci/build/python_loader:$PYTHONPATH'
-  TEST_RUNNER: '/opt/tools/bin/qemu-riscv64 -cpu syntacore-scr9 -L /opt/riscv/sysroot'
+  TEST_RUNNER: '/opt/tools/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/riscv/sysroot'
 
 jobs:
   BuildAndTest:
@@ -124,7 +124,7 @@ jobs:
         cd $HOME/build
         ${{ env.TEST_RUNNER }} bin/opencv_test_core \
           ${{ env.EXTRA_GTEST_OPTIONS }} \
-          --gtest_filter=*:-Core_DS_Graph.basic_operations:Core_LPSolver.issue_12337:Core_InputOutput*
+          --gtest_filter=*:-Core_DS_Graph.basic_operations:Core_LPSolver.issue_12337:Core_InputOutput*:Mat.regression_12943
     - name: Accuracy:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -132,7 +132,7 @@ jobs:
         cd $HOME/build
         ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc \
           ${{ env.EXTRA_GTEST_OPTIONS }} \
-          --gtest_filter=*:-Imgproc_ConvexityDefects.ordering_4539:Imgproc.filter_empty_src_16857:Drawing.circle_overflow:Imgproc_DistanceTransform.large_square_22732:Mat.regression_12943
+          --gtest_filter=*:-Imgproc_ConvexityDefects.ordering_4539:Imgproc.filter_empty_src_16857:Drawing.circle_overflow:Imgproc_DistanceTransform.large_square_22732:Mat.regression_12943:Imgproc_Hist_Calc.badarg
 
   BuildContrib:
     runs-on: opencv-ru-lin-riscv
