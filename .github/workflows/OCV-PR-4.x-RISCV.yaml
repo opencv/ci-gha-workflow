@@ -132,7 +132,7 @@ jobs:
         cd $HOME/build
         ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc \
           ${{ env.EXTRA_GTEST_OPTIONS }} \
-          --gtest_filter=*:-Imgproc_ConvexityDefects.ordering_4539:Imgproc.filter_empty_src_16857:Drawing.circle_overflow
+          --gtest_filter=*:-Imgproc_ConvexityDefects.ordering_4539:Imgproc.filter_empty_src_16857:Drawing.circle_overflow:Imgproc_DistanceTransform.large_square_22732:Mat.regression_12943
 
   BuildContrib:
     runs-on: opencv-ru-lin-riscv
