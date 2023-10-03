@@ -124,7 +124,7 @@ jobs:
         cd $HOME/build
         ${{ env.TEST_RUNNER }} bin/opencv_test_core \
           ${{ env.EXTRA_GTEST_OPTIONS }} \
-          --gtest_filter=*:-Core_DS_Graph.basic_operations:Core_LPSolver.issue_12337:Core_InputOutput*:Mat.regression_12943
+          --gtest_filter=*
     - name: Accuracy:imgproc
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -132,7 +132,7 @@ jobs:
         cd $HOME/build
         ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc \
           ${{ env.EXTRA_GTEST_OPTIONS }} \
-          --gtest_filter=*:-Imgproc_ConvexityDefects.ordering_4539:Imgproc.filter_empty_src_16857:Drawing.circle_overflow:Imgproc_DistanceTransform.large_square_22732:Mat.regression_12943:Imgproc_Hist_Calc.badarg
+          --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
 
   BuildContrib:
     runs-on: opencv-ru-lin-riscv
