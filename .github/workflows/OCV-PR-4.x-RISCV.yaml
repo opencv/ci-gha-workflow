@@ -133,6 +133,14 @@ jobs:
         ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc \
           ${{ env.EXTRA_GTEST_OPTIONS }} \
           --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
+    - name: Accuracy:dnn
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        cd $HOME/build
+        ${{ env.TEST_RUNNER }} bin/opencv_test_dnn \
+          ${{ env.EXTRA_GTEST_OPTIONS }} \
+          --gtest_filter=*
 
   BuildContrib:
     runs-on: opencv-ru-lin-riscv
