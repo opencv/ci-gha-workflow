@@ -79,6 +79,7 @@ jobs:
       run: |
         git -C ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }} \
           pull \
+          --no-rebase --no-ff --no-commit \
           -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" \
           "${{ env.SOURCE_BRANCH_NAME }}"
     - name: Clone opencv
@@ -98,7 +99,7 @@ jobs:
         if [[ ! -z "$OPENCV_FORK" ]]; then
           echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
           cd $HOME/opencv
-          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
+          git pull --no-rebase --no-ff --no-commit -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
