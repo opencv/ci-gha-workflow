@@ -1,0 +1,123 @@
+name: OCV Contrib PR:5.x RISC-V
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-Contrib-PR-5.x-RISCV.yaml'
+  workflow_call:
+
+concurrency:
+  group: OCV-Contrib-PR-5.x-RISCV-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DCPU_BASELINE=RVV -DCPU_BASELINE_REQUIRE=RVV -DRISCV_RVV_SCALABLE=ON'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  CCACHE_DIR: '/home/ci/.ccache'
+  GIT_CACHE_DOCKER: '/home/ci/git_cache'
+  OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
+  OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
+  OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
+  OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
+  PYTHONPATH: '/home/ci/build/python_loader:$PYTHONPATH'
+  TEST_RUNNER: '/opt/riscv/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/riscv/sysroot'
+  GIT_COMMITTER_NAME: 'nouser'
+  GIT_COMMITTER_EMAIL: 'noemail'
+
+jobs:
+  BuildAndTest:
+    runs-on: opencv-ru-lin-riscv
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-main:20230910
+      volumes:
+        - /mnt/cache/git_cache:/home/ci/git_cache
+        - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
+        - /mnt/cache/binaries_cache:/home/ci/binaries_cache
+    steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/home/ci" >> $GITHUB_ENV
+    - name: Setup infra environment
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: |
+        echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
+    - name: Setup test environment
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        echo "EXTRA_GTEST_OPTIONS=--skip_unstable=1" >> $GITHUB_ENV
+    - name: PR info
+      timeout-minutes: 60
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      timeout-minutes: 60
+      run: find ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }} -mindepth 1 -delete
+    - name: Fetch opencv_contrib
+      timeout-minutes: 60
+      run: |
+        git clone \
+          --branch ${{ env.TARGET_BRANCH_NAME }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
+          https://github.com/opencv/opencv_contrib.git \
+          ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
+    - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        git -C ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }} \
+          pull \
+          --no-rebase --no-ff --no-commit \
+          -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" \
+          "${{ env.SOURCE_BRANCH_NAME }}"
+    - name: Clone opencv
+      timeout-minutes: 60
+      run: |
+        git clone \
+          --single-branch \
+          --branch ${{ env.TARGET_BRANCH_NAME }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
+          https://github.com/opencv/opencv.git \
+          ${{ env.OPENCV_DOCKER_WORKDIR }}
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        OPENCV_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_FORK" ]]; then
+          echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          cd $HOME/opencv
+          git pull --no-rebase --no-ff --no-commit -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+    - name: Configure OpenCV
+      timeout-minutes: 60
+      run: |
+        cmake -G Ninja \
+          -S ${{ env.OPENCV_DOCKER_WORKDIR }} \
+          -B $HOME/build \
+          -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules \
+          ${{ env.EXTRA_CMAKE_OPTIONS }}
+    - name: Build OpenCV
+      timeout-minutes: 60
+      id: build-opencv-contrib
+      run: |
+        ninja -C $HOME/build | tee $HOME/build/build-log.txt
+    - name: Warnings check
+      timeout-minutes: 60
+      run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
