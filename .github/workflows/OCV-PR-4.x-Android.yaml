@@ -79,6 +79,12 @@ jobs:
           cd /home/ci/build
           sed -i 's+https\\://services.gradle.org/distributions/gradle-@GRADLE_VERSION@-all.zip+file\\:/opt/gradle/gradle-@GRADLE_VERSION@-bin.zip+g' ${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/gradle-wrapper/gradle/wrapper/gradle-wrapper.properties.in
           python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_sdk.py" --build_doc --config "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/ndk-18-api-level-21.config.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" /home/ci/build
+      - name: Build AAR
+        timeout-minutes: 60
+        run: |
+          cd /home/ci/build
+          sed -i 's+https\\://services.gradle.org/distributions/gradle-@GRADLE_VERSION@-all.zip+file\\:/opt/gradle/gradle-@GRADLE_VERSION@-bin.zip+g' ${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/aar-template/gradle/wrapper/gradle-wrapper.properties
+          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_java_shared_aar.py" OpenCV-android-sdk
       - name: Test CMake
         timeout-minutes: 60
         run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_cmake_build.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" OpenCV-android-sdk/sdk/native/jni
@@ -94,4 +100,6 @@ jobs:
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
         with:
           name: OpenCV4AndroidSDK
-          path: /home/ci/build/OpenCV4Android.zip
+          path: |
+            /home/ci/build/OpenCV4Android.zip
+            /home/ci/build/outputs/*.aar
