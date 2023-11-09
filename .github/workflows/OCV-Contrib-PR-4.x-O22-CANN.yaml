@@ -25,7 +25,6 @@ env:
 
 jobs:
   BuildAndTest:
-    if: contains(github.event.pull_request.labels.*.name, 'category:cann')
     runs-on: opencv-cn-openeuler-ascend310-x86-64
     defaults:
       run:
