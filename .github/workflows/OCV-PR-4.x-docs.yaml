@@ -159,12 +159,16 @@ jobs:
         grep -Eo "https?://[a-zA-Z0-9\./&\?=_-]*" -rI ${{ env.OPENCV_DOCKER_WORKDIR }}/doc -h > urls.txt
 
         cmd=`cat <<EOF
-        from urllib.request import urlopen
+        import requests
+        session = requests.Session()
         with open("urls.txt", "rt") as f:
             for url in f.readlines():
                 try:
-                    r = urlopen(url, timeout=1)
+                    response = session.get(url, stream=True, timeout=10)
+                    if response:
+                        continue
                 except Exception as e:
-                    print(f"{url.strip()} -- Broken link!")
+                    pass
+                print(f"{url.strip()} -- Broken link!")
         EOF`
         python3 -c "$cmd"
