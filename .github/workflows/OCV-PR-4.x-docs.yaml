@@ -152,3 +152,8 @@ jobs:
       run: |
         cd $HOME/build
         cmake --build . --config release --target check_flake8 -- -j$(nproc)
+    - name: Check broken links
+      timeout-minutes: 5
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        grep -Eo "https?://[a-zA-Z0-9\./&\?=_-]*" -rI ${{ env.OPENCV_DOCKER_WORKDIR }}/doc -h | xargs -n 1 -P $(nproc) wget -nv --spider --timeout=1 --tries 1
