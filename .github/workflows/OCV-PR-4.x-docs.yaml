@@ -156,19 +156,4 @@ jobs:
       timeout-minutes: 5
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
-        grep -Eo "https?://[a-zA-Z0-9\./&\?=_-]*" -rI ${{ env.OPENCV_DOCKER_WORKDIR }}/doc -h > urls.txt
-
-        cmd=`cat <<EOF
-        import requests
-        session = requests.Session()
-        with open("urls.txt", "rt") as f:
-            for url in f.readlines():
-                try:
-                    response = session.get(url, stream=True, timeout=10)
-                    if response:
-                        continue
-                except Exception as e:
-                    pass
-                print(f"{url.strip()} -- Broken link!")
-        EOF`
-        python3 -c "$cmd"
+        grep -Eo "https?://[a-zA-Z0-9\./&\?=_-]*" -rI ${{ env.OPENCV_DOCKER_WORKDIR }}/doc -h | xargs wget -nv --spider --timeout=1 --tries 1
