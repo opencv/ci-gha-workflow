@@ -32,7 +32,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-androidsdk-28:20220721
+      image: quay.io/opencv-ci/opencv-androidsdk-30:20231114
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
@@ -73,7 +73,7 @@ jobs:
           cd ${{ env.OPENCV_DOCKER_WORKDIR }}
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
       - name: Build OpenCV for Android SDK
-        timeout-minutes: 120
+        timeout-minutes: 180
         run: |
           mkdir -p /home/ci/build
           cd /home/ci/build
