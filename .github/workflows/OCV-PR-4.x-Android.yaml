@@ -84,7 +84,7 @@ jobs:
         run: |
           cd /home/ci/build
           sed -i 's+https\\://services.gradle.org/distributions/gradle-@GRADLE_VERSION@-all.zip+file\\:/opt/gradle/gradle-@GRADLE_VERSION@-bin.zip+g' ${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/aar-template/gradle/wrapper/gradle-wrapper.properties
-          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_java_shared_aar.py" OpenCV-android-sdk
+          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_java_shared_aar.py" --ndk_location="$ANDROID_NDK_HOME" --cmake_location=$(dirname $(dirname $(which cmake))) OpenCV-android-sdk
       - name: Test CMake
         timeout-minutes: 60
         run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_cmake_build.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" OpenCV-android-sdk/sdk/native/jni
