@@ -88,9 +88,16 @@ jobs:
       - name: Test CMake
         timeout-minutes: 60
         run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_cmake_build.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" OpenCV-android-sdk/sdk/native/jni
-      - name: Test Gradle
+      - name: Test Gradle for Local SDK
         timeout-minutes: 60
         run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk
+      - name: Test Gradle for AAR
+        timeout-minutes: 60
+        run: |
+          cd /home/ci/build
+          echo "opencv_source = 'maven_local'" > aar_local.properties
+          echo "opencv_source_path = '/home/ci/build/build_java_shared/AndroidProject/OpenCV/build/repo'" > aar_local.properties
+          "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk /home/ci/build/aar_local.properties
       - name: Create Package
         timeout-minutes: 60
         run: cd /home/ci/build && zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
