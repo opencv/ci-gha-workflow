@@ -95,9 +95,7 @@ jobs:
         timeout-minutes: 60
         run: |
           cd /home/ci/build
-          echo "opencv_source = 'maven_local'" > aar_local.properties
-          echo "opencv_source_path = '/home/ci/build/build_java_shared/AndroidProject/OpenCV/build/repo'" > aar_local.properties
-          "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk /home/ci/build/aar_local.properties
+          "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk /home/ci/build/outputs/maven_repo
       - name: Create Package
         timeout-minutes: 60
         run: cd /home/ci/build && zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
