@@ -96,9 +96,10 @@ jobs:
         run: |
           cd /home/ci/build
           "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle_aar.sh" OpenCV-android-sdk /home/ci/build/outputs/maven_repo
-      - name: Create Package
+      - name: Create Packages
         timeout-minutes: 60
         run: cd /home/ci/build && zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
+        run: cd /home/ci/build/outputs && zip -r -9 -y maven-repo.zip maven_repo
       - name: Release Package
         timeout-minutes: 60
         uses: actions/upload-artifact@v3
@@ -107,4 +108,4 @@ jobs:
           name: OpenCV4AndroidSDK
           path: |
             /home/ci/build/OpenCV4Android.zip
-            /home/ci/build/outputs/*.aar
+            /home/ci/build/outputs/maven-repo.zip
