@@ -1,0 +1,97 @@
+name: OCV PR:4.x Android aarch64 build and test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-4.x-Android-Test.yaml'
+  workflow_call:
+
+concurrency:
+  group: OCV-PR-4.x-Android-Test-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DANDROID_ABI=arm64-v8a -DCMAKE_TOOLCHAIN_FILE=/Users/xperience/Android/ndk/25.2.9519653/build/cmake/android.toolchain.cmake -DANDROID_NDK=/Users/xperience/Android/ndk/25.2.9519653 -DANDROID_SDK=/Users/xperience/Android -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
+  PATH: '${{ env.PATH }}:/Users/xperience/gradle/gradle-7.6.3/bin'
+  GRADLE_HOME: '/Users/xperience/gradle/gradle-7.6.3'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
+  ANDROID_HOME: '/Users/xperience/Android'
+
+jobs:
+  BuildAndTest:
+    runs-on: opencv-cn-mac-arm64
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Brief system information
+      timeout-minutes: 60
+      run: bash $GIT_CACHE/print_system_information.sh
+    - name: Setup infra environment
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
+    - name: PR info
+      timeout-minutes: 60
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+    - name: Clean
+      timeout-minutes: 60
+      run: find . -mindepth 1 -delete
+      working-directory: ${{ github.workspace }}
+    - name: Fetch opencv
+      timeout-minutes: 60
+      run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git
+      working-directory: ${{ github.workspace }}
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+      working-directory: ${{ github.workspace }}/opencv
+    - name: Clone opencv_extra
+      timeout-minutes: 60
+      run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv_extra.git https://github.com/opencv/opencv_extra.git
+      working-directory: ${{ github.workspace }}
+    - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
+          echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+      working-directory: ${{ github.workspace }}/opencv_extra
+    - name: Configure OpenCV
+      timeout-minutes: 60
+      run: |
+        cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} opencv
+      working-directory: ${{ github.workspace }}
+    - name: Build OpenCV
+      timeout-minutes: 60
+      id: build-opencv
+      run: |
+        ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
+      working-directory: ${{ github.workspace }}/build
+    - name: Warnings check
+      timeout-minutes: 60
+      run: python3 $GIT_CACHE/warnings-handling.py
+      working-directory: ${{ github.workspace }}/build
+    - name: Test Java
+      timeout-minutes: 60
+      id: java-test
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: ./gradlew -i tests_module:connectedAndroidTest
+      working-directory: ${{ github.workspace }}/build/android_test
