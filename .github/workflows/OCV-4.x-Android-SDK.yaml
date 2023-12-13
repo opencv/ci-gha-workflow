@@ -5,8 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-PR-4.x-Android.yaml'
-  workflow_call:
+      - '.github/workflows/OCV-4.x-Android-SDK.yaml'
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
@@ -26,7 +25,7 @@ env:
   OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
 
 jobs:
-  BuildAndTest:
+  BuildAndTestSDK:
     runs-on: opencv-cn-lin-x86-64-android
     defaults:
       run:
