@@ -114,6 +114,8 @@ jobs:
         timeout-minutes: 60
         run: |
           cd /home/ci/build
+          # revert hacked Gradle URL to the original one
+          sed -i 's+file\\:/opt/gradle/gradle-7.6.3-bin.zip+https\\://services.gradle.org/distributions/gradle-7.6.3-bin.zip+g' OpenCV-android-sdk/samples/gradle/wrapper/gradle-wrapper.properties
           zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
           zip -r -9 -y sdk-maven-repo.zip maven_repo
           cd /home/ci/build/outputs
