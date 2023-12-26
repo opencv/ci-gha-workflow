@@ -79,6 +79,9 @@ jobs:
           cd /home/ci/build
           sed -i 's+https\\://services.gradle.org/distributions/gradle-@GRADLE_VERSION@-all.zip+file\\:/opt/gradle/gradle-@GRADLE_VERSION@-bin.zip+g' ${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/gradle-wrapper/gradle/wrapper/gradle-wrapper.properties.in
           python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_sdk.py" --build_doc --config "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/ndk-18-api-level-21.config.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" /home/ci/build
+      - name: Build local repo from SDK
+        timeout-minutes: 60
+        run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_aar.sh" OpenCV-android-sdk
       - name: Build AAR
         timeout-minutes: 60
         run: |
@@ -97,14 +100,24 @@ jobs:
       - name: Test Gradle for Local SDK
         timeout-minutes: 60
         run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk
-      - name: Test Gradle for AAR
+      - name: Test Gradle for AAR from Py Script
         timeout-minutes: 60
         run: |
           cd /home/ci/build
           "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle_aar.sh" OpenCV-android-sdk /home/ci/build/outputs/maven_repo
+      - name: Test Gradle for AAR from SDK
+        timeout-minutes: 60
+        run: |
+          cd /home/ci/build
+          "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle_aar.sh" OpenCV-android-sdk /home/ci/build/maven_repo
       - name: Create Packages
         timeout-minutes: 60
-        run: cd /home/ci/build/outputs && zip -r -9 -y maven-repo.zip maven_repo
+        run: |
+          cd /home/ci/build
+          zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
+          zip -r -9 -y sdk-maven-repo.zip maven_repo
+          cd /home/ci/build/outputs
+          zip -r -9 -y python-maven-repo.zip maven_repo
       - name: Release Package
         timeout-minutes: 60
         uses: actions/upload-artifact@v3
@@ -113,4 +126,5 @@ jobs:
           name: OpenCV4AndroidSDK
           path: |
             /home/ci/build/OpenCV4Android.zip
-            /home/ci/build/outputs/maven-repo.zip
+            /home/ci/build/sdk-maven-repo.zip
+            /home/ci/build/outputs/python-maven-repo.zip
