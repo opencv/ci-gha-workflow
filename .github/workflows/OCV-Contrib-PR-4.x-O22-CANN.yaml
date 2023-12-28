@@ -30,7 +30,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-openeuler-22.03.sp2-ascend310:20231107
+      image: quay.io/opencv-ci/opencv-openeuler-22.03.sp2-ascend310:20231228
       options: --device /dev/davinci0 --device /dev/davinci_manager --device /dev/devmm_svm --device /dev/hisi_hdc --env-file /home/opencv-cn/git_cache/proxy
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
