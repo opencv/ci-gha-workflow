@@ -21,6 +21,7 @@ env:
   ANT_HOME: '/usr/share/ant'
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
+  OPENCV_TEST_REQUIRE_DATA: 1
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
   PARALLEL_JOBS: 8
 
