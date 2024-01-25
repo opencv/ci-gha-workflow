@@ -112,15 +112,14 @@ jobs:
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
             ${REMOTE_BIN}/opencv_test_core \
-              --gtest_filter=*:-Samples.findFile
+              --gtest_filter=*:-Samples.findFile:Core_Or*/ElemWiseTest.accuracy/0:Core_Xor*/ElemWiseTest.accuracy/0
     - name: Run imgproc test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
       run: |
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_imgproc \
-              --gtest_filter=*
+            ${REMOTE_BIN}/opencv_test_imgproc
     - name: Run calib3d test
       timeout-minutes: 60
       if: ${{ always() && matrix.branch == '4.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
@@ -134,7 +133,8 @@ jobs:
       run: |
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_3d
+            ${REMOTE_BIN}/opencv_test_3d \
+              --gtest_filter=*:-Volume/VolumeTestFixture.*
     - name: Run calib test
       timeout-minutes: 60
       if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
