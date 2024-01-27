@@ -100,16 +100,11 @@ jobs:
       - name: Test Gradle for Local SDK
         timeout-minutes: 60
         run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk
-      - name: Test Gradle for AAR from Py Script
+      - name: Test Gradle for AAR
         timeout-minutes: 60
         run: |
           cd /home/ci/build
           "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle_aar.sh" OpenCV-android-sdk /home/ci/build/outputs/maven_repo
-      - name: Test Gradle for AAR from SDK
-        timeout-minutes: 60
-        run: |
-          cd /home/ci/build
-          "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle_aar.sh" OpenCV-android-sdk /home/ci/build/maven_repo
       - name: Create Packages
         timeout-minutes: 60
         run: |
@@ -117,7 +112,6 @@ jobs:
           # revert hacked Gradle URL to the original one
           sed -i 's+file\\:/opt/gradle/gradle-7.6.3-bin.zip+https\\://services.gradle.org/distributions/gradle-7.6.3-bin.zip+g' OpenCV-android-sdk/samples/gradle/wrapper/gradle-wrapper.properties
           zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
-          zip -r -9 -y sdk-maven-repo.zip maven_repo
           cd /home/ci/build/outputs
           zip -r -9 -y python-maven-repo.zip maven_repo
       - name: Release Package
@@ -128,5 +122,4 @@ jobs:
           name: OpenCV4AndroidSDK
           path: |
             /home/ci/build/OpenCV4Android.zip
-            /home/ci/build/sdk-maven-repo.zip
             /home/ci/build/outputs/python-maven-repo.zip
