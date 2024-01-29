@@ -19,7 +19,6 @@ env:
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-  PATH: '${{ env.PATH }}:/Users/xperience/gradle/gradle-7.6.3/bin'
   GRADLE_HOME: '/Users/xperience/gradle/gradle-7.6.3'
   GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
   ANDROID_HOME: '/Users/xperience/Android'
