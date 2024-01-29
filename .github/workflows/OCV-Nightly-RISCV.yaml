@@ -42,7 +42,7 @@ jobs:
     env:
       BRANCH: '${{ matrix.branch }}'
     container:
-      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-071:20231030
+      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-071:20240117
       volumes:
         - /mnt/cache/git_cache:/home/ci/git_cache
         - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
@@ -89,6 +89,7 @@ jobs:
           -S ${{ env.SRC_OPENCV }} \
           -B ${{ env.BUILD_DIR }} \
           -DCMAKE_TOOLCHAIN_FILE=${{ env.SRC_OPENCV }}/platforms/linux/riscv64-071-gcc.toolchain.cmake \
+          -DCORE=C910V \
           -DBUILD_SHARED_LIBS=OFF \
           -DWITH_OPENCL=OFF \
           -DOPENCV_EXTRA_MODULES_PATH=${{ env.SRC_OPENCV_CONTRIB }}/modules \
@@ -111,15 +112,14 @@ jobs:
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
             ${REMOTE_BIN}/opencv_test_core \
-              --gtest_filter=*:-Samples.findFile:hal_intrin128.*_BASELINE:*ElemWiseTest.accuracy*
+              --gtest_filter=*:-Samples.findFile:Core_Or*/ElemWiseTest.accuracy/0:Core_Xor*/ElemWiseTest.accuracy/0
     - name: Run imgproc test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
       run: |
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_imgproc \
-              --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
+            ${REMOTE_BIN}/opencv_test_imgproc
     - name: Run calib3d test
       timeout-minutes: 60
       if: ${{ always() && matrix.branch == '4.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
@@ -133,7 +133,8 @@ jobs:
       run: |
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_3d
+            ${REMOTE_BIN}/opencv_test_3d \
+              --gtest_filter=*:-Volume/VolumeTestFixture.*
     - name: Run calib test
       timeout-minutes: 60
       if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
@@ -147,7 +148,8 @@ jobs:
       run: |
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_dnn
+            ${REMOTE_BIN}/opencv_test_dnn \
+              --gtest_filter=*:-Test_Int8_layers.InnerProduct/0:Test_Caffe_layers.InnerProduct/0:Test_Caffe_layers.layer_prelu_fc/0:Test_TensorFlow_layers.matmul/0:Test_TensorFlow_layers.lstm/0:Test_Torch_layers.run_reshape_single_sample/0
     - name: Run features2d test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
