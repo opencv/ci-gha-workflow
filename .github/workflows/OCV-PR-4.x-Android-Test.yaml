@@ -82,7 +82,7 @@ jobs:
       timeout-minutes: 60
       id: build-opencv
       run: |
-        ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
+        ninja | tee ${{ github.workspace }}/build/build-log.txt
       working-directory: ${{ github.workspace }}/build
     - name: Warnings check
       timeout-minutes: 60
