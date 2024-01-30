@@ -25,7 +25,7 @@ env:
 
 jobs:
   BuildAndTest:
-    runs-on: opencv-cn-mac-arm64
+    runs-on: python-macos11-m1
     defaults:
       run:
         shell: bash
