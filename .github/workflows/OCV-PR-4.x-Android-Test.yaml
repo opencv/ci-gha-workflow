@@ -22,6 +22,7 @@ env:
   GRADLE_HOME: '/Users/xperience/gradle/gradle-7.6.3'
   GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
   ANDROID_HOME: '/Users/xperience/Android'
+  GIT_CACHE: '/Users/xperience/git_cache'
 
 jobs:
   BuildAndTest:
