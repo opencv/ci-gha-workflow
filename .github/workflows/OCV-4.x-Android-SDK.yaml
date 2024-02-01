@@ -38,6 +38,7 @@ jobs:
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
         - /home/opencv-cn/gradle_cache:/home/ci/.gradle
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
+        - /home/opencv-cn/gradle_cache/:/home/ci/.gradle/
     steps:
       - name: Brief system information
         timeout-minutes: 60
