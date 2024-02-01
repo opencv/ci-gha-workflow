@@ -1,16 +1,19 @@
-name: Loongson:4.x
+name: OCV PR:4.x Loongnix LoongArch64
 
 on:
   pull_request:
     branches:
-      - 4.x
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-4.x-loongnix-loongarch64.yaml'
+  workflow_call:
 
 concurrency:
-  group: OCV-PR-4.x-macOS-ARM64-${{ github.ref }}
+  group: OCV-PR-4.x-Loongnix-LoongArch64-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF -DWITH_OPENCL=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -204,11 +207,11 @@ jobs:
         if: ${{ always() && steps.build-opencv.outcome == 'success' && steps.check-warnings.outcome == 'success' }}
         run: xvfb-run -a ./bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
         working-directory: ${{ github.workspace }}/build
-      # - name: Performance:gapi # fails a lot tests: https://github.com/fengyuentau/opencv/actions/runs/7708566403/job/21007921185?pr=11#step:17:33299
-      #   timeout-minutes: 60
-      #   if: ${{ always() && steps.build-opencv.outcome == 'success' && steps.check-warnings.outcome == 'success' }}
-      #   run: xvfb-run -a ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      #   working-directory: ${{ github.workspace }}/build
+      - name: Performance:gapi
+        timeout-minutes: 60
+        if: ${{ always() && steps.build-opencv.outcome == 'success' && steps.check-warnings.outcome == 'success' }}
+        run: xvfb-run -a ./bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
+        working-directory: ${{ github.workspace }}/build
       - name: Performance:imgcodecs
         timeout-minutes: 60
         if: ${{ always() && steps.build-opencv.outcome == 'success' && steps.check-warnings.outcome == 'success' }}
