@@ -89,6 +89,10 @@ jobs:
       timeout-minutes: 60
       run: python3 $GIT_CACHE/warnings-handling.py
       working-directory: ${{ github.workspace }}/build
+    - name: Touch device
+      run: |
+        ${{ env.ANDROID_HOME }}/platform-tools/adb devices
+        ${{ env.ANDROID_HOME }}/platform-tools/adb shell cat /proc/cpuinfo
     - name: Test Java
       timeout-minutes: 60
       id: java-test
