@@ -97,5 +97,7 @@ jobs:
       timeout-minutes: 60
       id: java-test
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./gradlew -i tests_module:connectedAndroidTest
+      run: |
+        ${{ env.ANDROID_HOME }}/platform-tools/adb uninstall org.opencv.tests || 0
+        ./gradlew -i tests_module:connectedAndroidTest
       working-directory: ${{ github.workspace }}/build/android_test
