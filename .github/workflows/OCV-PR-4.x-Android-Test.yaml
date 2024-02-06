@@ -101,3 +101,10 @@ jobs:
         ${{ env.ANDROID_HOME }}/platform-tools/adb uninstall org.opencv.tests || 0
         ./gradlew -i tests_module:connectedAndroidTest
       working-directory: ${{ github.workspace }}/build/android_test
+    - name: Save Unit Test Results
+      timeout-minutes: 5
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-junit-html
+        path: ${{ github.workspace }}/build/android_test/tests_module/build/reports/androidTests/connected/
