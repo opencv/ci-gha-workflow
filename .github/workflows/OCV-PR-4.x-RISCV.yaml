@@ -111,7 +111,7 @@ jobs:
         cmake -G Ninja \
           -S ${{ env.OPENCV_DOCKER_WORKDIR }} \
           -B $HOME/build \
-          ${{ env.EXTRA_CMAKE_OPTIONS }} 
+          ${{ env.EXTRA_CMAKE_OPTIONS }}
     - name: Build OpenCV
       timeout-minutes: 60
       id: build-opencv
@@ -222,7 +222,7 @@ jobs:
           -S ${{ env.OPENCV_DOCKER_WORKDIR }} \
           -B $HOME/build \
           -DOPENCV_EXTRA_MODULES_PATH=$HOME/opencv_contrib/modules \
-          ${{ env.EXTRA_CMAKE_OPTIONS }} 
+          ${{ env.EXTRA_CMAKE_OPTIONS }}
     - name: Build OpenCV Contrib
       timeout-minutes: 60
       run: |

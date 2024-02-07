@@ -21,6 +21,7 @@ env:
   GIT_CACHE_DOCKER: '/home/openvino/git_cache'
   PYTHONPATH: /home/openvino/build/python_loader:$PYTHONPATH
   OPENCV_TEST_DATA_PATH: '/home/openvino/opencv_extra/testdata'
+  #OPENCV_TEST_REQUIRE_DATA: 1
   OPENCV_DOCKER_WORKDIR: '/home/openvino/opencv'
   DNN_MODELS: '/home/openvino/dnn-models'
   PARALLEL_JOBS: 8

@@ -21,6 +21,7 @@ env:
   ANT_HOME: '/usr/share/ant'
   PYTHONPATH: '${{ github.workspace }}/build/python_loader:$PYTHONPATH'
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
+  OPENCV_TEST_REQUIRE_DATA: 1
   GTEST_FILTER_STRING: '-GOTURN.memory_usage:DaSiamRPN.memory_usage:videoio_dynamic.basic_write:Tracking_Boosting.Boosting/0:Tracking_Boosting.Boosting/1:Tracking_Boosting.Boosting/2:Tracking_TLD.TLD/0:Tracking_TLD.TLD/1:Tracking_TLD.TLD/2:Tracking/DistanceAndOverlap.TLD/2:Tracking/DistanceAndOverlap.Scaled_Data_TLD/2:videoio/videocapture_acceleration.read/64:videoio/videocapture_acceleration.read/65:videoio/videocapture_acceleration.read/66:videoio/videocapture_acceleration.read/67'
 
 jobs:

@@ -22,6 +22,7 @@ env:
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
   PYTHONPATH: /home/ci/build/python_loader:$PYTHONPATH
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
+  #OPENCV_TEST_REQUIRE_DATA: 1
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   PARALLEL_JOBS: 16
 
@@ -88,6 +89,28 @@ jobs:
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
+    # download models independently from DNN as some modules are used here and there on other places
+    #- name: Extra DNN models update
+      #timeout-minutes: 60
+      #run: |
+        #DOWNLOAD_MODELS_FILE='download_models.py'
+        #if [ -f ${{ env.DNN_MODELS }}/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt ]; then
+          #LATEST_SAVED_HASH=$(cat ${{ env.DNN_MODELS }}/dnn/latest-hash-${{ env.TARGET_BRANCH_NAME }}.txt)
+        #else
+          #LATEST_SAVED_HASH=""
+        #fi
+        #LATEST_HASH=$(sha256sum $HOME/opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
+        #if [[ $LATEST_HASH == $LATEST_SAVED_HASH ]]; then
+          #echo "DNN models are up to date"
+          #echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
+        #else
+          #echo "Updating DNN models list"
+          #echo "OPENCV_DNN_TEST_DATA_PATH=/home/ci/new-dnn-models" >> $GITHUB_ENV && OPENCV_DNN_TEST_DATA_PATH='/home/ci/new-dnn-models'
+          #mkdir -p "$OPENCV_DNN_TEST_DATA_PATH"
+          #rsync -a --exclude=$DOWNLOAD_MODELS_FILE ${{ env.DNN_MODELS }}/* $OPENCV_DNN_TEST_DATA_PATH
+          #cp $HOME/opencv_extra/testdata/dnn/download_models.py $OPENCV_DNN_TEST_DATA_PATH/dnn
+          #cd $OPENCV_DNN_TEST_DATA_PATH/dnn && python3 download_models.py
+        #fi
     - name: Configure OpenCV
       timeout-minutes: 60
       run: |
