@@ -24,6 +24,7 @@ env:
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   CCACHE_DIR: '/home/ci/.ccache'
   OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
+  OPENCV_GRADLE_VERBOSE_OPTIONS: '--offline -i'
 
 jobs:
   BuildAndTest:
