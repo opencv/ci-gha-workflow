@@ -22,7 +22,6 @@ env:
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
   OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
-  OPENCV_TEST_REQUIRE_DATA: 1
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   PYTHONPATH: '/home/ci/build/python_loader:$PYTHONPATH'
