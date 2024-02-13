@@ -33,7 +33,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-androidsdk-30:20231201
+      image: quay.io/opencv-ci/opencv-androidsdk-30:20240213
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
@@ -79,7 +79,11 @@ jobs:
           mkdir -p /home/ci/build
           cd /home/ci/build
           sed -i 's+https\\://services.gradle.org/distributions/gradle-@GRADLE_VERSION@-all.zip+file\\:/opt/gradle/gradle-@GRADLE_VERSION@-bin.zip+g' ${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/gradle-wrapper/gradle/wrapper/gradle-wrapper.properties.in
-          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_sdk.py" --build_doc --config "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/ndk-18-api-level-21.config.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" /home/ci/build
+          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_sdk.py" --build_doc --config "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/ndk-18-api-level-21.config.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" /home/ci/build | tee /home/ci/build/build-log.txt
+      # disabled till 4.x->5.x merge in main repo
+      #- name: Warning check
+        #timeout-minutes: 60
+        #run: cd /home/ci/build && python3 /home/ci/scripts/warnings-handling.py
       - name: Build local repo from SDK
         timeout-minutes: 60
         run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_aar.sh" OpenCV-android-sdk
