@@ -162,11 +162,6 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_imgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:ml
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_ml --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
     - name: Accuracy:objdetect
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
