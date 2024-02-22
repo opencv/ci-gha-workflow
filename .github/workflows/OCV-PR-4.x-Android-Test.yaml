@@ -91,8 +91,15 @@ jobs:
       working-directory: ${{ github.workspace }}/build
     - name: Touch device
       run: |
+        ${{ env.ANDROID_HOME }}/platform-tools/adb kill-server
+        ${{ env.ANDROID_HOME }}/platform-tools/adb start-server
         ${{ env.ANDROID_HOME }}/platform-tools/adb devices
         ${{ env.ANDROID_HOME }}/platform-tools/adb shell cat /proc/cpuinfo
+    - name: Start adb logging
+      run: |
+        rm -f android_logcat.log
+        ${{ env.ANDROID_HOME }}/platform-tools/adb logcat -c
+        nohup ${{ env.ANDROID_HOME }}/platform-tools/adb logcat 2>&1 | tee android_logcat.log &
     - name: Test Java
       timeout-minutes: 60
       id: java-test
@@ -101,10 +108,15 @@ jobs:
         ${{ env.ANDROID_HOME }}/platform-tools/adb uninstall org.opencv.tests || 0
         ./gradlew -i tests_module:connectedAndroidTest
       working-directory: ${{ github.workspace }}/build/android_test
+    - name: Stop adb logging
+      run: ${{ env.ANDROID_HOME }}/platform-tools/adb kill-server
+      if: ${{ always() }}
     - name: Save Unit Test Results
       timeout-minutes: 5
       if: ${{ always() }}
       uses: actions/upload-artifact@v4
       with:
         name: android-junit-html
-        path: ${{ github.workspace }}/build/android_test/tests_module/build/reports/androidTests/connected/
+        path: |
+          ${{ github.workspace }}/build/android_test/tests_module/build/reports/androidTests/connected/
+          ${{ github.workspace }}/android_logcat.log
