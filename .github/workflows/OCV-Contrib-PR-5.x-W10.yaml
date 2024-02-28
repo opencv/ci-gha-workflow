@@ -309,6 +309,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_xstereo.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
+    - name: Accuracy:ml
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd ${{ github.workspace }}\build && bin\opencv_test_ml.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Performance:3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
