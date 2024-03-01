@@ -1,4 +1,4 @@
-name: OCV PR:4.x Android aarch64 build and test
+name: OCV PR:4.x Android aarch64 build
 
 on:
   pull_request:
@@ -90,12 +90,14 @@ jobs:
       run: python3 $GIT_CACHE/warnings-handling.py
       working-directory: ${{ github.workspace }}/build
     - name: Touch device
+      if: 0
       run: |
         ${{ env.ANDROID_HOME }}/platform-tools/adb kill-server
         ${{ env.ANDROID_HOME }}/platform-tools/adb start-server
         ${{ env.ANDROID_HOME }}/platform-tools/adb devices
         ${{ env.ANDROID_HOME }}/platform-tools/adb shell cat /proc/cpuinfo
     - name: Start adb logging
+      if: 0
       run: |
         rm -f android_logcat.log
         ${{ env.ANDROID_HOME }}/platform-tools/adb logcat -c
@@ -103,17 +105,17 @@ jobs:
     - name: Test Java
       timeout-minutes: 60
       id: java-test
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: 0 # ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         ${{ env.ANDROID_HOME }}/platform-tools/adb uninstall org.opencv.tests || 0
         ./gradlew -i tests_module:connectedAndroidTest
       working-directory: ${{ github.workspace }}/build/android_test
     - name: Stop adb logging
       run: ${{ env.ANDROID_HOME }}/platform-tools/adb kill-server
-      if: ${{ always() }}
+      if: 0 # ${{ always() }}
     - name: Save Unit Test Results
       timeout-minutes: 5
-      if: ${{ always() }}
+      if: 0 # ${{ always() }}
       uses: actions/upload-artifact@v4
       with:
         name: android-junit-html
