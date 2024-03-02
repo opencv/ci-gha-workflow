@@ -113,7 +113,7 @@ jobs:
         timeout-minutes: 60
         run: |
           cd /home/ci/build
-          "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle_aar.sh" OpenCV-android-sdk /home/ci/build/maven_repo
+          "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle_aar.sh" OpenCV-android-sdk /home/ci/build/outputs/maven_repo
       - name: Create Packages
         timeout-minutes: 60
         run: |
