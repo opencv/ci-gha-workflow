@@ -116,7 +116,7 @@ jobs:
         cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules opencv
       working-directory: ${{ github.workspace }}
     - name: Build OpenCV
-      timeout-minutes: 60
+      timeout-minutes: 100
       id: build-opencv-contrib
       run: |
         ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
