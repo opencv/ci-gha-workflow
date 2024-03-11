@@ -345,6 +345,11 @@ jobs:
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: ./bin/opencv_test_ximgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
+    - name: Accuracy:xobjdetect
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: ./bin/opencv_test_xobjdetect --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      working-directory: ${{ github.workspace }}/build
     - name: Accuracy:xphoto
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -474,6 +479,11 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: ./bin/opencv_perf_ximgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
+      working-directory: ${{ github.workspace }}/build
+    - name: Performance:xobjdetect
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: ./bin/opencv_perf_xobjdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:xphoto
       timeout-minutes: 60
