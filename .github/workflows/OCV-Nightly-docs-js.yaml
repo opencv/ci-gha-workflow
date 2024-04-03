@@ -69,7 +69,7 @@ jobs:
     - name: Upload arftifacts
       timeout-minutes: 60
       if: ${{ (always() && steps.build-opencv.outcome == 'success') && github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: OpenCVDocDoxygen${{ matrix.branch }}
         path: /home/ci/build/release/doc_doxygen.zip
