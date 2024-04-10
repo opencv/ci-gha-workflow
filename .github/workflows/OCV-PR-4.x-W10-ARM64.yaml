@@ -20,7 +20,7 @@ env:
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
 
 jobs:
-  BuildAndTest:
+  CrossBuild:
     runs-on: opencv-cn-win
     defaults:
       run:
