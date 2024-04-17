@@ -116,13 +116,13 @@ jobs:
     - name: Configure OpenCV
       timeout-minutes: 60
       run: |
-        cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} opencv
+        cmake -B build ${{ env.EXTRA_CMAKE_OPTIONS }} opencv
       working-directory: ${{ github.workspace }}
     - name: Build OpenCV
       timeout-minutes: 60
       id: build-opencv
       run: |
-        ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
+        cmake --build build -j$PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
       working-directory: ${{ github.workspace }}/build
     - name: Warnings check
       timeout-minutes: 60
