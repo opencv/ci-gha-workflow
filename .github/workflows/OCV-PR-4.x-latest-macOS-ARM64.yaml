@@ -122,7 +122,7 @@ jobs:
       timeout-minutes: 60
       id: build-opencv
       run: |
-        cmake --build build -j$PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
+        cmake --build ${{ github.workspace }}/build -j$PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
       working-directory: ${{ github.workspace }}/build
     - name: Warnings check
       timeout-minutes: 60
