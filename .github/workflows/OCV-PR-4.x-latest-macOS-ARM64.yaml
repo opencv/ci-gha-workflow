@@ -26,7 +26,7 @@ env:
 
 jobs:
   BuildAndTest:
-    runs-on: macos-latest
+    runs-on: macos-14
     defaults:
       run:
         shell: bash
