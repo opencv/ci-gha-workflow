@@ -181,7 +181,8 @@ jobs:
     - name: Accuracy:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_videoio --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      # OpenCV-GStreamer bug with MPEG: https://github.com/opencv/opencv/issues/25547
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_videoio --gtest_filter='-videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Performance:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
