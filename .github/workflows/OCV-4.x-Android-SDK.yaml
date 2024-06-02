@@ -12,7 +12,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: OCV-4.x-Android-SDK-${{ github.ref }}
+  group: OCV-4.10.0-Android-SDK
   cancel-in-progress: true
 
 env:
@@ -50,7 +50,7 @@ jobs:
         timeout-minutes: 60
         run: |
           if [[ "${{ github.event.repository.name }}" == "ci-gha-workflow" || "${{ github.event_name }}" == "schedule" ]]; then
-            echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
+            echo "TARGET_BRANCH_NAME=4.10.0" >> $GITHUB_ENV
           else
             echo "BUILD_PRECOMMIT=1" >> $GITHUB_ENV
           fi
