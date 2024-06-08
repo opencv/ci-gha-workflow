@@ -18,6 +18,7 @@ env:
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
   OPENCV_WORKDIR: ${{ github.workspace }}/opencv
+  OPENCV_JS_BUILD: ${{ github.workspace }}/build_js
   EMSDK_VERSION: 2.0.10
   EMSDK_ROOT: ${{ github.workspace }}/emsdk
 
@@ -65,4 +66,12 @@ jobs:
       timeout-minutes: 60
       run: |
         source ${{ env.EMSDK_ROOT }}/emsdk_env.sh
-        emcmake python ${{ env.OPENCV_WORKDIR }}/platforms/js/build_js.py build_js --build_test
+        emcmake python ${{ env.OPENCV_WORKDIR }}/platforms/js/build_js.py ${{ env.OPENCV_JS_BUILD }} --build_test
+
+    - name: Run tests
+      timeout-minutes: 60
+      run: |
+        source ${{ env.EMSDK_ROOT }}/emsdk_env.sh
+        cd ${{ env.OPENCV_JS_BUILD }}/bin
+        npm install
+        node tests.js
