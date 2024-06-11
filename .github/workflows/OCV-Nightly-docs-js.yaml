@@ -48,7 +48,13 @@ jobs:
       timeout-minutes: 60
       run: |
         cd $HOME/build
-        python ../opencv/platforms/js/build_js.py js
+        emcmake python ../opencv/platforms/js/build_js.py js --build_test
+    - name: Run js tests
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build/js/bin
+        npm install
+        node tests.js
     - name: Configure OpenCV doxygen
       timeout-minutes: 60
       run: |
