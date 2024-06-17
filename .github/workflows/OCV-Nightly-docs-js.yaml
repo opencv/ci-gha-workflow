@@ -40,7 +40,7 @@ jobs:
       run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
     - name: Fetch opencv
       timeout-minutes: 60
-      run: git clone --branch d.kurtaev/opencv_js_tests_old_emsdk https://github.com/dkurt/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+      run: git clone --branch ${{ matrix.branch }} https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Clone opencv_contrib
       timeout-minutes: 60
       run: git clone --single-branch --branch ${{ matrix.branch }} https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
