@@ -1,0 +1,14 @@
+name: OCV Python Rolling Release
+
+on:
+  schedule:
+    - cron: '0 3 * * 6'
+  workflow_dispatch:
+
+
+jobs:
+  OCV-Python-Rolling-4x:
+    uses: opencv/opencv-python/.github/workflows/build_rolling_packages.yml@4.x
+
+  OCV-Python-Rolling-5x:
+    uses: opencv/opencv-python/.github/workflows/build_rolling_packages.yml@5.x
