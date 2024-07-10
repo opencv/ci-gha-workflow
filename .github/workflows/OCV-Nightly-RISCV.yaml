@@ -349,9 +349,11 @@ jobs:
 
   BuildAndTestNDS:
     env:
+      BRANCH: '${{ matrix.branch }}'
+      OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
+      OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
       TEST_RUNNER: '/opt/andes/bin/qemu-riscv64 -cpu andes-ax25 -L /opt/andes/sysroot'
       TEST_OPT: ''
-      BRANCH: '${{ matrix.branch }}'
     strategy:
       max-parallel: 1
       matrix:
@@ -419,25 +421,12 @@ jobs:
       id: build
       run: |
         ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
-    - name: Deploy to remote host
-      timeout-minutes: 60
-      id: deploy
-      run: |
-        rsync -az --stats ${{ env.BUILD_DIR }}/bin/ ${REMOTE_HOST}:${REMOTE_BIN} --delete
-        rsync -az --stats ${{ env.SRC_OPENCV_EXTRA }}/testdata/ ${REMOTE_HOST}:${REMOTE_DATA} --delete
-    - name: Run core test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_core ${TEST_OPT} --gtest_filter=*:-Samples.findFile
     - name: Run core test
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
-        $TEST_RUNNER} bin/opencv_test_core \
+        $TEST_RUNNER bin/opencv_test_core \
           $TEST_OPT \
           --gtest_filter=*
     - name: Run imgproc test
@@ -445,23 +434,25 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
-        ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc \
-          ${{ env.EXTRA_GTEST_OPTIONS }} \
+        $TEST_RUNNER bin/opencv_test_imgproc \
+          $TEST_OPT \
           --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
     - name: Run dnn test
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
-        ${{ env.TEST_RUNNER }} bin/opencv_test_dnn \
-          ${{ env.EXTRA_GTEST_OPTIONS }} \
+        $TEST_RUNNER bin/opencv_test_dnn \
+          $TEST_OPT \
           --gtest_filter=*
 
   BuildAndTestSC:
     env:
+      BRANCH: '${{ matrix.branch }}'
+      OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
+      OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
       TEST_RUNNER: '/opt/sc-dt/tools/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/sc-dt/riscv-gcc/sysroot'
       TEST_OPT: ''
-      BRANCH: '${{ matrix.branch }}'
     strategy:
       max-parallel: 1
       matrix:
@@ -532,25 +523,12 @@ jobs:
       id: build
       run: |
         ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
-    - name: Deploy to remote host
-      timeout-minutes: 60
-      id: deploy
-      run: |
-        rsync -az --stats ${{ env.BUILD_DIR }}/bin/ ${REMOTE_HOST}:${REMOTE_BIN} --delete
-        rsync -az --stats ${{ env.SRC_OPENCV_EXTRA }}/testdata/ ${REMOTE_HOST}:${REMOTE_DATA} --delete
-    - name: Run core test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_core ${TEST_OPT} --gtest_filter=*:-Samples.findFile
     - name: Run core test
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
-        $TEST_RUNNER} bin/opencv_test_core \
+        $TEST_RUNNER bin/opencv_test_core \
           $TEST_OPT \
           --gtest_filter=*
     - name: Run imgproc test
@@ -558,14 +536,14 @@ jobs:
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
-        ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc \
-          ${{ env.EXTRA_GTEST_OPTIONS }} \
+        $TEST_RUNNER bin/opencv_test_imgproc \
+          $TEST_OPT \
           --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
     - name: Run dnn test
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
-        ${{ env.TEST_RUNNER }} bin/opencv_test_dnn \
-          ${{ env.EXTRA_GTEST_OPTIONS }} \
+        $TEST_RUNNER bin/opencv_test_dnn \
+          $TEST_OPT \
           --gtest_filter=*
