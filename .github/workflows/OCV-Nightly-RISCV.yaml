@@ -423,7 +423,7 @@ jobs:
         ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
     - name: Run core test
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build.outcome == 'success' }}
       run: |
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_core \
@@ -431,7 +431,7 @@ jobs:
           --gtest_filter=*
     - name: Run imgproc test
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build.outcome == 'success' }}
       run: |
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_imgproc \
@@ -439,7 +439,7 @@ jobs:
           --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
     - name: Run dnn test
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build.outcome == 'success' }}
       run: |
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_dnn \
@@ -525,7 +525,7 @@ jobs:
         ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
     - name: Run core test
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build.outcome == 'success' }}
       run: |
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_core \
@@ -533,7 +533,7 @@ jobs:
           --gtest_filter=*
     - name: Run imgproc test
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build.outcome == 'success' }}
       run: |
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_imgproc \
@@ -541,7 +541,7 @@ jobs:
           --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
     - name: Run dnn test
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ always() && steps.build.outcome == 'success' }}
       run: |
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_dnn \
