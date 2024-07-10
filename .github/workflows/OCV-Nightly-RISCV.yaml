@@ -409,9 +409,7 @@ jobs:
           -B ${{ env.BUILD_DIR }} \
           -DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-andes-gcc.toolchain.cmake \
           -DRISCV_GCC_INSTALL_ROOT=/opt/andes \
-          -DCPU_BASELINE=RVV \
-          -DCPU_BASELINE_REQUIRE=RVV \
-          -DRISCV_RVV_SCALABLE=ON \
+          -DWITH_NDSRVP=ON \
           -DBUILD_SHARED_LIBS=OFF \
           -DWITH_OPENCL=OFF \
           -DOPENCV_EXTRA_MODULES_PATH=${{ env.SRC_OPENCV_CONTRIB }}/modules \
