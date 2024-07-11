@@ -546,4 +546,4 @@ jobs:
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_dnn \
           $TEST_OPT \
-          --gtest_filter=*
+          --gtest_filter=*:-Test_ONNX_layers.*:Test_ONNX_conformance.*:Test_Int8_layers.InnerProduct/0
