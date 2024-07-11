@@ -353,7 +353,7 @@ jobs:
       OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
       OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
       TEST_RUNNER: '/opt/andes/bin/qemu-riscv64 -cpu andes-ax25 -L /opt/andes/sysroot'
-      TEST_OPT: ''
+      TEST_OPT: '--skip_unstable=1'
     strategy:
       max-parallel: 1
       matrix:
@@ -452,7 +452,7 @@ jobs:
       OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
       OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
       TEST_RUNNER: '/opt/sc-dt/tools/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/sc-dt/riscv-gcc/sysroot'
-      TEST_OPT: ''
+      TEST_OPT: '--skip_unstable=1'
     strategy:
       max-parallel: 1
       matrix:
