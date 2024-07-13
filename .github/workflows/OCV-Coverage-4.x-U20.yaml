@@ -179,7 +179,7 @@ jobs:
       run: cd /home/ci/build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java --test_threads=2 --test_tag_skip=size_hd
     - name: Save Unit Test Results
       timeout-minutes: 60
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html
@@ -205,7 +205,7 @@ jobs:
         genhtml --prefix /home/ci -t "OpenCV: ${{ env.TARGET_BRANCH_NAME }}-$GITHUB_SHA" -o /home/ci/build/test_coverage_html /home/ci/build/opencv_test_filtered.info
     - name: Upload test coverage
       timeout-minutes: 60
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() && steps.coverage-test-report.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: test-coverage-html
@@ -291,7 +291,7 @@ jobs:
         genhtml --prefix /home/ci -t "OpenCV: ${{ env.TARGET_BRANCH_NAME }}-$GITHUB_SHA" -o /home/ci/build/perf_coverage_html /home/ci/build/opencv_perf_filtered.info
     - name: Upload perf coverage
       timeout-minutes: 60
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() && steps.coverage-perf-report.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: perf-coverage-html
