@@ -46,9 +46,9 @@ jobs:
       run: git clone --single-branch --branch ${{ matrix.branch }} https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
     - name: Update Node.js
       run: |
-        apt-get update
-        apt-get autoremove -y nodejs
-        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs
+        sudo apt-get update
+        sudo apt-get autoremove -y nodejs
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && sudo apt-get install -y nodejs
     - name: Build js (default)
       timeout-minutes: 60
       run: |
