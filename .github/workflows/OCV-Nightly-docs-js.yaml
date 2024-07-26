@@ -67,7 +67,8 @@ jobs:
       run: |
         cd $HOME/build/js_threads/bin
         npm install
-        node tests.js
+        npm install --no-save puppeteer
+        node run_puppeteer.js        
     - name: Configure OpenCV doxygen
       timeout-minutes: 60
       run: |
