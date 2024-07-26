@@ -44,11 +44,6 @@ jobs:
     - name: Clone opencv_contrib
       timeout-minutes: 60
       run: git clone --single-branch --branch ${{ matrix.branch }} https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
-    - name: Update Node.js
-      run: |
-        sudo apt-get update
-        sudo apt-get autoremove -y nodejs
-        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && sudo apt-get install -y nodejs
     - name: Build js (default)
       timeout-minutes: 60
       run: |
@@ -72,7 +67,7 @@ jobs:
       run: |
         cd $HOME/build/js_threads/bin
         npm install
-        npm install --no-save puppeteer
+        npm install --no-save puppeteer@13.7.0
         node run_puppeteer.js        
     - name: Configure OpenCV doxygen
       timeout-minutes: 60
