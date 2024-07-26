@@ -60,7 +60,7 @@ jobs:
       timeout-minutes: 60
       run: |
         cd $HOME/build
-        emcmake python ../opencv/platforms/js/build_js.py js_threads --build_test --threads
+        emcmake python ../opencv/platforms/js/build_js.py js_threads --build_wasm --build_test --threads
     - name: Run js tests (threads)
       timeout-minutes: 60
       if: ${{ always() && matrix.branch == '4.x' }}
