@@ -44,7 +44,7 @@ jobs:
     - name: Clone opencv_contrib
       timeout-minutes: 60
       run: git clone --single-branch --branch ${{ matrix.branch }} https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
-    - name: Build js
+    - name: Build js (default)
       timeout-minutes: 60
       run: |
         cd $HOME/build
@@ -54,6 +54,18 @@ jobs:
       if: ${{ always() && matrix.branch == '4.x' }}
       run: |
         cd $HOME/build/js/bin
+        npm install
+        node tests.js
+    - name: Build js (threads)
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build
+        emcmake python ../opencv/platforms/js/build_js.py js_threads --build_test --threads
+    - name: Run js tests (threads)
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '4.x' }}
+      run: |
+        cd $HOME/build/js_threads/bin
         npm install
         node tests.js
     - name: Configure OpenCV doxygen
