@@ -67,12 +67,11 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && matrix.branch == '4.x' }}
       run: |
+        export LD_LIBRARY_PATH=$HOME/libnss/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
         cd $HOME/build/js_threads/bin
         npm install
         npm install --no-save puppeteer@13.7.0
         node run_puppeteer.js    
-      env:
-        LD_LIBRARY_PATH: $HOME/libnss/usr/lib/x86_64-linux-gnu/
     - name: Configure OpenCV doxygen
       timeout-minutes: 60
       run: |
