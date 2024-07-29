@@ -61,13 +61,16 @@ jobs:
       run: |
         cd $HOME/build
         emcmake python ../opencv/platforms/js/build_js.py js_threads --build_wasm --build_test --threads
-        wget http://launchpadlibrarian.net/724214463/libnss3_3.98-0ubuntu0.20.04.2_amd64.deb
-        dpkg -x libnss3_3.98-0ubuntu0.20.04.2_amd64.deb $HOME/libnss
     - name: Run js tests (threads)
       timeout-minutes: 60
       if: ${{ always() && matrix.branch == '4.x' }}
       run: |
-        export LD_LIBRARY_PATH=$HOME/libnss/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
+        wget http://launchpadlibrarian.net/724214463/libnss3_3.98-0ubuntu0.20.04.2_amd64.deb
+        wget http://launchpadlibrarian.net/720519830/libnspr4_4.35-0ubuntu0.20.04.1_amd64.deb
+        dpkg -x libnss3_3.98-0ubuntu0.20.04.2_amd64.deb $HOME/libs
+        dpkg -x libnspr4_4.35-0ubuntu0.20.04.1_amd64.deb $HOME/libs
+
+        export LD_LIBRARY_PATH=$HOME/libs/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
         cd $HOME/build/js_threads/bin
         npm install
         npm install --no-save puppeteer@13.7.0
