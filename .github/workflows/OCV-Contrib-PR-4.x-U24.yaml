@@ -439,7 +439,7 @@ jobs:
       run: cd $HOME/build && xvfb-run -a python3 $HOME/opencv/modules/ts/misc/run.py . -a -t java
     - name: Save Unit Test Results
       timeout-minutes: 60
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv-contrib.outcome == 'success' }}
       with:
         name: junit-html-ubuntu24-x86-64
