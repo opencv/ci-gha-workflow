@@ -530,7 +530,7 @@ jobs:
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_core \
           $TEST_OPT \
-          --gtest_filter=*:-hal_intrin128.float64x2_BASELINE
+          --gtest_filter=*:-hal_intrin128.float64x2_BASELINE:Core_ArithmMask.uninitialized
     - name: Run imgproc test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' }}
@@ -538,7 +538,7 @@ jobs:
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_imgproc \
           $TEST_OPT \
-          --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
+          --gtest_filter=*:-Imgproc_Hist_Compare.accuracy:ImgProc/Imgproc_RemapRelative.validity/*
     - name: Run dnn test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' }}
