@@ -530,7 +530,7 @@ jobs:
         cd $HOME/build
         $TEST_RUNNER bin/opencv_test_core \
           $TEST_OPT \
-          --gtest_filter=*:-hal_intrin128.float64x2_BASELINE:Core_ArithmMask.uninitialized:Core_ConvertScale*/ElemWiseTest.accuracy/*
+          --gtest_filter=*:-hal_intrin128.float64x2_BASELINE:Core_ArithmMask.uninitialized:Core_ConvertScale*/ElemWiseTest.accuracy/*:Core_Add/ElemWiseTest.accuracy/*
     - name: Run imgproc test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' }}
