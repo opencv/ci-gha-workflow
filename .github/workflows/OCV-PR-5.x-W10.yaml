@@ -124,10 +124,18 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_core.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
-    - name: Accuracy:dnn
+    - name: Accuracy:dnn AUTO
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
+    - name: Accuracy:dnn Classic
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: set OPENCV_FORCE_DNN_ENGINE=1 && cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
+    - name: Accuracy:dnn New
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: set OPENCV_FORCE_DNN_ENGINE=2 && cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:features2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}

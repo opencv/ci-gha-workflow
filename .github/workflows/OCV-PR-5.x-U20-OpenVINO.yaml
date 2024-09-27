@@ -120,10 +120,18 @@ jobs:
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
-    - name: Accuracy:dnn
+    - name: Accuracy: AUTO dnn
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy: Classic dnn
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: export OPENCV_FORCE_DNN_ENGINE=1 && cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy: New dnn
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: export OPENCV_FORCE_DNN_ENGINE=2 && cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:gapi
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
