@@ -131,10 +131,14 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_core --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:dnn
+    - name: Accuracy:DNN_AUTO
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy:DNN_Classic
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: export OPENCV_FORCE_DNN_ENGINE=1 && cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:features2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
