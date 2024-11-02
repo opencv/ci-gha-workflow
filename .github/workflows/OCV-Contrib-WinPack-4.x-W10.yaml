@@ -200,7 +200,7 @@ jobs:
         %CI_SCRIPTS%\winpack_create.cmd
     - name: Save WinPack
       timeout-minutes: 60
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: WinPack
         path: artifacts\distrib.7z.exe

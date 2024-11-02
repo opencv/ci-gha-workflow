@@ -265,7 +265,7 @@ jobs:
       working-directory: ${{ github.workspace }}/build
     - name: Save Unit Test Results
       timeout-minutes: 60
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html-macos-arm64
