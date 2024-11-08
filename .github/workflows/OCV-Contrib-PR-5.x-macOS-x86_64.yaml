@@ -337,10 +337,10 @@ jobs:
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: ./bin/opencv_test_wechat_qrcode --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:xfeatures
+    - name: Accuracy:xfeatures2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: ./bin/opencv_test_xfeatures --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: ./bin/opencv_test_xfeatures2d --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:ximgproc
       timeout-minutes: 60
@@ -472,10 +472,10 @@ jobs:
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: ./bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
-    - name: Performance:xfeatures
+    - name: Performance:xfeatures2d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: ./bin/opencv_perf_xfeatures --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
+      run: ./bin/opencv_perf_xfeatures2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:ximgproc
       timeout-minutes: 60
