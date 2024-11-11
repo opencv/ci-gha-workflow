@@ -1,0 +1,242 @@
+name: OCV Nightly U24 DBG
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-Nightly-U24-DBG.yaml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
+
+
+concurrency:
+  group: OCV-Nightly-U24-DBG-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SRC_OPENCV: '/home/ubuntu/opencv'
+  SRC_OPENCV_CONTRIB: '/home/ubuntu/opencv_contrib'
+  SRC_OPENCV_EXTRA: '/home/ubuntu/opencv_extra'
+  BUILD_DIR: '/home/ubuntu/build'
+  CCACHE_DIR: '/home/ubuntu/.ccache'
+  GIT_CACHE_DOCKER: '/home/ubuntu/git_cache'
+  OPENCV_DOWNLOAD_PATH: '/home/ubuntu/binaries_cache'
+  OPENCV_TEST_DATA_PATH: '/home/ubuntu/opencv_extra/testdata'
+  EXTRA_CMAKE_OPTIONS: '-DCMAKE_BUILD_TYPE=Debug -DWITH_IPP=OFF -DCPU_DISPATCH= -DCV_DISABLE_OPTIMIZATION=ON'
+  PARALLEL_JOBS: 4
+  EXTRA_TEST_OPT: '--skip_unstable=1 --test_threads=4'
+  EXTRA_PERF_OPT: '--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=4'
+  OPENCV_BUFFER_AREA_ALWAYS_SAFE: '1'
+
+jobs:
+  BuildAndTest:
+    env:
+      TEST_RUNNER: 'xvfb-run -a'
+      BRANCH: '${{ matrix.branch }}'
+      MOD_FEATURES: "${{ matrix.branch == '4.x' && 'features2d' || 'features' }}"
+    strategy:
+      max-parallel: 1
+      matrix:
+        branch: ['4.x', '5.x']
+    runs-on: opencv-cn-lin-x86-64
+    defaults:
+      run:
+        shell: bash
+        working-directory: '/home/ubuntu/build'
+    container:
+      image: quay.io/opencv-ci/opencv-ubuntu-24.04:20241031
+      volumes:
+        - /home/opencv-cn/git_cache:/home/ubuntu/git_cache
+        - /home/opencv-cn/ci_cache/opencv:/home/ubuntu/.ccache
+        - /home/opencv-cn/binaries_cache:/home/ubuntu/binaries_cache
+    steps:
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/home/ubuntu" >> $GITHUB_ENV
+    - name: Fetch opencv
+      timeout-minutes: 60
+      run: |
+        rm -rf ${{ env.SRC_OPENCV }}
+        git clone \
+          --single-branch \
+          --branch ${{ env.BRANCH }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
+          https://github.com/opencv/opencv.git \
+          ${{ env.SRC_OPENCV }}
+    - name: Fetch opencv_contrib
+      timeout-minutes: 60
+      run: |
+        rm -rf ${{ env.SRC_OPENCV_CONTRIB }}
+        git clone \
+          --single-branch \
+          --branch ${{ env.BRANCH }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
+          https://github.com/opencv/opencv_contrib.git \
+          ${{ env.SRC_OPENCV_CONTRIB }}
+    - name: Fetch opencv_extra
+      timeout-minutes: 60
+      run: |
+        rm -rf ${{ env.SRC_OPENCV_EXTRA }}
+        git clone \
+          --single-branch \
+          --branch ${{ env.BRANCH }} \
+          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
+          https://github.com/opencv/opencv_extra.git \
+          ${{ env.SRC_OPENCV_EXTRA }}
+
+    - name: Configure OpenCV
+      timeout-minutes: 60
+      run: |
+        cmake -G Ninja \
+          -S ${{ env.SRC_OPENCV }} \
+          -B ${{ env.BUILD_DIR }} \
+          ${{ env.EXTRA_CMAKE_OPTIONS }} \
+          -DOPENCV_EXTRA_MODULES_PATH=${{ env.SRC_OPENCV_CONTRIB }}/modules \
+          -DCMAKE_INSTALL_PREFIX=${{ env.BUILD_DIR }}/install
+    - name: Build OpenCV
+      timeout-minutes: 60
+      id: build
+      run: |
+        ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
+    - name: Warnings check
+      timeout-minutes: 60
+      run: python3 ${HOME}/scripts/warnings-handling.py
+    - name: Accuracy:3d
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_3d ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:calib
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_calib ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:calib3d
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '4.x' && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_calib3d ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:core
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_core ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:DNN_AUTO
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_dnn ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:DNN_Classic
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      env:
+        OPENCV_FORCE_DNN_ENGINE: '1'
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_dnn ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:features
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_${MOD_FEATURES} ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:flann
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_flann ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:gapi
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '4.x' && steps.build.outcome == 'success' }}
+      # G-API bug with GCC 11+: https://github.com/opencv/opencv/issues/19678
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_gapi ${{ env.EXTRA_TEST_OPT }} --gtest_filter='*:-AsyncAPICancelation/cancel/*:Camera*'
+    - name: Accuracy:highgui
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_highgui ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:imgcodecs
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_imgcodecs ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:imgproc
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_imgproc ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:objdetect
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_objdetect ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:photo
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_photo ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:stereo
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_stereo ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:stitching
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_stitching ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:video
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_video ${{ env.EXTRA_TEST_OPT }}
+    - name: Accuracy:videoio
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      # OpenCV-GStreamer bug with MPEG: https://github.com/opencv/opencv/issues/25547
+      run: ${{ env.TEST_RUNNER }} bin/opencv_test_videoio --gtest_filter='-videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' ${{ env.EXTRA_TEST_OPT }}
+    - name: Performance:3d
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_3d ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:calib
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_calib ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:calib3d
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '4.x' && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_calib3d ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:core
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_core ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:dnn
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_dnn ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:${MOD_FEATURES}
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_${MOD_FEATURES} ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:gapi
+      timeout-minutes: 60
+      if: ${{ always() && matrix.branch == '4.x' && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_gapi ${{ env.EXTRA_PERF_OPT }} --gtest_filter=*:-SubPerfTestFluid/*
+    - name: Performance:imgcodecs
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_imgcodecs ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:imgproc
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_imgproc ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:objdetect
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_objdetect ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:photo
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_photo ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:stereo
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_stereo ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:stitching
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_stitching ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:video
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_video ${{ env.EXTRA_PERF_OPT }}
+    - name: Performance:videoio
+      timeout-minutes: 60
+      if: ${{ always() && steps.build.outcome == 'success' }}
+      run: ${{ env.TEST_RUNNER }} bin/opencv_perf_videoio ${{ env.EXTRA_PERF_OPT }}
+
