@@ -33,6 +33,7 @@ jobs:
       REMOTE_DATA: './testdata'
       TEST_RUNNER: 'ssh lichee1'
       BRANCH: '${{ matrix.branch }}'
+      MOD_FEATURES: "${{ matrix.branch == '4.x' && 'features2d' || 'features' }}"
     strategy:
       max-parallel: 1
       matrix:
@@ -150,13 +151,13 @@ jobs:
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
             ${REMOTE_BIN}/opencv_test_dnn \
               --gtest_filter=*:-Test_Int8_layers.InnerProduct/0:Test_Caffe_layers.InnerProduct/0:Test_Caffe_layers.layer_prelu_fc/0:Test_TensorFlow_layers.matmul/0:Test_TensorFlow_layers.lstm/0:Test_Torch_layers.run_reshape_single_sample/0
-    - name: Run features2d test
+    - name: Run features test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
       run: |
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_features2d
+            ${REMOTE_BIN}/opencv_test_${MOD_FEATURES}
     - name: Run objdetect test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
@@ -195,6 +196,7 @@ jobs:
       TEST_RUNNER: 'ssh canmv1'
       TEST_OPT: '--test_tag_skip=mem_512mb'
       BRANCH: '${{ matrix.branch }}'
+      MOD_FEATURES: "${{ matrix.branch == '4.x' && 'features2d' || 'features' }}"
     strategy:
       max-parallel: 1
       matrix:
@@ -311,13 +313,13 @@ jobs:
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
             ${REMOTE_BIN}/opencv_test_dnn ${TEST_OPT} --gtest_filter=*:-Test_Caffe_layers.InnerProduct/0
-    - name: Run features2d test
+    - name: Run features test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
       run: |
         $TEST_RUNNER \
           OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_features2d ${TEST_OPT} --gtest_filter=*:-KAZE/DetectorScaleInvariance.scale/*
+            ${REMOTE_BIN}/opencv_test_${MOD_FEATURES} ${TEST_OPT} --gtest_filter=*:-KAZE/DetectorScaleInvariance.scale/*
     - name: Run objdetect test
       timeout-minutes: 60
       if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
