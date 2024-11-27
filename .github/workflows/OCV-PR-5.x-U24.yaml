@@ -23,6 +23,7 @@ env:
   PYTHONPATH: /home/ubuntu/build/python_loader:$PYTHONPATH
   OPENCV_TEST_DATA_PATH: '/home/ubuntu/opencv_extra/testdata'
   OPENCV_TEST_REQUIRE_DATA: 1
+  OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
   OPENCV_DOCKER_WORKDIR: '/home/ubuntu/opencv'
   DNN_MODELS: '/home/ubuntu/dnn-models'
   PARALLEL_JOBS: 8

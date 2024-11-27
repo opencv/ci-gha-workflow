@@ -22,7 +22,8 @@ env:
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
   PYTHONPATH: /home/ci/build/python_loader:$PYTHONPATH
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
-  #OPENCV_TEST_REQUIRE_DATA: 1
+  #OPENCV_TEST_REQUIRE_DATA: 1 # There is no DNN models sync step
+  #OPENCV_TEST_CHECK_OPTIONAL_DATA: 1 # There is no DNN models sync step
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   PARALLEL_JOBS: 16
 
