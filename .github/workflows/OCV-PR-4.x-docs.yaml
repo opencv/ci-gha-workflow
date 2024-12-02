@@ -29,7 +29,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-docs-22.04:20240219
+      image: quay.io/opencv-ci/opencv-docs-22.04:20241202
       options: --user ci
     steps:
     - name: Define proper HOME path
