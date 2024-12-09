@@ -32,6 +32,10 @@ jobs:
       image: quay.io/opencv-ci/opencv-docs-22.04:20241202
       options: --user ci
     steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
     - name: Define proper HOME path
       timeout-minutes: 60
       run: echo "HOME=/home/ci" >> $GITHUB_ENV
@@ -137,9 +141,10 @@ jobs:
       if: ${{ always() && steps.opencv-doxygen.outcome == 'success' }}
       timeout-minutes: 60
       id: build-opencv
-      run: |
-        cd $HOME/build
-        cmake --build . --config release --target doxygen -- -j$(nproc)
+      working-directory: ${{ env.HOME }}/build
+      run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
+    - name: Warnings check
+      run: python3 scripts/warnings-handling.py ${{ env.HOME }}/build/log.txt
     - name: Pylint
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
