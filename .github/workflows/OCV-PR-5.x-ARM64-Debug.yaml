@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DCV_DISABLE_OPTIMIZATION=ON -DCMAKE_BUILD_TYPE=Debug -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_OPENCL=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DCV_DISABLE_OPTIMIZATION=ON -DCMAKE_BUILD_TYPE=Debug -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_OPENCL=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
