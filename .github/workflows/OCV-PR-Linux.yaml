@@ -66,3 +66,8 @@ jobs:
         generator: 'Ninja'
         enable_contrib: true
         options: '-DBUILD_DOCS=ON -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_JPEGXL=ON'
+
+    - uses: ./run-tests
+      with:
+        workdir: '/home/ubuntu'
+        runner: 'xvfb-run -a'

@@ -20,7 +20,8 @@ runs:
       shell: bash
       run: |
         echo "::group::Configure"
-        mkdir -p build && pushd build && rm -rf * && popd
+        rm -rf build
+        mkdir -p build
         cmake \
           -S opencv \
           -B build \
