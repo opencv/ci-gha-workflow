@@ -94,51 +94,51 @@ runs:
   - name: Performance:calib3d
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_calib3d ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_calib3d ${{ inputs.perf_opt }} 
   - name: Performance:core
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_core ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_core ${{ inputs.perf_opt }} 
   - name: Performance:dnn
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_dnn ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_dnn ${{ inputs.perf_opt }} 
   - name: Performance:features2d
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_features2d ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_features2d ${{ inputs.perf_opt }} 
   - name: Performance:gapi
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_gapi ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_gapi ${{ inputs.perf_opt }} 
   - name: Performance:imgcodecs
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_imgcodecs ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_imgcodecs ${{ inputs.perf_opt }} 
   - name: Performance:imgproc
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_imgproc ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_imgproc ${{ inputs.perf_opt }} 
   - name: Performance:objdetect
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_objdetect ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_objdetect ${{ inputs.perf_opt }} 
   - name: Performance:photo
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_photo ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_photo ${{ inputs.perf_opt }} 
   - name: Performance:stitching
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_stitching ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_stitching ${{ inputs.perf_opt }} 
   - name: Performance:video
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_video ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_video ${{ inputs.perf_opt }} 
   - name: Performance:videoio
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_videoio ${{ perf_opt }} 
+    run: ${{ inputs.runner }} bin/opencv_perf_videoio ${{ inputs.perf_opt }} 
 
   # Python
 
