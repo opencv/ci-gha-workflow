@@ -26,65 +26,50 @@ runs:
 
   # Accuracy
 
-  - name: Accuracy:calib3d
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_calib3d ${{ inputs.acc_opt }}
-  - name: Accuracy:core
-    shell: bash
+    run: ${{ inputs.runner }} python3 ${{ github.workspace }}/scripts/runner.py bin/opencv_test_calib3d ${{ inputs.acc_opt }}
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_core ${{ inputs.acc_opt }}
-  - name: Accuracy:dnn
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_dnn ${{ inputs.acc_opt }}
-  - name: Accuracy:features2d
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_features2d ${{ inputs.acc_opt }}
-  - name: Accuracy:flann
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_flann ${{ inputs.acc_opt }}
-  - name: Accuracy:gapi
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     # G-API bug with GCC 11+: https://github.com/opencv/opencv/issues/19678
     run: ${{ inputs.runner }} bin/opencv_test_gapi ${{ inputs.acc_opt }} --gtest_filter='-AsyncAPICancelation/cancel/*'
-  - name: Accuracy:highgui
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_highgui ${{ inputs.acc_opt }}
-  - name: Accuracy:imgcodecs
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_imgcodecs ${{ inputs.acc_opt }}
-  - name: Accuracy:imgproc
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_imgproc ${{ inputs.acc_opt }}
-  - name: Accuracy:ml
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_ml ${{ inputs.acc_opt }}
-  - name: Accuracy:objdetect
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_objdetect ${{ inputs.acc_opt }}
-  - name: Accuracy:photo
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_photo ${{ inputs.acc_opt }}
-  - name: Accuracy:stitching
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_stitching ${{ inputs.acc_opt }}
-  - name: Accuracy:video
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     run: ${{ inputs.runner }} bin/opencv_test_video ${{ inputs.acc_opt }}
-  - name: Accuracy:videoio
-    shell: bash
+  - shell: bash
     working-directory: ${{ inputs.workdir }}/build
     # OpenCV-GStreamer bug with MPEG: https://github.com/opencv/opencv/issues/25547
     run: ${{ inputs.runner }} bin/opencv_test_videoio ${{ inputs.acc_opt }} --gtest_filter='-videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' 
