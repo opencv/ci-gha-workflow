@@ -21,16 +21,16 @@ inputs:
     description: "Group in skip-list file"
   enable_accuracy:
     description: "Enable accuracy tests"
-    default: true
+    default: "true"
   enable_performance:
     description: "Enable performance tests"
-    default: true
+    default: "true"
   enable_python:
     description: "Enable Python testing"
-    default: true
+    default: "true"
   enable_java:
     description: "Enable Java testing"
-    default: true
+    default: "true"
 
 runs:
   using: "composite"
@@ -42,8 +42,10 @@ runs:
     run: |
       for m in ${{ inputs.modules }} ; do
         python3 scripts/runner.py \
-          --wrap='${{ inputs.wrapper }}' \
-          --workdir='${{ inputs.workdir }}/build' \
+          '--wrap=${{ inputs.wrapper }}' \
+          '--workdir=${{ inputs.workdir }}/build' \
+          '--skiplist=${{ inputs.skiplist }}' \
+          '--skipgroup=${{ inputs.skipgroup }}' \
           ${{ inputs.accuracy_opt }} \
           bin/opencv_test_${m} || FAILED=1
       done
@@ -55,8 +57,10 @@ runs:
     run: |
       for m in ${{ inputs.modules }} ; do
         python3 scripts/runner.py \
-          --wrap='${{ inputs.wrapper }}' \
-          --workdir='${{ inputs.workdir }}/build' \
+          '--wrap=${{ inputs.wrapper }}' \
+          '--workdir=${{ inputs.workdir }}/build' \
+          '--skiplist=${{ inputs.skiplist }}' \
+          '--skipgroup=${{ inputs.skipgroup }}' \
           ${{ inputs.performance_opt }} \
           bin/opencv_perf_${m} || FAILED=1
       done
