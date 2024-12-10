@@ -14,10 +14,6 @@ concurrency:
 
 env:
   EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ubuntu/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_JPEGXL=ON'
-  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
-  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
-  TARGET_BRANCH_NAME: ${{ github.base_ref }}
   ANT_HOME: '/usr/share/ant'
   GIT_CACHE_DOCKER: '/home/ubuntu/git_cache'
   PYTHONPATH: /home/ubuntu/build/python_loader:$PYTHONPATH
@@ -56,5 +52,6 @@ jobs:
         target_branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '4.x' || github.base_ref }}
         author: ${{ github.event.pull_request.user.login }}
         source_branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}
+        gitcache: '/home/ubuntu/git_cache'
         home: '/home/ubuntu'
         workdir: '/home/ubuntu'

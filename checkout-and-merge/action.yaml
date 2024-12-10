@@ -12,6 +12,8 @@ inputs:
     description: "PR author"
   source_branch:
     description: "Source PR branch"
+  gitcache:
+    description: "Root folder with git cache (can contain opencv.git/, opencv_contrib.git/, opencv_extra.git/)"
   home:
     description: "Home directory on executor (for git configuration)"
     default: "/home/ubuntu"
@@ -21,9 +23,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-
-  - shell: bash
-    run: echo '${{ toJSON(github) }}'
 
   # opencv
   
@@ -35,7 +34,7 @@ runs:
       rm -rf opencv
       HOME=${{ inputs.home }} \
       git clone \
-        --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
+        --reference-if-able ${{ inputs.gitcache }}/opencv.git \
         --single-branch \
         --branch ${{ inputs.target_branch }} \
         https://github.com/opencv/opencv.git
@@ -68,7 +67,7 @@ runs:
       rm -rf opencv_contrib
       HOME=${{ inputs.home }} \
       git clone \
-        --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
+        --reference-if-able ${{ inputs.gitcache }}/opencv_contrib.git \
         --single-branch \
         --branch ${{ inputs.target_branch }} \
         https://github.com/opencv/opencv_contrib.git
@@ -98,7 +97,7 @@ runs:
       rm -rf opencv_extra
       HOME=${{ inputs.home }} \
       git clone \
-        --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
+        --reference-if-able ${{ inputs.gitcache }}/opencv_extra.git \
         --single-branch \
         --branch ${{ inputs.target_branch }} \
         https://github.com/opencv/opencv_extra.git
