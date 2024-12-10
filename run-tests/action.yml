@@ -51,7 +51,10 @@ runs:
           ${{ inputs.accuracy_opt }} \
           bin/opencv_test_${m} || FAILED=1
       done
-      [ -n ${FAILED} ] && exit 1
+      if [ -n "${FAILED}" ] ; then
+        echo "::error::Some tests have failed"
+        exit 1
+      fi
 
   - if: ${{ inputs.enable_accuracy }}
     uses: actions/upload-artifact@v4
@@ -74,7 +77,10 @@ runs:
           ${{ inputs.performance_opt }} \
           bin/opencv_perf_${m} || FAILED=1
       done
-      [ -n ${FAILED} ] && exit 1
+      if [ -n "${FAILED}" ] ; then
+        echo "::error::Some tests have failed"
+        exit 1
+      fi
 
   - if: ${{ inputs.enable_performance }}
     uses: actions/upload-artifact@v4
