@@ -41,6 +41,12 @@ runs:
     working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
+      echo "OPENCV_MAIN_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads https://github.com/${{ inputs.author }}/opencv ${{ inputs.source_branch }})" >> $GITHUB_ENV
+
+  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'main') && inputs.source_branch && env.OPENCV_MAIN_FORK }}
+    working-directory: ${{ inputs.workdir }}
+    shell: bash
+    run: |
       echo "::group::Merge opencv"
       HOME=${{ inputs.home }} \
       git pull \
@@ -69,7 +75,7 @@ runs:
     working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
-      echo "OPENCV_CONTRIB_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads "https://github.com/${{ inputs.author }}/opencv_contrib)" >> $GITHUB_ENV
+      echo "OPENCV_CONTRIB_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads https://github.com/${{ inputs.author }}/opencv_contrib ${{ inputs.source_branch }})" >> $GITHUB_ENV
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'contrib') && inputs.source_branch && env.OPENCV_CONTRIB_FORK }}
     shell: bash
@@ -101,7 +107,7 @@ runs:
     working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
-      echo "OPENCV_EXTRA_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads "https://github.com/${{ inputs.author }}/opencv_extra)" >> $GITHUB_ENV
+      echo "OPENCV_EXTRA_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads https://github.com/${{ inputs.author }}/opencv_extra ${{ inputs.source_branch }})" >> $GITHUB_ENV
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'extra') && inputs.source_branch && env.OPENCV_EXTRA_FORK }}
     shell: bash
