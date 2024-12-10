@@ -35,8 +35,6 @@ runs:
         --single-branch \
         --branch ${{ inputs.target_branch }} \
         https://github.com/opencv/opencv.git
-      pwd
-      ls -la
       echo "::endgroup::"
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'main') && inputs.source_branch }}
@@ -53,11 +51,7 @@ runs:
       pwd
       ls -la
       HOME=${{ inputs.home }} \
-      git pull \
-        -v \
-        -C opencv \
-        "https://github.com/${{ inputs.author }}/opencv" \
-        "${{ inputs.source_branch }}"
+      git -C opencv pull -v "https://github.com/${{ inputs.author }}/opencv" "${{ inputs.source_branch }}"
       echo "::endgroup::"
 
   #  opencv_contrib
@@ -86,10 +80,7 @@ runs:
     run: |
       echo "::group::Merge opencv_contrib"
       HOME=${{ inputs.home }} \
-      git pull \
-        -v \
-        "https://github.com/${{ inputs.author }}/opencv_contrib" \
-        "${{ inputs.source_branch }}"
+      git -C opencv_contrib pull -v "https://github.com/${{ inputs.author }}/opencv_contrib" "${{ inputs.source_branch }}"
       echo "::endgroup::"
 
   # opencv_extra
@@ -118,8 +109,5 @@ runs:
     run: |
       echo "::group::Merge opencv_extra"
       HOME=${{ inputs.home }} \
-      git pull \
-        -v \
-        "https://github.com/${{ inputs.author }}/opencv_extra" \
-        "${{ inputs.source_branch }}"
+      git -C opencv_extra pull -v "https://github.com/${{ inputs.author }}/opencv_extra" "${{ inputs.source_branch }}"
       echo "::endgroup::"
