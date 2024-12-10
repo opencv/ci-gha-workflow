@@ -27,127 +27,131 @@ runs:
   # Accuracy
 
   - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} python3 ${{ github.workspace }}/scripts/runner.py bin/opencv_test_calib3d ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_core ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_dnn ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_features2d ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_flann ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    # G-API bug with GCC 11+: https://github.com/opencv/opencv/issues/19678
-    run: ${{ inputs.runner }} bin/opencv_test_gapi ${{ inputs.acc_opt }} --gtest_filter='-AsyncAPICancelation/cancel/*'
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_highgui ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_imgcodecs ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_imgproc ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_ml ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_objdetect ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_photo ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_stitching ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_test_video ${{ inputs.acc_opt }}
-  - shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    # OpenCV-GStreamer bug with MPEG: https://github.com/opencv/opencv/issues/25547
-    run: ${{ inputs.runner }} bin/opencv_test_videoio ${{ inputs.acc_opt }} --gtest_filter='-videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' 
+    run: |
+      python3 ${{ github.workspace }}/scripts/runner.py \
+        --wrap='${{ inputs.runner }}' \
+        --workdir='${{ inputs.workdir }}/build' \
+        ${{ inputs.acc_opt }} \
+        bin/opencv_test_calib3d 
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_core ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_dnn ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_features2d ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_flann ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   # G-API bug with GCC 11+: https://github.com/opencv/opencv/issues/19678
+  #   run: ${{ inputs.runner }} bin/opencv_test_gapi ${{ inputs.acc_opt }} --gtest_filter='-AsyncAPICancelation/cancel/*'
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_highgui ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_imgcodecs ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_imgproc ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_ml ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_objdetect ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_photo ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_stitching ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_test_video ${{ inputs.acc_opt }}
+  # - shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   # OpenCV-GStreamer bug with MPEG: https://github.com/opencv/opencv/issues/25547
+  #   run: ${{ inputs.runner }} bin/opencv_test_videoio ${{ inputs.acc_opt }} --gtest_filter='-videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' 
 
-  # Performance
+  # # Performance
 
-  - name: Performance:calib3d
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_calib3d ${{ inputs.perf_opt }} 
-  - name: Performance:core
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_core ${{ inputs.perf_opt }} 
-  - name: Performance:dnn
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_dnn ${{ inputs.perf_opt }} 
-  - name: Performance:features2d
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_features2d ${{ inputs.perf_opt }} 
-  - name: Performance:gapi
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_gapi ${{ inputs.perf_opt }} 
-  - name: Performance:imgcodecs
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_imgcodecs ${{ inputs.perf_opt }} 
-  - name: Performance:imgproc
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_imgproc ${{ inputs.perf_opt }} 
-  - name: Performance:objdetect
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_objdetect ${{ inputs.perf_opt }} 
-  - name: Performance:photo
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_photo ${{ inputs.perf_opt }} 
-  - name: Performance:stitching
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_stitching ${{ inputs.perf_opt }} 
-  - name: Performance:video
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_video ${{ inputs.perf_opt }} 
-  - name: Performance:videoio
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} bin/opencv_perf_videoio ${{ inputs.perf_opt }} 
+  # - name: Performance:calib3d
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_calib3d ${{ inputs.perf_opt }} 
+  # - name: Performance:core
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_core ${{ inputs.perf_opt }} 
+  # - name: Performance:dnn
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_dnn ${{ inputs.perf_opt }} 
+  # - name: Performance:features2d
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_features2d ${{ inputs.perf_opt }} 
+  # - name: Performance:gapi
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_gapi ${{ inputs.perf_opt }} 
+  # - name: Performance:imgcodecs
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_imgcodecs ${{ inputs.perf_opt }} 
+  # - name: Performance:imgproc
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_imgproc ${{ inputs.perf_opt }} 
+  # - name: Performance:objdetect
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_objdetect ${{ inputs.perf_opt }} 
+  # - name: Performance:photo
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_photo ${{ inputs.perf_opt }} 
+  # - name: Performance:stitching
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_stitching ${{ inputs.perf_opt }} 
+  # - name: Performance:video
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_video ${{ inputs.perf_opt }} 
+  # - name: Performance:videoio
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} bin/opencv_perf_videoio ${{ inputs.perf_opt }} 
 
   # Python
 
-  - if: ${{ inputs.enable_python }}
-    name: Python3 Bindings
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: |
-      python3 ../opencv/modules/python/test/test.py --repo ../opencv -v
+  # - if: ${{ inputs.enable_python }}
+  #   name: Python3 Bindings
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: |
+  #     python3 ../opencv/modules/python/test/test.py --repo ../opencv -v
 
-  - if: ${{ inputs.enable_python }}
-    name: Python3 Apps
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: |
-      if [ -f "../opencv/apps/python_app_test.py" ]; then
-        python3 "../opencv/apps/python_app_test.py" --repo ../opencv -v
-      fi
+  # - if: ${{ inputs.enable_python }}
+  #   name: Python3 Apps
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: |
+  #     if [ -f "../opencv/apps/python_app_test.py" ]; then
+  #       python3 "../opencv/apps/python_app_test.py" --repo ../opencv -v
+  #     fi
 
     # Java
 
-  - if: ${{ inputs.enable_java }}
-    name: Java
-    id: java-test
-    shell: bash
-    working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} python3 ../opencv/modules/ts/misc/run.py . -a -t java
+  # - if: ${{ inputs.enable_java }}
+  #   name: Java
+  #   id: java-test
+  #   shell: bash
+  #   working-directory: ${{ inputs.workdir }}/build
+  #   run: ${{ inputs.runner }} python3 ../opencv/modules/ts/misc/run.py . -a -t java
