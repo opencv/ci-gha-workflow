@@ -63,7 +63,7 @@ def read_process(proc, timeout, verbose, logfd):
             continue
 
     if not verbose:
-        print('\n'.join(summary), flush=True)
+        print('\n'.join(summary_output), flush=True)
 
 
 if __name__ == "__main__":
