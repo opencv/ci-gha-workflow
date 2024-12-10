@@ -15,22 +15,22 @@ if __name__ == "__main__":
 
     args, other = parser.parse_known_args()
 
-    print("::group::Run {}".format(args.exe))
+    print("::group::Run {}".format(args.exe), flush=True)
 
     options = []
     if args.log:
         options.append('--gtest_output=xml:{}'.format(args.log))
     full_exe = args.wrap.split() + [args.exe] + options + other
-    print("Run: {}".format(full_exe))
+    print("Run: {}".format(full_exe), flush=True)
     try:
         res = subprocess.run(full_exe, timeout=args.timeout, check=True, cwd=args.workdir)
         status = res.returncode
     except Exception as err:
-        print("::error::{}".format(err))
+        print("::error::{}".format(err), flush=True)
         status = -1
 
-    print("Exit status: {}".format(status))
-    print("::endgroup::")
+    print("Exit status: {}".format(status), flush=True)
+    print("::endgroup::", flush=True)
 
     exit(status)
     
