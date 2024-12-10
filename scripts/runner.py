@@ -6,6 +6,7 @@ from pathlib import Path
 import json
 import re
 import time
+import traceback
 
 STATE_START = 1
 STATE_CASE = 2
@@ -92,6 +93,7 @@ if __name__ == "__main__":
             logfd = open(args.log, 'wb')
         except Exception as err:
             print("::error::{}".format(err), flush=True)
+            traceback.print_exception(err)
             status = -3
 
     if args.skiplist and args.skipgroup:
@@ -99,12 +101,13 @@ if __name__ == "__main__":
         try:
             with open(args.skiplist) as f:
                 skip = json.load(f)[args.skipgroup]
-            for k, v in skip.keys():
-                if args.exe.contains(k):
+            for k, v in skip.items():
+                if k in args.exe:
                     options += [ '--gtest_filter=*:-{}'.format(':'.join(v)) ]
                     break
         except Exception as err:
             print("::error::{}".format(err), flush=True)
+            traceback.print_exception(err)
             status = -2
 
     if status == 0:
@@ -117,6 +120,7 @@ if __name__ == "__main__":
             status = proc.returncode
         except Exception as err:
             print("::error::{}".format(err), flush=True)
+            traceback.print_exception(err)
             status = -1
 
     if logfd:

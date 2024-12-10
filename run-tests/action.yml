@@ -38,7 +38,8 @@ runs:
 
   # Accuracy
 
-  - shell: bash
+  - if: ${{ inputs.enable_accuracy }}
+    shell: bash
     run: |
       for m in ${{ inputs.modules }} ; do
         python3 scripts/runner.py \
@@ -46,14 +47,22 @@ runs:
           '--workdir=${{ inputs.workdir }}/build' \
           '--skiplist=${{ inputs.skiplist }}' \
           '--skipgroup=${{ inputs.skipgroup }}' \
+          --log=log_a_${m}.txt \
           ${{ inputs.accuracy_opt }} \
           bin/opencv_test_${m} || FAILED=1
       done
       [ -n ${FAILED} ] && exit 1
 
+  - if: ${{ inputs.enable_accuracy }}
+    uses: actions/upload-artifact@v4
+    with:
+      name: test_output_a
+      path: '${{ inputs.workdir }}/build/log_a_*.txt'
+
   # Performance
 
-  - shell: bash
+  - if: ${{ inputs.enable_performance }}
+    shell: bash
     run: |
       for m in ${{ inputs.modules }} ; do
         python3 scripts/runner.py \
@@ -61,10 +70,17 @@ runs:
           '--workdir=${{ inputs.workdir }}/build' \
           '--skiplist=${{ inputs.skiplist }}' \
           '--skipgroup=${{ inputs.skipgroup }}' \
+          --log=log_p_${m}.txt \
           ${{ inputs.performance_opt }} \
           bin/opencv_perf_${m} || FAILED=1
       done
       [ -n ${FAILED} ] && exit 1
+
+  - if: ${{ inputs.enable_performance }}
+    uses: actions/upload-artifact@v4
+    with:
+      name: test_output_p
+      path: '${{ inputs.workdir }}/build/log_p_*.txt'
 
   # Python
 
