@@ -30,7 +30,7 @@ def warnings_count(filename, verbose):
             if is_suppressed(line):
                 suppressed += 1
             else:
-                print("***> {}".format(line.rstrip()))
+                print("::warning::{}".format(line.rstrip()), flush=True)
                 warnings += 1
                 continue
         if verbose:
@@ -41,11 +41,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Check warnings produced during build')
     parser.add_argument('filename', help='Path to the log file.', default='build-log.txt')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Print all lines and mark warnings with ***')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Print all lines and mark warnings')
     args = parser.parse_args()
 
+    print("::group::Warning check", flush=True)
     total, suppressed, warnings = warnings_count(args.filename, args.verbose)
-    print("========\nLine stats:\n- total:\t{}\n- suppressed:\t{}\n- warnings:\t{}".format(total, suppressed, warnings))
+    print("::endgroup::", flush=True)
+    print("::notice::Warning stats => total lines: {}, suppressed: {}, warnings: {}".format(total, suppressed, warnings), flush=True)
+
     if warnings != 0:
         sys.exit(1)
     sys.exit(0)

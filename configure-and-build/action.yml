@@ -1,0 +1,46 @@
+name: configure-and-build
+description: "Build OpenCV using CMake"
+
+inputs:
+  workdir:
+    description: "Work directory on executor, repositories will be cloned to opencv/opencv_contrib/opencv_extra"
+  builddir:
+    description: "Build directory"
+    default: "build"
+  generator:
+    description: "CMake generator, e.g. Ninja"
+  options:
+    description: "Extra CMake options"
+
+runs:
+  using: "composite"
+  steps:
+
+    - working-directory: ${{ inputs.workdir }}
+      shell: bash
+      run: |
+        echo "::group::Configure"
+        rm -rf ${{ inputs.builddir }}
+        mkdir -p ${{ inputs.builddir }}
+        cmake \
+          -S opencv \
+          -B ${{ inputs.builddir }} \
+          -G ${{ inputs.generator }} \
+          ${{ inputs.options }}
+        echo "::endgroup::"
+
+    - working-directory: ${{ inputs.workdir }}
+      shell: bash
+      run: |
+        echo "::group::Build"
+        cmake --build ${{ inputs.builddir }} 2>&1 | tee ${{ inputs.builddir }}/log.txt
+        echo "::endgroup::"
+
+    - shell: bash
+      run: |
+        set +e
+        python3 ./scripts/warnings-handling.py \
+          ${{ inputs.workdir }}/${{ inputs.builddir }}/log.txt
+        if [ $? -ne 0 ]; then
+          echo "WARNINGS=1" >> $GITHUB_ENV
+        fi
