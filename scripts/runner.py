@@ -18,6 +18,8 @@ if __name__ == "__main__":
 
     args, other = parser.parse_known_args()
 
+    status = 0
+
     print("::group::Run {}".format(args.exe), flush=True)
 
     options = []
@@ -31,7 +33,7 @@ if __name__ == "__main__":
                 skip = json.load(f)[args.skipgroup]
             for k, v in skip.keys():
                 if args.exe.contains(k):
-                    options += [ '--gtest_filter=*:-{}'.format(':'.join(v))]
+                    options += [ '--gtest_filter=*:-{}'.format(':'.join(v)) ]
                     break
         except Exception as err:
             print("::error::{}".format(err), flush=True)
