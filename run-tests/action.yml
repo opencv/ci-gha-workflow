@@ -12,6 +12,8 @@ inputs:
   performance_opt:
     description: "Common options for all performance tests"
     default: '--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1'
+  modules:
+    description: "List of modules to test (space-separated string)"
   enable_accuracy:
     description: "Enable accuracy tests"
     default: true

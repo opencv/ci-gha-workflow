@@ -71,3 +71,4 @@ jobs:
       with:
         workdir: '/home/ubuntu'
         wrapper: 'xvfb-run -a'
+        modules: 'calib3d core dnn features2d flann gapi highgui imgcodecs imgproc ml objdetect photo stitching video videoio'
