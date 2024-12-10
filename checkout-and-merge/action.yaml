@@ -35,6 +35,8 @@ runs:
         --single-branch \
         --branch ${{ inputs.target_branch }} \
         https://github.com/opencv/opencv.git
+      pwd
+      ls -la
       echo "::endgroup::"
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'main') && inputs.source_branch }}
@@ -48,6 +50,8 @@ runs:
     shell: bash
     run: |
       echo "::group::Merge opencv"
+      pwd
+      ls -la
       HOME=${{ inputs.home }} \
       git pull \
         -v \
