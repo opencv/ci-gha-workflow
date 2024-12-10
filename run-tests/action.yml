@@ -1,24 +1,29 @@
-name: configure-and-build
-description: "Build OpenCV using CMake"
+name: run-tests
+description: "Run OpenCV tests"
 
 inputs:
   workdir:
-    description: "Work directory on executor, repositories will be cloned to opencv/opencv_contrib/opencv_extra"
+    description: "Work directory, assuming build is in the build/ subfolder"
   wrapper:
     description: "Prefix command (e.g. xvfb-run -a)"
-  acc_opt:
+  accuracy_opt:
     description: "Common options for all accuracy tests"
     default: '--skip_unstable=1'
-  perf_opt:
+  performance_opt:
     description: "Common options for all performance tests"
     default: '--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1'
+  enable_accuracy:
+    description: "Enable accuracy tests"
+    default: true
+  enable_performance:
+    description: "Enable performance tests"
+    default: true
   enable_python:
     description: "Enable Python testing"
     default: true
   enable_java:
     description: "Enable Java testing"
     default: true
-
 
 runs:
   using: "composite"
@@ -28,211 +33,25 @@ runs:
 
   - shell: bash
     run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_calib3d 
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_core
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_dnn
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_features2d
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_flann
-  - shell: bash
-    # G-API bug with GCC 11+: https://github.com/opencv/opencv/issues/19678
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} --gtest_filter='-AsyncAPICancelation/cancel/*' \
-        bin/opencv_test_gapi
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_highgui
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_imgcodecs
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_imgproc
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_ml
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_objdetect
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_photo
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_stitching
-  - shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        bin/opencv_test_video
-  - shell: bash
-    # OpenCV-GStreamer bug with MPEG: https://github.com/opencv/opencv/issues/25547
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.acc_opt }} \
-        --gtest_filter='-videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' \
-        bin/opencv_test_videoio
+      for m in ${{ inputs.modules }} ; do
+        python3 scripts/runner.py \
+          --wrap='${{ inputs.runner }}' \
+          --workdir='${{ inputs.workdir }}/build' \
+          ${{ inputs.accuracy_opt }} \
+          bin/opencv_test_${m}
+      done 
 
   # Performance
 
-  - name: Performance:calib3d
-    shell: bash
+  - shell: bash
     run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_calib3d
-  - name: Performance:core
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_core
-  - name: Performance:dnn
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_dnn
-  - name: Performance:features2d
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_features2d
-  - name: Performance:gapi
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_gapi
-  - name: Performance:imgcodecs
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_imgcodecs
-  - name: Performance:imgproc
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_imgproc
-  - name: Performance:objdetect
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_objdetect
-  - name: Performance:photo
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_photo
-  - name: Performance:stitching
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_stitching
-  - name: Performance:video
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_video
-  - name: Performance:videoio
-    shell: bash
-    run: |
-      python3 scripts/runner.py \
-        --wrap='${{ inputs.runner }}' \
-        --workdir='${{ inputs.workdir }}/build' \
-        ${{ inputs.perf_opt }}  \
-        bin/opencv_perf_videoio
+      for m in ${{ inputs.modules }} ; do
+        python3 scripts/runner.py \
+          --wrap='${{ inputs.runner }}' \
+          --workdir='${{ inputs.workdir }}/build' \
+          ${{ inputs.performance_opt }} \
+          bin/opencv_perf_${m}
+      done 
 
   # Python
 
