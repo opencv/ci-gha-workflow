@@ -2,10 +2,12 @@ name: checkout-and-merge
 description: "checkout OpenCV repositories and merge if needed"
 
 inputs:
+  repos:
+    description: "Repository list to clone, can contain 'main', 'contrib' and 'extra'"
+    default: ['main', 'contrib', 'extra']
   target_branch:
     description: "Target PR branch in OpenCV repository (4.x, 5.x)"
     default: "4.x"
-    required: true
   author:
     description: "PR author"
   source_branch:
@@ -19,7 +21,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - working-directory: ${{ inputs.workdir }}
+
+  # opencv
+  
+  - if: ${{ contains(inputs.repos, 'main') }}
+    working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
       echo "::group::Clone opencv"
@@ -28,11 +34,10 @@ runs:
         --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
         --single-branch \
         --branch ${{ inputs.target_branch }} \
-        https://github.com/opencv/opencv.git \
-        opencv
+        https://github.com/opencv/opencv.git
       echo "::endgroup::"
 
-  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && inputs.source_branch }}
+  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'main') && inputs.source_branch }}
     working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
@@ -45,7 +50,42 @@ runs:
         "${{ inputs.source_branch }}"
       echo "::endgroup::"
 
-  - working-directory: ${{ inputs.workdir }}
+  #  opencv_contrib
+
+  - if: ${{ contains(inputs.repos, 'contrib') }}
+    working-directory: ${{ inputs.workdir }}
+    shell: bash
+    run: |
+      echo "::group::Clone opencv_contrib"
+      HOME=${{ inputs.home }} \
+      git clone \
+        --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
+        --single-branch \
+        --branch ${{ inputs.target_branch }} \
+        https://github.com/opencv/opencv_contrib.git
+      echo "::endgroup::"
+
+  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'contrib') && inputs.source_branch }}
+    working-directory: ${{ inputs.workdir }}
+    shell: bash
+    run: |
+      echo "OPENCV_CONTRIB_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads "https://github.com/${{ inputs.author }}/opencv_contrib)" >> $GITHUB_ENV
+
+  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'contrib') && inputs.source_branch && env.OPENCV_CONTRIB_FORK }}
+    shell: bash
+    run: |
+      echo "::group::Merge opencv_contrib"
+      HOME=${{ inputs.home }} \
+      git pull \
+        -v \
+        "https://github.com/${{ inputs.author }}/opencv_contrib" \
+        "${{ inputs.source_branch }}"
+      echo "::endgroup::"
+
+  # opencv_extra
+
+  - if: ${{ contains(inputs.repos, 'extra') }}
+    working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
       echo "::group::Clone opencv_extra"
@@ -54,17 +94,16 @@ runs:
         --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
         --single-branch \
         --branch ${{ inputs.target_branch }} \
-        https://github.com/opencv/opencv_extra.git \
-        opencv_extra
+        https://github.com/opencv/opencv_extra.git
       echo "::endgroup::"
 
-  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && inputs.source_branch }}
+  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'extra') && inputs.source_branch }}
     working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
       echo "OPENCV_EXTRA_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads "https://github.com/${{ inputs.author }}/opencv_extra)" >> $GITHUB_ENV
 
-  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && inputs.source_branch && env.OPENCV_EXTRA_FORK }}
+  - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'extra') && inputs.source_branch && env.OPENCV_EXTRA_FORK }}
     shell: bash
     run: |
       echo "::group::Merge opencv_extra"
