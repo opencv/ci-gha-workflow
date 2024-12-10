@@ -1,0 +1,198 @@
+name: configure-and-build
+description: "Build OpenCV using CMake"
+
+inputs:
+  workdir:
+    description: "Work directory on executor, repositories will be cloned to opencv/opencv_contrib/opencv_extra"
+  runner:
+    description: "Test runner prefix command (e.g. xvfb-run -a)"
+  acc_opt:
+    description: "Common options for all accuracy tests"
+    default: '--skip_unstable=1'
+  perf_opt:
+    description: "Common options for all performance tests"
+    default: '--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1'
+  enable_python:
+    description: "Enable Python testing"
+    default: true
+  enable_java:
+    description: "Enable Java testing"
+    default: true
+
+
+runs:
+  using: "composite"
+  steps:
+
+  # Accuracy
+
+  - name: Accuracy:calib3d
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_calib3d ${{ inputs.acc_opt }}
+  - name: Accuracy:core
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_core ${{ inputs.acc_opt }}
+  - name: Accuracy:dnn
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_dnn ${{ inputs.acc_opt }}
+  - name: Accuracy:features2d
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_features2d ${{ inputs.acc_opt }}
+  - name: Accuracy:flann
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_flann ${{ inputs.acc_opt }}
+  - name: Accuracy:gapi
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    # G-API bug with GCC 11+: https://github.com/opencv/opencv/issues/19678
+    run: ${{ inputs.runner }} bin/opencv_test_gapi ${{ inputs.acc_opt }} --gtest_filter='-AsyncAPICancelation/cancel/*'
+  - name: Accuracy:highgui
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_highgui ${{ inputs.acc_opt }}
+  - name: Accuracy:imgcodecs
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_imgcodecs ${{ inputs.acc_opt }}
+  - name: Accuracy:imgproc
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_imgproc ${{ inputs.acc_opt }}
+  - name: Accuracy:ml
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_ml ${{ inputs.acc_opt }}
+  - name: Accuracy:objdetect
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_objdetect ${{ inputs.acc_opt }}
+  - name: Accuracy:photo
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_photo ${{ inputs.acc_opt }}
+  - name: Accuracy:stitching
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_stitching ${{ inputs.acc_opt }}
+  - name: Accuracy:video
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_test_video ${{ inputs.acc_opt }}
+  - name: Accuracy:videoio
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    # OpenCV-GStreamer bug with MPEG: https://github.com/opencv/opencv/issues/25547
+    run: ${{ inputs.runner }} bin/opencv_test_videoio ${{ inputs.acc_opt }} --gtest_filter='-videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' 
+
+  # Performance
+
+  - name: Performance:calib3d
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_calib3d ${{ perf_opt }} 
+  - name: Performance:core
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_core ${{ perf_opt }} 
+  - name: Performance:dnn
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_dnn ${{ perf_opt }} 
+  - name: Performance:features2d
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_features2d ${{ perf_opt }} 
+  - name: Performance:gapi
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_gapi ${{ perf_opt }} 
+  - name: Performance:imgcodecs
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_imgcodecs ${{ perf_opt }} 
+  - name: Performance:imgproc
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_imgproc ${{ perf_opt }} 
+  - name: Performance:objdetect
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_objdetect ${{ perf_opt }} 
+  - name: Performance:photo
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_photo ${{ perf_opt }} 
+  - name: Performance:stitching
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_stitching ${{ perf_opt }} 
+  - name: Performance:video
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_video ${{ perf_opt }} 
+  - name: Performance:videoio
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} bin/opencv_perf_videoio ${{ perf_opt }} 
+
+  # Python
+
+  - if: ${{ inputs.enable_python }}
+    name: Python3 Bindings
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: |
+      python3 ../opencv/modules/python/test/test.py --repo ../opencv -v
+
+  - if: ${{ inputs.enable_python }}
+    name: Python3 Apps
+    timeout-minutes: 60
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: |
+      if [ -f "../opencv/apps/python_app_test.py" ]; then
+        python3 "../opencv/apps/python_app_test.py" --repo ../opencv -v
+      fi
+
+    # Java
+
+  - if: ${{ inputs.enable_java }}
+    name: Java
+    timeout-minutes: 60
+    id: java-test
+    shell: bash
+    working-directory: ${{ workdir }}/build
+    run: ${{ inputs.runner }} python3 ../opencv/modules/ts/misc/run.py . -a -t java
