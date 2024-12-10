@@ -1,0 +1,113 @@
+name: run-tests
+description: "Run OpenCV tests"
+
+inputs:
+  workdir:
+    description: "Work directory, assuming build is in the build/ subfolder"
+  wrapper:
+    description: "Prefix command (e.g. xvfb-run -a)"
+  accuracy_opt:
+    description: "Common options for all accuracy tests"
+    default: '--skip_unstable=1'
+  performance_opt:
+    description: "Common options for all performance tests"
+    default: '--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1'
+  modules:
+    description: "List of modules to test (space-separated string)"
+  skiplist:
+    description: "File skip-list.json with list of skipped tests"
+    default: "scripts/skip-list.json"
+  skipgroup:
+    description: "Group in skip-list file"
+  enable_accuracy:
+    description: "Enable accuracy tests"
+    default: "true"
+  enable_performance:
+    description: "Enable performance tests"
+    default: "true"
+  enable_python:
+    description: "Enable Python testing"
+    default: "true"
+  enable_java:
+    description: "Enable Java testing"
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+
+  # Accuracy
+
+  - if: ${{ always() && inputs.enable_accuracy }}
+    shell: bash
+    run: |
+      for m in ${{ inputs.modules }} ; do
+        python3 scripts/runner.py \
+          '--wrap=${{ inputs.wrapper }}' \
+          '--workdir=${{ inputs.workdir }}/build' \
+          '--skiplist=${{ inputs.skiplist }}' \
+          '--skipgroup=${{ inputs.skipgroup }}' \
+          --log=log_a_${m}.txt \
+          ${{ inputs.accuracy_opt }} \
+          bin/opencv_test_${m} || FAILED=1
+      done
+      if [ -n "${FAILED}" ] ; then
+        echo "::error::Some tests have failed"
+        exit 1
+      fi
+
+  - if: ${{ always() && inputs.enable_accuracy }}
+    uses: actions/upload-artifact@v4
+    with:
+      name: test_output_a
+      path: '${{ inputs.workdir }}/build/log_a_*.txt'
+
+  # Performance
+
+  - if: ${{ always() && inputs.enable_performance }}
+    shell: bash
+    run: |
+      for m in ${{ inputs.modules }} ; do
+        python3 scripts/runner.py \
+          '--wrap=${{ inputs.wrapper }}' \
+          '--workdir=${{ inputs.workdir }}/build' \
+          '--skiplist=${{ inputs.skiplist }}' \
+          '--skipgroup=${{ inputs.skipgroup }}' \
+          --log=log_p_${m}.txt \
+          ${{ inputs.performance_opt }} \
+          bin/opencv_perf_${m} || FAILED=1
+      done
+      if [ -n "${FAILED}" ] ; then
+        echo "::error::Some tests have failed"
+        exit 1
+      fi
+
+  - if: ${{ always() && inputs.enable_performance }}
+    uses: actions/upload-artifact@v4
+    with:
+      name: test_output_p
+      path: '${{ inputs.workdir }}/build/log_p_*.txt'
+
+  # Python
+
+  - if: ${{ always() && inputs.enable_python }}
+    shell: bash
+    working-directory: ${{ inputs.workdir }}/build
+    run: |
+      python3 ../opencv/modules/python/test/test.py --repo ../opencv -v
+
+  - if: ${{ always() && inputs.enable_python }}
+    shell: bash
+    working-directory: ${{ inputs.workdir }}/build
+    run: |
+      if [ -f "../opencv/apps/python_app_test.py" ]; then
+        python3 "../opencv/apps/python_app_test.py" --repo ../opencv -v
+      fi
+
+    # Java
+
+  - if: ${{ inputs.enable_java }}
+    id: java-test
+    shell: bash
+    working-directory: ${{ inputs.workdir }}/build
+    run: ${{ inputs.wrapper }} python3 ../opencv/modules/ts/misc/run.py . -a -t java

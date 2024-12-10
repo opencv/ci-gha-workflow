@@ -30,7 +30,7 @@ def warnings_count(filename, verbose):
             if is_suppressed(line):
                 suppressed += 1
             else:
-                print("***> {}".format(line.rstrip()))
+                print("::warning::{}".format(line.rstrip()))
                 warnings += 1
                 continue
         if verbose:

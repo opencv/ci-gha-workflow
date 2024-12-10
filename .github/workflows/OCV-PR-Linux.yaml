@@ -1,0 +1,75 @@
+name: OCV PR Linux
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-Linux.yaml'
+  workflow_call:
+
+concurrency:
+  group: OCV-PR-Linux-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ANT_HOME: '/usr/share/ant'
+  DNN_MODELS: '/home/ubuntu/dnn-models'
+  CCACHE_DIR: '/home/ubuntu/.ccache'
+  GIT_CACHE_DOCKER: '/home/ubuntu/git_cache'
+  OPENCV_DOWNLOAD_PATH: /home/ubuntu/binaries_cache
+
+jobs:
+  Build-U24:
+    runs-on: opencv-cn-lin-x86-64
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: quay.io/opencv-ci/opencv-ubuntu-24.04:20241031
+      volumes:
+        - /home/opencv-cn/git_cache:/home/ubuntu/git_cache
+        - /home/opencv-cn/ci_cache/opencv:/home/ubuntu/.ccache
+        - /home/opencv-cn/binaries_cache:/home/ubuntu/binaries_cache
+        - /home/opencv-cn/dnn-models:/home/ubuntu/dnn-models
+    steps:
+
+    - uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'add-custom-action' }}
+
+    - uses: ./checkout-and-merge
+      with:
+        target_branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '4.x' || github.base_ref }}
+        author: ${{ github.event.pull_request.user.login }}
+        source_branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}
+        gitcache: '/home/ubuntu/git_cache'
+        home: '/home/ubuntu'
+        workdir: '/home/ubuntu'
+
+    - name: Update extra dnn models
+      timeout-minutes: 60
+      working-directory: '/home/ubuntu'
+      run: |
+        python3 opencv_extra/testdata/dnn/download_models.py -d '${{ env.DNN_MODELS }}/dnn'
+        echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
+
+    - uses: ./configure-and-build
+      with:
+        workdir: '/home/ubuntu'
+        generator: 'Ninja'
+        enable_contrib: true
+        options: '-DBUILD_DOCS=ON -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_JPEGXL=ON'
+
+    - uses: ./run-tests
+      env:
+        OPENCV_TEST_DATA_PATH: '/home/ubuntu/opencv_extra/testdata'
+        OPENCV_TEST_REQUIRE_DATA: 1
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+        PYTHONPATH: /home/ubuntu/build/python_loader:$PYTHONPATH
+      with:
+        workdir: '/home/ubuntu'
+        wrapper: 'xvfb-run -a'
+        modules: 'calib3d core dnn features2d flann gapi highgui imgcodecs imgproc ml objdetect photo stitching video videoio'
+        skipgroup: "ubuntu24-list"
