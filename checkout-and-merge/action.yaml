@@ -1,5 +1,5 @@
 name: checkout-and-merge
-description: "checkout OpenCV repositories and merge if needed"
+description: "Checkout OpenCV repositories and merge if needed"
 
 inputs:
   repos:
@@ -51,8 +51,6 @@ runs:
     shell: bash
     run: |
       echo "::group::Merge opencv"
-      pwd
-      ls -la
       HOME=${{ inputs.home }} \
       git -C opencv pull -v "https://github.com/${{ inputs.author }}/opencv" "${{ inputs.source_branch }}"
       echo "::endgroup::"
