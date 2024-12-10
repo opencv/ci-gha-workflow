@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - '.github/workflows/OCV-PR-Linux.yaml'
-  workflow-call:
+  workflow_call:
 
 concurrency:
   group: OCV-PR-Linux-${{ github.ref }}
