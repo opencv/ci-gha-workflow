@@ -73,7 +73,7 @@ if __name__ == "__main__":
     parser.add_argument('--log', type=Path, help='Path to store log')
     parser.add_argument('--timeout', type=int, default=10, help='Timeout in minutes')
     parser.add_argument('--wrap', default='', help="Wrapper command")
-    parser.add_argument('--workdir', default='.', help="Change working dir")
+    parser.add_argument('--workdir', default='.', type=Path, help="Change working dir")
     parser.add_argument('--skiplist', type=Path, help="skip-list.json file")
     parser.add_argument('--skipgroup', help="group in skip-list file")
     parser.add_argument('--verbose', help="Output all executable lines, print only errors and summary lines otherwise")
@@ -88,9 +88,9 @@ if __name__ == "__main__":
 
     logfd = None
     if args.log:
-        print("Log file: {}".format(args.log))
+        print("Log file: {}".format(args.workdir / args.log))
         try:
-            logfd = open(args.log, 'wb')
+            logfd = open(args.workdir / args.log, 'wb')
         except Exception as err:
             print("::error::{}".format(err), flush=True)
             traceback.print_exception(err)
@@ -127,8 +127,8 @@ if __name__ == "__main__":
         logfd.close()
 
     print("", flush=True)
-    print("::notice::Exit status: {}".format(status), flush=True)
     print("::endgroup::", flush=True)
 
+    print("::{}::Exit status: {}".format("notice" if status == 0 else "error", status), flush=True)
     exit(status)
     
