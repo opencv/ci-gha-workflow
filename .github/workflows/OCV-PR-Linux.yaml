@@ -48,8 +48,8 @@ jobs:
         ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
     - uses: ./checkout-and-merge
       with:
-        target_branch: ${{ github.base_ref }}
+        target_branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '4.x' || github.base_ref }}
         author: ${{ github.event.pull_request.user.login }}
-        source_branch: ${{ github.head_ref }}
+        source_branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}
         home: '/home/ubuntu'
         workdir: '/home/ubuntu'
