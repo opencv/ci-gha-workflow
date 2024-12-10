@@ -1,0 +1,55 @@
+name: OCV PR Linux
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-Linux.yaml'
+  workflow_call:
+
+concurrency:
+  group: OCV-PR-Linux-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ubuntu/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_JPEGXL=ON'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  ANT_HOME: '/usr/share/ant'
+  GIT_CACHE_DOCKER: '/home/ubuntu/git_cache'
+  PYTHONPATH: /home/ubuntu/build/python_loader:$PYTHONPATH
+  OPENCV_TEST_DATA_PATH: '/home/ubuntu/opencv_extra/testdata'
+  OPENCV_TEST_REQUIRE_DATA: 1
+  OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+  OPENCV_DOCKER_WORKDIR: '/home/ubuntu/opencv'
+  DNN_MODELS: '/home/ubuntu/dnn-models'
+  PARALLEL_JOBS: 8
+
+jobs:
+  Build-U24:
+    runs-on: opencv-cn-lin-x86-64
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: quay.io/opencv-ci/opencv-ubuntu-24.04:20241031
+      volumes:
+        - /home/opencv-cn/git_cache:/home/ubuntu/git_cache
+        - /home/opencv-cn/ci_cache/opencv:/home/ubuntu/.ccache
+        - /home/opencv-cn/binaries_cache:/home/ubuntu/binaries_cache
+        - /home/opencv-cn/dnn-models:/home/ubuntu/dnn-models
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
+    - uses: ./checkout-and-merge
+      with:
+        target_branch: ${{ github.base_ref }}
+        author: ${{ github.event.pull_request.user.login }}
+        source_branch: ${{ github.head_ref }}
+        home: '/home/ubuntu'
+        workdir: '/home/ubuntu'
