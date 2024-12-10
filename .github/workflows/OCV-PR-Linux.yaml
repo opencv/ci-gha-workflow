@@ -38,11 +38,6 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ubuntu/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ubuntu/dnn-models
     steps:
-
-    - shell: bash
-      run: echo '${{ toJSON(github) }}'
-
-
     - uses: actions/checkout@v4
       with:
         repository: opencv/ci-gha-workflow
@@ -55,3 +50,10 @@ jobs:
         gitcache: '/home/ubuntu/git_cache'
         home: '/home/ubuntu'
         workdir: '/home/ubuntu'
+
+    - name: Update extra dnn models
+      timeout-minutes: 60
+      working-directory: '/home/ubuntu'
+      run: |
+        python opencv_extra/testdata/dnn/download_models.py -d ${{ env.DNN_MODELS }}
+        echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
