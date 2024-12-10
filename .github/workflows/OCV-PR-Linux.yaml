@@ -28,7 +28,7 @@ env:
   DNN_MODELS: '/home/ubuntu/dnn-models'
   PARALLEL_JOBS: 8
   PIPELINE: ${{ github.action_ref }}
-  PIPELINE_REF: ${{ github.event }}
+  PIPELINE_REF: ${{ github.event.ref }}
 
 jobs:
   Build-U24:
