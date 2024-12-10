@@ -35,7 +35,7 @@ runs:
     run: |
       for m in ${{ inputs.modules }} ; do
         python3 scripts/runner.py \
-          --wrap='${{ inputs.runner }}' \
+          --wrap='${{ inputs.wrapper }}' \
           --workdir='${{ inputs.workdir }}/build' \
           ${{ inputs.accuracy_opt }} \
           bin/opencv_test_${m}
@@ -47,7 +47,7 @@ runs:
     run: |
       for m in ${{ inputs.modules }} ; do
         python3 scripts/runner.py \
-          --wrap='${{ inputs.runner }}' \
+          --wrap='${{ inputs.wrapper }}' \
           --workdir='${{ inputs.workdir }}/build' \
           ${{ inputs.performance_opt }} \
           bin/opencv_perf_${m}
@@ -75,4 +75,4 @@ runs:
     id: java-test
     shell: bash
     working-directory: ${{ inputs.workdir }}/build
-    run: ${{ inputs.runner }} python3 ../opencv/modules/ts/misc/run.py . -a -t java
+    run: ${{ inputs.wrapper }} python3 ../opencv/modules/ts/misc/run.py . -a -t java
