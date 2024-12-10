@@ -45,7 +45,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         repository: opencv/ci-gha-workflow
-        ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
+        ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || github.action_ref }}
     - uses: ./checkout-and-merge
       with:
         target_branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '4.x' || github.base_ref }}
