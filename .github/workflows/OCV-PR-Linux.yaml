@@ -14,14 +14,14 @@ concurrency:
 
 env:
   ANT_HOME: '/usr/share/ant'
-  PYTHONPATH: /home/ubuntu/build/python_loader:$PYTHONPATH
+  DNN_MODELS: '/home/ubuntu/dnn-models'
+  CCACHE_DIR: '/home/ubuntu/.ccache'
   GIT_CACHE_DOCKER: '/home/ubuntu/git_cache'
   OPENCV_DOWNLOAD_PATH: /home/ubuntu/binaries_cache
   OPENCV_TEST_DATA_PATH: '/home/ubuntu/opencv_extra/testdata'
   OPENCV_TEST_REQUIRE_DATA: 1
   OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
-  OPENCV_DOCKER_WORKDIR: '/home/ubuntu/opencv'
-  DNN_MODELS: '/home/ubuntu/dnn-models'
+  PYTHONPATH: /home/ubuntu/build/python_loader:$PYTHONPATH
   PARALLEL_JOBS: 8
 
 jobs:
@@ -38,6 +38,7 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ubuntu/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ubuntu/dnn-models
     steps:
+
     - uses: actions/checkout@v4
       with:
         repository: opencv/ci-gha-workflow
@@ -63,4 +64,5 @@ jobs:
       with:
         workdir: '/home/ubuntu'
         generator: 'Ninja'
+        enable_contrib: true
         options: '-DBUILD_DOCS=ON -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_JPEGXL=ON'
