@@ -28,7 +28,7 @@ runs:
 
   - shell: bash
     run: |
-      python3 ${{ github.workspace }}/scripts/runner.py \
+      python3 scripts/runner.py \
         --wrap='${{ inputs.runner }}' \
         --workdir='${{ inputs.workdir }}/build' \
         ${{ inputs.acc_opt }} \
