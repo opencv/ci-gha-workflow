@@ -22,6 +22,9 @@ runs:
   using: "composite"
   steps:
 
+  - shell: bash
+    run: echo '${{ toJSON(github) }}'
+
   # opencv
   
   - if: ${{ contains(inputs.repos, 'main') }}
@@ -29,6 +32,7 @@ runs:
     shell: bash
     run: |
       echo "::group::Clone opencv"
+      rm -rf opencv
       HOME=${{ inputs.home }} \
       git clone \
         --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
@@ -61,6 +65,7 @@ runs:
     shell: bash
     run: |
       echo "::group::Clone opencv_contrib"
+      rm -rf opencv_contrib
       HOME=${{ inputs.home }} \
       git clone \
         --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
@@ -90,6 +95,7 @@ runs:
     shell: bash
     run: |
       echo "::group::Clone opencv_extra"
+      rm -rf opencv_extra
       HOME=${{ inputs.home }} \
       git clone \
         --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
