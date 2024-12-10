@@ -55,5 +55,5 @@ jobs:
       timeout-minutes: 60
       working-directory: '/home/ubuntu'
       run: |
-        python opencv_extra/testdata/dnn/download_models.py -d ${{ env.DNN_MODELS }}
+        python3 opencv_extra/testdata/dnn/download_models.py -d ${{ env.DNN_MODELS }}
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
