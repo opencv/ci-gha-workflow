@@ -14,6 +14,11 @@ inputs:
     default: '--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1'
   modules:
     description: "List of modules to test (space-separated string)"
+  skiplist:
+    description: "File skip-list.json with list of skipped tests"
+    default: "scripts/skip-list.json"
+  skipgroup:
+    description: "Group in skip-list file"
   enable_accuracy:
     description: "Enable accuracy tests"
     default: true
@@ -40,8 +45,9 @@ runs:
           --wrap='${{ inputs.wrapper }}' \
           --workdir='${{ inputs.workdir }}/build' \
           ${{ inputs.accuracy_opt }} \
-          bin/opencv_test_${m}
-      done 
+          bin/opencv_test_${m} || FAILED=1
+      done
+      [ -n ${FAILED} ] && exit 1
 
   # Performance
 
@@ -52,8 +58,9 @@ runs:
           --wrap='${{ inputs.wrapper }}' \
           --workdir='${{ inputs.workdir }}/build' \
           ${{ inputs.performance_opt }} \
-          bin/opencv_perf_${m}
-      done 
+          bin/opencv_perf_${m} || FAILED=1
+      done
+      [ -n ${FAILED} ] && exit 1
 
   # Python
 

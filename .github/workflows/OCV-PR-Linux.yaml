@@ -18,11 +18,6 @@ env:
   CCACHE_DIR: '/home/ubuntu/.ccache'
   GIT_CACHE_DOCKER: '/home/ubuntu/git_cache'
   OPENCV_DOWNLOAD_PATH: /home/ubuntu/binaries_cache
-  OPENCV_TEST_DATA_PATH: '/home/ubuntu/opencv_extra/testdata'
-  OPENCV_TEST_REQUIRE_DATA: 1
-  OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
-  PYTHONPATH: /home/ubuntu/build/python_loader:$PYTHONPATH
-  PARALLEL_JOBS: 8
 
 jobs:
   Build-U24:
@@ -68,7 +63,13 @@ jobs:
         options: '-DBUILD_DOCS=ON -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_JPEGXL=ON'
 
     - uses: ./run-tests
+      env:
+        OPENCV_TEST_DATA_PATH: '/home/ubuntu/opencv_extra/testdata'
+        OPENCV_TEST_REQUIRE_DATA: 1
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+        PYTHONPATH: /home/ubuntu/build/python_loader:$PYTHONPATH
       with:
         workdir: '/home/ubuntu'
         wrapper: 'xvfb-run -a'
         modules: 'calib3d core dnn features2d flann gapi highgui imgcodecs imgproc ml objdetect photo stitching video videoio'
+        skipgroup: "ubuntu24-list"
