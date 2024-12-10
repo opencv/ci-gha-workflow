@@ -4,7 +4,7 @@ description: "checkout OpenCV repositories and merge if needed"
 inputs:
   repos:
     description: "Repository list to clone, can contain 'main', 'contrib' and 'extra'"
-    default: ['main', 'contrib', 'extra']
+    default: 'main,contrib,extra'
   target_branch:
     description: "Target PR branch in OpenCV repository (4.x, 5.x)"
     default: "4.x"
