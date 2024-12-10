@@ -70,4 +70,4 @@ jobs:
     - uses: ./run-tests
       with:
         workdir: '/home/ubuntu'
-        runner: 'xvfb-run -a'
+        wrapper: 'xvfb-run -a'
