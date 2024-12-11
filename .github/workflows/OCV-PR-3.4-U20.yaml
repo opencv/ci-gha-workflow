@@ -244,7 +244,7 @@ jobs:
       run: cd $HOME/build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
     - name: Save Unit Test Results
       timeout-minutes: 60
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html-ubuntu20-x86-64
