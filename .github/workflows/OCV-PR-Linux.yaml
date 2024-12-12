@@ -36,7 +36,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: 'quay.io/opencv-ci/opencv-ubuntu-20.04:20230413'
+      image: 'ubuntu:20.04'
     defaults:
       run:
         shell: bash
