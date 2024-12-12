@@ -37,7 +37,7 @@ jobs:
             fi
   
   test:
-    runs-on: opencv-ru-lin-x86-64
+    runs-on: opencv-ru-lin-riscv
     container:
       image: 'quay.io/opencv-ci/opencv-ubuntu-20.04:20230413'
       volumes:
