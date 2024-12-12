@@ -43,7 +43,6 @@ jobs:
     env:
       HOME: /home/ci/
     steps:
-      - uses: actions/checkout@v4
 
       - run: |
           pwd
@@ -51,6 +50,8 @@ jobs:
           ls -la /opt
           export
           mount
+
+      - uses: actions/checkout@v4
 
       - uses: actions/cache@v4
         with:
