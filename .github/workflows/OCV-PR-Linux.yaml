@@ -40,17 +40,26 @@ jobs:
     runs-on: opencv-ru-lin-riscv
     container:
       image: 'quay.io/opencv-ci/opencv-ubuntu-20.04:20230413'
-      volumes:
-        - ${{ env.CACHE_ROOT }}/git_cache:/opt/git_cache
-        - ${{ env.CACHE_ROOT }}/ci_cache/opencv:/opt/.ccache
-        - ${{ env.CACHE_ROOT }}/binaries_cache:/opt/binaries_cache
-        - ${{ env.CACHE_ROOT }}/dnn-models:/opt/dnn-models
   
     steps:
+      - uses: actions/cache@v4
+        with:
+          path: /opt/cache/ccache
+          key: linux-cache-root-20.04
+      - uses: actions/cache@v4
+        with:
+          path: /opt/cache/gitcache
+          key: linux-cache-git-${{ github.base_ref }}
+      - uses: actions/cache@v4
+        with:
+          path: /opt/cache/dl
+          key: linux-cache-dl-${{ github.base_ref }}
+
       - shell: bash
         run: |
           pwd
           ls -la
+          ls -la /opt/cache
           export
           mount
 
