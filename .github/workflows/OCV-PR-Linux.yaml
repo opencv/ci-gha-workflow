@@ -41,23 +41,30 @@ jobs:
       run:
         shell: bash
     steps:
+      - run: |
+          pwd
+          ls -la
+          ls -la /opt
+          export
+          mount
+
       - uses: actions/cache@v4
         with:
-          path: /opt/cache/ccache
+          path: /opt/ccache
           key: linux-cache-root-20.04-${{ github.base_ref }}
       - uses: actions/cache@v4
         with:
-          path: /opt/cache/gitcache
+          path: /opt/gitcache
           key: linux-cache-git-${{ github.base_ref }}
       - uses: actions/cache@v4
         with:
-          path: /opt/cache/dl
+          path: /opt/dl
           key: linux-cache-dl-${{ github.base_ref }}
 
       - run: |
           pwd
           ls -la
-          ls -la /opt/cache
+          ls -la /opt
           export
           mount
 
