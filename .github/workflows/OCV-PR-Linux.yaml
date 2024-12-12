@@ -50,15 +50,15 @@ jobs:
 
       - uses: actions/cache@v4
         with:
-          path: /opt/ccache
+          path: ccache
           key: linux-cache-root-20.04-${{ github.base_ref }}
       - uses: actions/cache@v4
         with:
-          path: /opt/gitcache
+          path: gitcache
           key: linux-cache-git-${{ github.base_ref }}
       - uses: actions/cache@v4
         with:
-          path: /opt/dl
+          path: dlcache
           key: linux-cache-dl-${{ github.base_ref }}
 
       - run: |
