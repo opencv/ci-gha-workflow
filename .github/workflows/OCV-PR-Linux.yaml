@@ -40,6 +40,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      HOME: /home/ci/
     steps:
       - uses: actions/checkout@v4
 
