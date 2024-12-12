@@ -18,6 +18,9 @@ concurrency:
   group: OCV-PR-Linux-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CACHE_ROOT: '/mnt/cache'
+
 jobs:
   branch_eval:
     runs-on: ubuntu-latest
@@ -38,10 +41,10 @@ jobs:
     container:
       image: 'quay.io/opencv-ci/opencv-ubuntu-20.04:20230413'
       volumes:
-        - ${{ env.CACHE_ROOT }}/git_cache:/opt/git_cache
-        - ${{ env.CACHE_ROOT }}/ci_cache/opencv:/opt/.ccache
-        - ${{ env.CACHE_ROOT }}/binaries_cache:/opt/binaries_cache
-        - ${{ env.CACHE_ROOT }}/dnn-models:/opt/dnn-models
+        - ${CACHE_ROOT}/git_cache:/opt/git_cache
+        - ${CACHE_ROOT}/ci_cache/opencv:/opt/.ccache
+        - ${CACHE_ROOT}/binaries_cache:/opt/binaries_cache
+        - ${CACHE_ROOT}/dnn-models:/opt/dnn-models
   
     steps:
       - shell: bash
