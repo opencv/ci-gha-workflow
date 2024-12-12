@@ -45,7 +45,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: /opt/cache/ccache
-          key: linux-cache-root-20.04
+          key: linux-cache-root-20.04-${{ github.base_ref }}
       - uses: actions/cache@v4
         with:
           path: /opt/cache/gitcache
