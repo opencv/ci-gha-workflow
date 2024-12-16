@@ -39,7 +39,7 @@ jobs:
       - branch_eval
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 3
       matrix:
         version: 
           - '24.04'
@@ -70,6 +70,7 @@ jobs:
         - /mnt/cache/git_cache:/opt/git_cache
         - /mnt/cache/ci_cache/opencv:/opt/.ccache
         - /mnt/cache/binaries_cache:/opt/binaries_cache
+        - vol_dnn_models:/opt/dnn-models
         # - /home/opencv-cn/git_cache:/opt/git_cache
         # - /home/opencv-cn/ci_cache/opencv:/opt/.ccache
         # - /home/opencv-cn/binaries_cache:/opt/binaries_cache
