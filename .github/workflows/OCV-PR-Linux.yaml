@@ -110,7 +110,9 @@ jobs:
       timeout-minutes: 60
       working-directory: '${{ env.HOME }}'
       run: |
-        python3 opencv_extra/testdata/dnn/download_models.py -d '${{ env.DNN_MODELS }}/dnn'
+        python3 opencv_extra/testdata/dnn/download_models.py \
+          --cleanup \
+          --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
     - name: Configure and build OpenCV
@@ -147,4 +149,4 @@ jobs:
         skipgroup: "ubuntu24-list"
         enable_python: "true"
         enable_java: "true"
-        suffix: '${{ matrix.image }}_${{ matrix.branch }}'
+        suffix: '${{ matrix.version }}_${{ matrix.branch }}'
