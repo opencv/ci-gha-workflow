@@ -78,7 +78,7 @@ def run_one(name, cmd, logname, env, args):
     logfd = None
     try:
         logfd = open(logname, 'wb')
-        proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=args.workdir, env=(os.environ | env))
+        proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=args.workdir, env=(dict(os.environ) | env))
         read_process(proc, args.timeout, args.verbose, logfd)
         proc.wait()
         status = proc.returncode
