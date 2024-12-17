@@ -86,7 +86,7 @@ def run_one(wrap, exe, extra, bindir, prefix, logdir, workdir, timeout, verbose=
         proc.wait()                    
         status = proc.returncode
     except Exception as err:
-        print("::error::{} {}".format(exe, err), flush=True)
+        # print("::error::{} {}".format(exe, err), flush=True)
         traceback.print_exception(err)
         status = -1
     finally:
@@ -100,7 +100,7 @@ def run_one(wrap, exe, extra, bindir, prefix, logdir, workdir, timeout, verbose=
         print("::error::Failure => {} ({})".format(exe, status))
         return False
     else:
-        print("::notice::Success => {}".format(exe))
+        # print("::notice::Success => {}".format(exe))
         return True
 
 
@@ -116,9 +116,10 @@ if __name__ == "__main__":
     parser.add_argument('--timeout', type=int, default=10, help='Timeout in minutes')
     parser.add_argument('--prefix', default="out_", help='Prefix to add to logs')
     parser.add_argument('--workdir', default='.', type=Path, help="Working directory")
-    parser.add_argument('--logdir', type=Path, default='.', help='Directory to store logs (relative to workdir)')
+    parser.add_argument('--logdir', default='.', type=Path, help='Directory to store logs (relative to workdir)')
     parser.add_argument('--bindir', default='bin', type=Path, help="Directory with binaries (relative to workdir)")
     parser.add_argument('--verbose', help="Output all executable lines, print only errors and summary lines otherwise")
+    parser.add_argument('--summary', type=Path, help="Path to summary file to generate")
 
     args, other = parser.parse_known_args()
 
@@ -127,6 +128,10 @@ if __name__ == "__main__":
     with open(args.plan) as f:
         plan = json.load(f)
     suite = plan["suites"][args.suite]
+
+    sumfd = None
+    if args.summary:
+        sumfd = open(args.summary, 'wb')
 
     for exe in suite:
         wrap = []
@@ -150,10 +155,20 @@ if __name__ == "__main__":
         if filter:
             extra.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
                     
-        status &= run_one(wrap, exe, extra, args.bindir, args.prefix, args.logdir, args.workdir, args.timeout, args.verbose)
+        res = run_one(wrap, exe, extra, args.bindir, args.prefix, args.logdir, args.workdir, args.timeout, args.verbose)
+        status &= res
+
+        if sumfd:
+            if res:
+                sumfd.write("- :white_check_mark: {} => PASS\n")
+            else:
+                sumfd.write("- :x: {} => FAIL\n")
+
+    if sumfd:
+        sumfd.close()
 
     if status:
-        print("::notice::Testing succeeded ({})".format(args.plan))
+        print("::notice::Testing succeeded (plan: {}, count: {})".format(args.plan, len(suite)))
     else:
         print("::error::Testing failed ({})".format(args.plan))
         exit(1)

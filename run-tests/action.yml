@@ -39,7 +39,10 @@ runs:
         '--plan=scripts/test-plan.json' \
         '--suite=${{ inputs.suite }}' \
         '--filter=${{ inputs.filter }}' \
-        '--options=${{ inputs.options }}'
+        '--options=${{ inputs.options }}' \
+        '--summary=${{ inputs.workdir }}/${{ inputs.builddir }}/summary.md'
+      echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
+      cat ${{ inputs.workdir }}/${{ inputs.builddir }}/summary.md >> $GITHUB_STEP_SUMMARY
 
   # Logs
 

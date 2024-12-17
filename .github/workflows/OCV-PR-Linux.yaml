@@ -55,12 +55,6 @@ jobs:
             image: '20.04:20230413'
           - version: '24.04'
             jpegxl: "true"
-          - branch: '4.x'
-            amodules: 'calib3d core dnn features2d flann gapi highgui imgcodecs imgproc ml objdetect photo stitching video videoio'
-            pmodules: 'calib3d core dnn features2d gapi imgcodecs imgproc objdetect photo stitching video videoio'
-          - branch: '5.x'
-            amodules: '3d core dnn features flann gapi highgui imgcodecs imgproc ml objdetect photo stitching video videoio'
-            pmodules: '3d core dnn features gapi imgcodecs imgproc objdetect photo stitching video videoio'
     defaults:
       run:
         shell: bash
