@@ -74,7 +74,7 @@ def run_one(wrap, exe, extra, bindir, prefix, logdir, workdir, timeout, verbose=
     logfd = None
     try:
         # Open log file for stdout/stderr
-        full_log = logdir / (prefix + Path(exe).stem + ".txt")
+        full_log = workdir / logdir / (prefix + Path(exe).stem + ".txt")
         print("Log: {}".format(full_log), flush=True)
         logfd = open(full_log , 'wb')
         # Build command line
@@ -115,9 +115,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--timeout', type=int, default=10, help='Timeout in minutes')
     parser.add_argument('--prefix', default="out_", help='Prefix to add to logs')
-    parser.add_argument('--logdir', type=Path, default='.', help='Directory to store logs (can be relative)')
-    parser.add_argument('--bindir', default='bin', type=Path, help="Directory with binaries (can be relative)")
     parser.add_argument('--workdir', default='.', type=Path, help="Working directory")
+    parser.add_argument('--logdir', type=Path, default='.', help='Directory to store logs (relative to workdir)')
+    parser.add_argument('--bindir', default='bin', type=Path, help="Directory with binaries (relative to workdir)")
     parser.add_argument('--verbose', help="Output all executable lines, print only errors and summary lines otherwise")
 
     args, other = parser.parse_known_args()
