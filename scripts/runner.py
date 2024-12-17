@@ -56,7 +56,7 @@ def read_process(proc, timeout, verbose, logfd):
             if case_fail.match(line):
                 state = STATE_START
                 if not verbose:
-                    print('\n'.join(case_output), flush=True)        
+                    print('\n'.join(case_output), flush=True)
                 continue
         elif state == STATE_SUM:
             summary_output.append(line)
@@ -66,27 +66,22 @@ def read_process(proc, timeout, verbose, logfd):
         print('\n'.join(summary_output), flush=True)
 
 
-def run_one(wrap, exe, extra, bindir, prefix, logdir, workdir, timeout, verbose=False):
+def run_one(name, cmd, logname, env, args):
 
-    print("::group::Run {}".format(exe), flush=True)
+    print("::group::Run {}".format(name), flush=True)
+    print("Run: {}".format(cmd), flush=True)
+    print("Log: {}".format(logname), flush=True)
 
     status = 0
     logfd = None
     try:
-        # Open log file for stdout/stderr
-        full_log = workdir / logdir / (prefix + Path(exe).stem + ".txt")
-        print("Log: {}".format(full_log), flush=True)
-        logfd = open(full_log , 'wb')
-        # Build command line
-        full_exe = wrap + [bindir / Path(exe)] + extra
-        print("Run: {}".format(full_exe), flush=True)
-        # Run process and process its output
-        proc = Popen(full_exe, stdout=PIPE, stderr=STDOUT, cwd=workdir)
-        read_process(proc, timeout, verbose, logfd)
-        proc.wait()                    
+        logfd = open(logname, 'wb')
+        proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=args.workdir, env=(dict(os.environ) | env))
+        read_process(proc, args.timeout, args.verbose, logfd)
+        proc.wait()
         status = proc.returncode
     except Exception as err:
-        # print("::error::{} {}".format(exe, err), flush=True)
+        # print("::error::{} {}".format(name, err), flush=True)
         traceback.print_exception(err)
         status = -1
     finally:
@@ -97,10 +92,11 @@ def run_one(wrap, exe, extra, bindir, prefix, logdir, workdir, timeout, verbose=
     print("::endgroup::", flush=True)
 
     if status != 0:
-        print("::error::Failure => {} ({})".format(exe, status))
+        print("::error::Failure => {} ({})".format(name, status))
         return False
     else:
-        # print("::notice::Success => {}".format(exe))
+        # print("::notice::Success => {}".format(name))
+        print("Success => {}".format(name))
         return True
 
 
@@ -133,29 +129,47 @@ if __name__ == "__main__":
     if args.summary:
         sumfd = open(args.summary, 'wb')
 
-    for exe in suite:
+    for test in suite:
+        actual_exe = test
         wrap = []
-        extra = []
+        extra_args = []
+        env = {}
         if args.options:
             opt_node = plan["options"][args.options]
+            # Add wrapper command
             if opt_node["wrap"]:
                 for k, v in opt_node["wrap"].items():
-                    if k in exe:
+                    if k in test:
                         wrap = v.split()
                         break # Note: only one wrapper
+            # Add extra test arguments
             if opt_node["args"]:
                 for k, v in opt_node["args"].items():
-                    if k in exe:
-                        extra.extend(v.split())
+                    if k in test:
+                        extra_args.extend(v.split())
+            # Use different executable
+            if opt_node["exe"]:
+                for k, v in opt_node["exe"].items():
+                    if k in test:
+                        actual_exe = v
+                        break # Note: only one exe change
+            # Change environment
+            if opt_node["env"]:
+                for k, v in opt_node["exe"].items():
+                    if k in test:
+                        env |= v
+
         filter = []
         if args.filter:
             for k, v in plan["filters"][args.filter].items():
-                if k in exe:
+                if k in test:
                     filter.extend(v)
         if filter:
-            extra.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
-                    
-        res = run_one(wrap, exe, extra, args.bindir, args.prefix, args.logdir, args.workdir, args.timeout, args.verbose)
+            extra_args.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
+
+        cmd = wrap + [bindir / Path(actual_exe)] + extra_args
+        logname = args.workdir / args.logdir / (args.prefix + name + ".txt")
+        res = run_one(name, cmd, env, logname, env, args)
         status &= res
 
         if sumfd:
@@ -170,4 +184,3 @@ if __name__ == "__main__":
     else:
         print("::error::Testing failed ({})".format(args.plan))
         exit(1)
-    
