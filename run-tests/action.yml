@@ -7,23 +7,13 @@ inputs:
   builddir:
     description: "Build directory"
     default: "build"
-  wrapper:
-    description: "Prefix command (e.g. xvfb-run -a)"
-  accuracy_opt:
-    description: "Common options for all accuracy tests"
-    default: '--skip_unstable=1'
-  performance_opt:
-    description: "Common options for all performance tests"
-    default: '--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1'
-  accuracy_modules:
-    description: "List of modules to accuracy test (space-separated string)"
-  performance_modules:
-    description: "List of modules to perf test (space-separated string)"
-  skiplist:
-    description: "File skip-list.json with list of skipped tests"
-    default: "scripts/skip-list.json"
-  skipgroup:
-    description: "Group in skip-list file"
+  suite:
+    description: "Suite in test plan (gtest)"
+  filter:
+    description: "Filter in test plan (gtest)"
+  options:
+    description: "Options in test plan (gtest)"
+    default: "default"
   enable_python:
     description: "Enable Python testing"
     default: "false"
@@ -37,53 +27,27 @@ runs:
   using: "composite"
   steps:
 
-  # Accuracy
+  # Test
 
-  - if: ${{ always() && inputs.accuracy_modules }}
+  - if: ${{ always() }}
     shell: bash
     run: |
-      for m in ${{ inputs.accuracy_modules }} ; do
-        python3 scripts/runner.py \
-          '--wrap=${{ inputs.wrapper }}' \
-          '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
-          '--skiplist=${{ inputs.skiplist }}' \
-          '--skipgroup=${{ inputs.skipgroup }}' \
-          --log=log_a_${m}.txt \
-          ${{ inputs.accuracy_opt }} \
-          bin/opencv_test_${m} || FAILED=1
-      done
-      if [ -n "${FAILED}" ] ; then
-        echo "::error::Some tests have failed"
-        exit 1
-      fi
-
-  # Performance
-
-  - if: ${{ always() && inputs.performance_modules }}
-    shell: bash
-    run: |
-      for m in ${{ inputs.performance_modules }} ; do
-        python3 scripts/runner.py \
-          '--wrap=${{ inputs.wrapper }}' \
-          '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
-          '--skiplist=${{ inputs.skiplist }}' \
-          '--skipgroup=${{ inputs.skipgroup }}' \
-          --log=log_p_${m}.txt \
-          ${{ inputs.performance_opt }} \
-          bin/opencv_perf_${m} || FAILED=1
-      done
-      if [ -n "${FAILED}" ] ; then
-        echo "::error::Some tests have failed"
-        exit 1
-      fi
+      python3 scripts/runner.py \
+        '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
+        '--bindir=bin' \
+        '--logdir=.' \
+        '--plan=scripts/test-plan.json' \
+        '--suite=${{ inputs.suite }}' \
+        '--filter=${{ inputs.filter }}' \
+        '--options=${{ inputs.options }}'
 
   # Logs
 
-  - if: ${{ always() && (inputs.accuracy_modules || inputs.performance_modules) }}
+  - if: ${{ always() }}
     uses: actions/upload-artifact@v4
     with:
       name: test_logs_${{ inputs.suffix }}
-      path: '${{ inputs.workdir }}/${{ inputs.builddir }}/log_*_*.txt'
+      path: '${{ inputs.workdir }}/${{ inputs.builddir }}/out_*.txt'
       compression-level: 9
       retention-days: 14
 

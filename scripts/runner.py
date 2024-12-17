@@ -66,69 +66,94 @@ def read_process(proc, timeout, verbose, logfd):
         print('\n'.join(summary_output), flush=True)
 
 
-if __name__ == "__main__":
+def run_one(wrap, exe, extra, prefix, logdir, workdir, timeout, verbose=False):
 
-    parser = argparse.ArgumentParser(description='Run gtest executable in GHA context')
-    parser.add_argument('exe', help='Executable to run')
-    parser.add_argument('--log', type=Path, help='Path to store log')
-    parser.add_argument('--timeout', type=int, default=10, help='Timeout in minutes')
-    parser.add_argument('--wrap', default='', help="Wrapper command")
-    parser.add_argument('--workdir', default='.', type=Path, help="Change working dir")
-    parser.add_argument('--skiplist', type=Path, help="skip-list.json file")
-    parser.add_argument('--skipgroup', help="group in skip-list file")
-    parser.add_argument('--verbose', help="Output all executable lines, print only errors and summary lines otherwise")
-
-    args, other = parser.parse_known_args()
+    print("::group::Run {}".format(exe), flush=True)
 
     status = 0
-
-    print("::group::Run {}".format(args.exe), flush=True)
-
-    options = []
-
-    logfd = None
-    if args.log:
-        print("Log file: {}".format(args.workdir / args.log))
-        try:
-            logfd = open(args.workdir / args.log, 'wb')
-        except Exception as err:
-            print("::error::{} {}".format(args.exe, err), flush=True)
-            traceback.print_exception(err)
-            status = -3
-
-    if args.skiplist and args.skipgroup:
-        print("Skip list: {}@{}".format(args.skiplist, args.skipgroup))
-        try:
-            with open(args.skiplist) as f:
-                skip = json.load(f)[args.skipgroup]
-            for k, v in skip.items():
-                if k in args.exe:
-                    options += [ '--gtest_filter=*:-{}'.format(':'.join(v)) ]
-                    break
-        except Exception as err:
-            print("::error::{} {}".format(args.exe, err), flush=True)
-            traceback.print_exception(err)
-            status = -2
-
-    if status == 0:
-        full_exe = args.wrap.split() + [args.exe] + options + other
+    try:
+        # Open log file for stdout/stderr
+        full_log = logdir / (prefix + exe.stem + ".txt")
+        print("Log: {}".format(full_log), flush=True)
+        logfd = open(full_log , 'wb')
+        # Build command line
+        full_exe = wrap.split() + [exe] + extra
         print("Run: {}".format(full_exe), flush=True)
-        try:
-            proc = Popen(full_exe, stdout=PIPE, stderr=STDOUT, cwd=args.workdir)
-            read_process(proc, args.timeout, args.verbose, logfd)
-            proc.wait()                    
-            status = proc.returncode
-        except Exception as err:
-            print("::error::{} {}".format(args.exe, err), flush=True)
-            traceback.print_exception(err)
-            status = -1
-
-    if logfd:
-        logfd.close()
+        # Run process and process its output
+        proc = Popen(full_exe, stdout=PIPE, stderr=STDOUT, cwd=workdir)
+        read_process(proc, timeout, verbose, logfd)
+        proc.wait()                    
+        status = proc.returncode
+    except Exception as err:
+        print("::error::{} {}".format(exe, err), flush=True)
+        traceback.print_exception(err)
+        status = -1
+    finally:
+        if logfd:
+            logfd.close()
 
     print("", flush=True)
     print("::endgroup::", flush=True)
 
-    print("::{}::{} Exit status: {}".format("notice" if status == 0 else "error", args.exe, status), flush=True)
-    exit(status)
+    if status != 0:
+        print("::error::Failure => {} ({})".format(exe, status))
+        return False
+    else:
+        print("::notice::Success => {}".format(exe))
+        return True
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Run gtest executable in GHA context')
+
+    parser.add_argument('--plan', type=Path, required=True, help='Path to test plan file (JSON)')
+    parser.add_argument('--suite', required=True, help='Suite in test plan (set of executables)')
+    parser.add_argument('--filter', help='Filter in test plan (skip some testcases)')
+    parser.add_argument('--options', default="default", help='Options in test plan (extra run options)')
+
+    parser.add_argument('--timeout', type=int, default=10, help='Timeout in minutes')
+    parser.add_argument('--prefix', default="out_", help='Prefix to add to logs')
+    parser.add_argument('--logdir', type=Path, default='.', help='Directory to store logs (can be relative)')
+    parser.add_argument('--bindir', default='bin', type=Path, help="Directory with binaries (can be relative)")
+    parser.add_argument('--workdir', default='.', type=Path, help="Working directory")
+    parser.add_argument('--verbose', help="Output all executable lines, print only errors and summary lines otherwise")
+
+    args, other = parser.parse_known_args()
+
+    status = True
+
+    with open(args.plan) as f:
+        plan = json.load(f)
+    suite = plan["suites"][args.suite]
+
+    for exe in suite:
+        wrap = ""
+        extra = []
+        if args.options:
+            opt_node = plan["options"][args.options]
+            if opt_node["wrap"]:
+                for k, v in opt_node["wrap"].items():
+                    if k in exe:
+                        wrap = v
+                        break
+            if opt_node["args"]:
+                for k, v in opt_node["args"].items():
+                    if k in exe:
+                        extra.append(v)
+        filter = []
+        if args.filter:
+            for k, v in plan["filters"][args.filter].items():
+                if k in exe:
+                    filter.extend(v)
+        if filter:
+            extra.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
+                    
+        status &= run_one(wrap, args.bindir / exe, extra, args.prefix, args.logdir, args.workdir, args.timeout, args.verbose)
+
+    if status:
+        print("::notice::Testing succeeded ({})".format(args.plan))
+    else:
+        print("::error::Testing failed ({})".format(args.plan))
+        exit(1)
     

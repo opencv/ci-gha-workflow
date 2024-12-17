@@ -143,10 +143,8 @@ jobs:
       with:
         workdir: '${{ env.HOME }}'
         builddir: 'build'
-        wrapper: 'xvfb-run -a'
-        accuracy_modules: ${{ matrix.amodules }}
-        performance_modules: ${{ matrix.pmodules }}
-        skipgroup: "ubuntu24-list"
+        suite: "linux-${{ matrix.branch }}"
+        filter: "ubuntu-common"
         enable_python: "true"
         enable_java: "true"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'
