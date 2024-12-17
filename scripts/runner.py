@@ -159,10 +159,8 @@ if __name__ == "__main__":
         status &= res
 
         if sumfd:
-            if res:
-                sumfd.write("- :white_check_mark: {} => PASS\n")
-            else:
-                sumfd.write("- :x: {} => FAIL\n")
+            sum = "- :white_check_mark: {} => PASS\n" if res else "- :x: {} => FAIL\n"
+            sumfd.write(sum.format(exe).encode("utf-8"))
 
     if sumfd:
         sumfd.close()
