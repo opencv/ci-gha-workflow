@@ -63,6 +63,7 @@ runs:
       name: test_output_a_${{ inputs.suffix }}
       path: '${{ inputs.workdir }}/${{ inputs.builddir }}/log_a_*.txt'
       compression-level: 9
+      retention-days: 14
 
   # Performance
 
@@ -90,6 +91,7 @@ runs:
       name: test_output_p_${{ inputs.suffix }}
       path: '${{ inputs.workdir }}/${{ inputs.builddir }}/log_p_*.txt'
       compression-level: 9
+      retention-days: 14
 
   # Python
 
