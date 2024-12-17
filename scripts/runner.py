@@ -71,13 +71,14 @@ def run_one(name, cmd, logname, env, args):
 
     print("::group::Run {}".format(name), flush=True)
     print("Run: {}".format(cmd), flush=True)
+    print("Env: {}".format(env), flush=True)
     print("Log: {}".format(logname), flush=True)
 
     status = 0
     logfd = None
     try:
         logfd = open(logname, 'wb')
-        proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=args.workdir, env=(dict(os.environ) | env))
+        proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=args.workdir, env=(os.environ | env))
         read_process(proc, args.timeout, args.verbose, logfd)
         proc.wait()
         status = proc.returncode
@@ -156,7 +157,7 @@ if __name__ == "__main__":
                         break # Note: only one exe change
             # Change environment
             if opt_node["env"]:
-                for k, v in opt_node["exe"].items():
+                for k, v in opt_node["env"].items():
                     if k in name:
                         env |= v
 

@@ -1,6 +1,6 @@
 {
     "suites": {
-        "smoke": ["opencv_test_ml", "opencv_test_videoio", "opencv_test_highgui", "opencv_perf_photo"],
+        "smoke": ["opencv_test_dnn_classic", "opencv_test_ml", "opencv_test_videoio", "opencv_test_highgui", "opencv_perf_photo"],
         "linux-4.x": [
             "opencv_test_calib3d",
             "opencv_test_core",
@@ -96,7 +96,7 @@
             },
             "env": {
                 "opencv_test_dnn_classic": {
-                    "OPENCV_FORCE_DNN_ENGINE": 1
+                    "OPENCV_FORCE_DNN_ENGINE": "1"
                 }
             }
         }
