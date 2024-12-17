@@ -57,14 +57,6 @@ runs:
         exit 1
       fi
 
-  - if: ${{ always() && inputs.accuracy_modules }}
-    uses: actions/upload-artifact@v4
-    with:
-      name: test_output_a_${{ inputs.suffix }}
-      path: '${{ inputs.workdir }}/${{ inputs.builddir }}/log_a_*.txt'
-      compression-level: 9
-      retention-days: 14
-
   # Performance
 
   - if: ${{ always() && inputs.performance_modules }}
@@ -85,11 +77,13 @@ runs:
         exit 1
       fi
 
-  - if: ${{ always() && inputs.performance_modules }}
+  # Logs
+
+  - if: ${{ always() && (inputs.accuracy_modules || inputs.performance_modules) }}
     uses: actions/upload-artifact@v4
     with:
-      name: test_output_p_${{ inputs.suffix }}
-      path: '${{ inputs.workdir }}/${{ inputs.builddir }}/log_p_*.txt'
+      name: test_logs_${{ inputs.suffix }}
+      path: '${{ inputs.workdir }}/${{ inputs.builddir }}/log_*_*.txt'
       compression-level: 9
       retention-days: 14
 
