@@ -167,7 +167,7 @@ if __name__ == "__main__":
         if filter:
             extra_args.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
 
-        cmd = wrap + [bindir / Path(actual_exe)] + extra_args
+        cmd = wrap + [args.bindir / Path(actual_exe)] + extra_args
         logname = args.workdir / args.logdir / (args.prefix + name + ".txt")
         res = run_one(name, cmd, env, logname, env, args)
         status &= res
