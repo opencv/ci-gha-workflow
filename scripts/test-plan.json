@@ -74,6 +74,8 @@
                 "videoio/videoio_synthetic.write_read_position/13",
                 "videoio/videoio_synthetic.write_read_position/26",
                 "videoio/videoio_synthetic.write_read_position/29",
+                "videoio/videocapture_acceleration.read/24",
+                "videoio/videocapture_acceleration.read/26",
                 "videoio/videowriter_acceleration.write/40",
                 "videoio/videowriter_acceleration.write/42"
             ]

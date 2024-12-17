@@ -66,18 +66,19 @@ def read_process(proc, timeout, verbose, logfd):
         print('\n'.join(summary_output), flush=True)
 
 
-def run_one(wrap, exe, extra, prefix, logdir, workdir, timeout, verbose=False):
+def run_one(wrap, exe, extra, bindir, prefix, logdir, workdir, timeout, verbose=False):
 
     print("::group::Run {}".format(exe), flush=True)
 
     status = 0
+    logfd = None
     try:
         # Open log file for stdout/stderr
-        full_log = logdir / (prefix + exe.stem + ".txt")
+        full_log = logdir / (prefix + Path(exe).stem + ".txt")
         print("Log: {}".format(full_log), flush=True)
         logfd = open(full_log , 'wb')
         # Build command line
-        full_exe = wrap.split() + [exe] + extra
+        full_exe = wrap + [bindir / Path(exe)] + extra
         print("Run: {}".format(full_exe), flush=True)
         # Run process and process its output
         proc = Popen(full_exe, stdout=PIPE, stderr=STDOUT, cwd=workdir)
@@ -128,19 +129,19 @@ if __name__ == "__main__":
     suite = plan["suites"][args.suite]
 
     for exe in suite:
-        wrap = ""
+        wrap = []
         extra = []
         if args.options:
             opt_node = plan["options"][args.options]
             if opt_node["wrap"]:
                 for k, v in opt_node["wrap"].items():
                     if k in exe:
-                        wrap = v
-                        break
+                        wrap = v.split()
+                        break # Note: only one wrapper
             if opt_node["args"]:
                 for k, v in opt_node["args"].items():
                     if k in exe:
-                        extra.append(v)
+                        extra.extend(v.split())
         filter = []
         if args.filter:
             for k, v in plan["filters"][args.filter].items():
@@ -149,7 +150,7 @@ if __name__ == "__main__":
         if filter:
             extra.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
                     
-        status &= run_one(wrap, args.bindir / exe, extra, args.prefix, args.logdir, args.workdir, args.timeout, args.verbose)
+        status &= run_one(wrap, exe, extra, args.bindir, args.prefix, args.logdir, args.workdir, args.timeout, args.verbose)
 
     if status:
         print("::notice::Testing succeeded ({})".format(args.plan))
