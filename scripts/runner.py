@@ -7,6 +7,7 @@ import json
 import re
 import time
 import traceback
+import os
 
 STATE_START = 1
 STATE_CASE = 2
@@ -129,9 +130,9 @@ if __name__ == "__main__":
     if args.summary:
         sumfd = open(args.summary, 'wb')
 
-    for test in suite:
-        actual_exe = test
+    for name in suite:
         wrap = []
+        actual_exe = name
         extra_args = []
         env = {}
         if args.options:
@@ -139,42 +140,42 @@ if __name__ == "__main__":
             # Add wrapper command
             if opt_node["wrap"]:
                 for k, v in opt_node["wrap"].items():
-                    if k in test:
+                    if k in name:
                         wrap = v.split()
                         break # Note: only one wrapper
             # Add extra test arguments
             if opt_node["args"]:
                 for k, v in opt_node["args"].items():
-                    if k in test:
+                    if k in name:
                         extra_args.extend(v.split())
             # Use different executable
             if opt_node["exe"]:
                 for k, v in opt_node["exe"].items():
-                    if k in test:
+                    if k in name:
                         actual_exe = v
                         break # Note: only one exe change
             # Change environment
             if opt_node["env"]:
                 for k, v in opt_node["exe"].items():
-                    if k in test:
+                    if k in name:
                         env |= v
 
         filter = []
         if args.filter:
             for k, v in plan["filters"][args.filter].items():
-                if k in test:
+                if k in name:
                     filter.extend(v)
         if filter:
             extra_args.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
 
         cmd = wrap + [args.bindir / Path(actual_exe)] + extra_args
         logname = args.workdir / args.logdir / (args.prefix + name + ".txt")
-        res = run_one(name, cmd, env, logname, env, args)
+        res = run_one(name, cmd, logname, env, args)
         status &= res
 
         if sumfd:
             sum = "- :white_check_mark: {} => PASS\n" if res else "- :x: {} => FAIL\n"
-            sumfd.write(sum.format(exe).encode("utf-8"))
+            sumfd.write(sum.format(name).encode("utf-8"))
 
     if sumfd:
         sumfd.close()
