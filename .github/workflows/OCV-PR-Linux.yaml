@@ -49,12 +49,15 @@ jobs:
         include:
           - version: '24.04'
             image: '24.04:20241031'
+            jpegxl: true
+            avx2: true
           - version: '22.04'
             image: '22.04:20230602'
+            plugins: true
           - version: '20.04'
             image: '20.04:20230413'
-          - version: '24.04'
-            jpegxl: "true"
+            limited_api: true
+            
     defaults:
       run:
         shell: bash
@@ -75,7 +78,14 @@ jobs:
       DNN_MODELS: '/opt/dnn-models'
       CCACHE_DIR: '/opt/.ccache'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
-      CMAKE_OPT: "-DBUILD_DOCS=ON -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}"
+      CMAKE_OPT: >-
+        -DBUILD_DOCS=ON 
+        -DBUILD_EXAMPLES=ON 
+        -DOPENCV_ENABLE_NONFREE=ON 
+        ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }} 
+        ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}} 
+        ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }} 
+        ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
       HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
       OPENCV_FOR_THREADS_NUM: 4
       CMAKE_BUILD_PARALLEL_LEVEL: 4
