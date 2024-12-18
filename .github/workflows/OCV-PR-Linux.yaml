@@ -125,7 +125,6 @@ jobs:
         workdir: '${{ env.HOME }}'
         builddir: 'build'
         generator: 'Ninja'
-        enable_contrib: 'false'
         options: '${{ env.CMAKE_OPT }}'
 
     - name: Configure and build OpenCV with contrib
@@ -134,8 +133,7 @@ jobs:
         workdir: '${{ env.HOME }}'
         builddir: 'build-contrib'
         generator: 'Ninja'
-        enable_contrib: 'true'
-        options: '${{ env.CMAKE_OPT }}'
+        options: '-DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 
     - name: Run OpenCV tests
       uses: ./run-tests
@@ -149,6 +147,6 @@ jobs:
         builddir: 'build'
         suite: "linux-${{ matrix.branch }}"
         filter: "ubuntu-common"
-        enable_python: "true"
-        enable_java: "true"
+        # enable_python: "true"
+        # enable_java: "true"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'

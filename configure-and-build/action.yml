@@ -11,9 +11,6 @@ inputs:
     description: "CMake generator, e.g. Ninja"
   options:
     description: "Extra CMake options"
-  enable_contrib:
-    description: "Enable opencv_contrib"
-    default: "false"
 
 runs:
   using: "composite"
@@ -29,7 +26,6 @@ runs:
           -S opencv \
           -B ${{ inputs.builddir }} \
           -G ${{ inputs.generator }} \
-          ${{ fromJSON(inputs.enable_contrib) && '-DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules' }} \
           ${{ inputs.options }}
         echo "::endgroup::"
 
