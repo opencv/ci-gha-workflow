@@ -25,7 +25,7 @@ runs:
   steps:
 
   # opencv
-  
+
   - if: ${{ contains(inputs.repos, 'main') }}
     working-directory: ${{ inputs.workdir }}
     shell: bash
