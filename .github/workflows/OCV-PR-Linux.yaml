@@ -125,7 +125,7 @@ jobs:
         workdir: '${{ env.HOME }}'
         builddir: 'build'
         generator: 'Ninja'
-        enable_contrib: false
+        enable_contrib: 'false'
         options: '${{ env.CMAKE_OPT }}'
 
     - name: Configure and build OpenCV with contrib
@@ -134,7 +134,7 @@ jobs:
         workdir: '${{ env.HOME }}'
         builddir: 'build-contrib'
         generator: 'Ninja'
-        enable_contrib: true
+        enable_contrib: 'true'
         options: '${{ env.CMAKE_OPT }}'
 
     - name: Run OpenCV tests
