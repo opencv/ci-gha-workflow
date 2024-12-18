@@ -32,7 +32,7 @@ jobs:
             else
               echo "branches=[ '${{ github.base_ref }}' ]" >> "$GITHUB_OUTPUT"
             fi
-  
+
   Ubuntu:
     runs-on: opencv-ru-lin-riscv
     needs:
@@ -41,7 +41,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        version: 
+        version:
           - '24.04'
           - '22.04'
           - '20.04'
@@ -57,7 +57,7 @@ jobs:
           - version: '20.04'
             image: '20.04:20230413'
             limited_api: true
-            
+
     defaults:
       run:
         shell: bash
@@ -79,12 +79,12 @@ jobs:
       CCACHE_DIR: '/opt/.ccache'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
       CMAKE_OPT: >-
-        -DBUILD_DOCS=ON 
-        -DBUILD_EXAMPLES=ON 
-        -DOPENCV_ENABLE_NONFREE=ON 
-        ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }} 
-        ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}} 
-        ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }} 
+        -DBUILD_DOCS=ON
+        -DBUILD_EXAMPLES=ON
+        -DOPENCV_ENABLE_NONFREE=ON
+        ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
+        ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
+        ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
         ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
       HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
       OPENCV_FOR_THREADS_NUM: 8
