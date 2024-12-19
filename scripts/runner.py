@@ -79,18 +79,19 @@ def run_one(name, cmd, logname, env, args):
     try:
         logfd = open(logname, 'wb')
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=args.workdir, env=(dict(os.environ) | env))
+        print("PID: {}".format(proc.pid), flush=True)
         read_process(proc, args.timeout, args.verbose, logfd)
         proc.wait()
         status = proc.returncode
+        print("Return code: {}".format(status), flush=True)
     except Exception as err:
-        # print("::error::{} {}".format(name, err), flush=True)
+        print("Exception", flush=True)
         traceback.print_exc()
         status = -1
     finally:
         if logfd:
             logfd.close()
 
-    print("", flush=True)
     print("::endgroup::", flush=True)
 
     if status != 0:
@@ -169,7 +170,11 @@ if __name__ == "__main__":
         if filter:
             extra_args.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
 
-        cmd = wrap + [args.bindir / Path(actual_exe)] + extra_args
+        actual_exe = args.bindir / Path(actual_exe)
+        if not actual_exe.exists() or not actual_exe.is_file():
+            print("Executable not found: {}".format(actual_exe))
+            status = False
+        cmd = wrap + [actual_exe] + extra_args
         logname = args.workdir / args.logdir / (args.prefix + name + ".txt")
         res = run_one(name, cmd, logname, env, args)
         status &= res
