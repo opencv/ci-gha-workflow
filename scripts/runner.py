@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--plan', type=Path, required=True, help='Path to test plan file (JSON)')
     parser.add_argument('--suite', required=True, help='Suite in test plan (set of executables)')
-    parser.add_argument('--filter', help='Filter in test plan (skip some testcases)')
+    parser.add_argument('--filter', nargs='*', help='Filter in test plan (skip some testcases), multiple allowed')
     parser.add_argument('--options', default="default", help='Options in test plan (extra run options)')
 
     parser.add_argument('--timeout', type=int, default=10, help='Timeout in minutes')
@@ -167,9 +167,10 @@ if __name__ == "__main__":
 
         filter = []
         if args.filter:
-            for k, v in plan["filters"][args.filter].items():
-                if k in name:
-                    filter.extend(v)
+            for one_filter in args.filter:
+                for k, v in plan["filters"][one_filter].items():
+                    if k in name:
+                        filter.extend(v)
         if filter:
             extra_args.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
 

@@ -77,6 +77,12 @@
                 "videoio/videowriter_acceleration.write/40",
                 "videoio/videowriter_acceleration.write/42"
             ]
+        },
+        "ubuntu-avx2": {
+            "test_core": [
+                "Core_InRangeS/ElemWiseTest.accuracy/0",
+                "Core_InRange/ElemWiseTest.accuracy/0"
+            ]
         }
     },
     "options": {

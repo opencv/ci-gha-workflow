@@ -10,7 +10,7 @@ inputs:
   suite:
     description: "Suite in test plan (gtest)"
   filter:
-    description: "Filter in test plan (gtest)"
+    description: "Filter(s) in test plan (gtest) (JSON list)"
   options:
     description: "Options in test plan (gtest)"
     default: "default"
@@ -39,7 +39,7 @@ runs:
         '--logdir=.' \
         '--plan=scripts/test-plan.json' \
         '--suite=${{ inputs.suite }}' \
-        '--filter=${{ inputs.filter }}' \
+        '--filter=${{ join(fromJSON(inputs.filter), " --filter=" }}' \
         '--options=${{ inputs.options }}' \
         "--summary=$GITHUB_STEP_SUMMARY"
 
