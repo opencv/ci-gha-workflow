@@ -8,6 +8,7 @@ import re
 import time
 import traceback
 import os
+import sys
 
 STATE_START = 1
 STATE_CASE = 2
@@ -77,15 +78,17 @@ def run_one(name, cmd, logname, env, args):
     status = 0
     logfd = None
     try:
+        full_env = dict(os.environ)
+        full_env.update(env)
         logfd = open(logname, 'wb')
-        proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=args.workdir, env=(dict(os.environ) | env))
+        proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=args.workdir, env=full_env)
         print("PID: {}".format(proc.pid), flush=True)
         read_process(proc, args.timeout, args.verbose, logfd)
         proc.wait()
         status = proc.returncode
         print("Return code: {}".format(status), flush=True)
     except Exception as err:
-        print("Exception {}".format(err), flush=True)
+        print("Exception: {}".format(err), flush=True)
         traceback.print_exc(file=sys.stdout)
         status = -1
     finally:
