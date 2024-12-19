@@ -170,18 +170,20 @@ if __name__ == "__main__":
         if filter:
             extra_args.append('--gtest_filter=*:-{}'.format(':'.join(filter)))
 
-        actual_exe = args.bindir / Path(actual_exe)
+        actual_exe = args.workdir / args.bindir / Path(actual_exe)
         if not actual_exe.exists() or not actual_exe.is_file():
             print("Executable not found: {}".format(actual_exe))
-            status = False
-        cmd = wrap + [actual_exe] + extra_args
-        logname = args.workdir / args.logdir / (args.prefix + name + ".txt")
-        res = run_one(name, cmd, logname, env, args)
-        status &= res
+            res = -3
+        else:
+            cmd = wrap + [actual_exe] + extra_args
+            logname = args.workdir / args.logdir / (args.prefix + name + ".txt")
+            res = run_one(name, cmd, logname, env, args)
 
         if sumfd:
             sum = "- :white_check_mark: {} => PASS\n" if res else "- :x: {} => FAIL\n"
             sumfd.write(sum.format(name).encode("utf-8"))
+
+        status &= res
 
     if sumfd:
         sumfd.close()
