@@ -76,7 +76,7 @@ runs:
 
     # Java
 
-  - if: ${{ always() && inputs.enable_java }}
+  - if: ${{ always() && fromJSON(inputs.enable_java) }}
     id: java-test
     shell: bash
     working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}

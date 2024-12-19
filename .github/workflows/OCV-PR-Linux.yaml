@@ -147,6 +147,6 @@ jobs:
         builddir: 'build'
         suite: "linux-${{ matrix.branch }}"
         filter: "ubuntu-common"
-        # enable_python: "true"
-        # enable_java: "true"
+        enable_python: "true"
+        enable_java: "true"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'
