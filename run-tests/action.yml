@@ -39,7 +39,7 @@ runs:
         '--logdir=.' \
         '--plan=scripts/test-plan.json' \
         '--suite=${{ inputs.suite }}' \
-        '--filter=${{ join(fromJSON(inputs.filter), " --filter=") }}' \
+        '--filter=${{ join(fromJSON(inputs.filter), '' --filter='') }}' \
         '--options=${{ inputs.options }}' \
         "--summary=$GITHUB_STEP_SUMMARY"
 
