@@ -85,8 +85,8 @@ def run_one(name, cmd, logname, env, args):
         status = proc.returncode
         print("Return code: {}".format(status), flush=True)
     except Exception as err:
-        print("Exception", flush=True)
-        traceback.print_exc()
+        print("Exception {}".format(err), flush=True)
+        traceback.print_exc(file=sys.stdout)
         status = -1
     finally:
         if logfd:
