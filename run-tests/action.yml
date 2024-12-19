@@ -32,6 +32,7 @@ runs:
   - if: ${{ always() }}
     shell: bash
     run: |
+      echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
       python3 scripts/runner.py \
         '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
         '--bindir=bin' \
@@ -40,9 +41,7 @@ runs:
         '--suite=${{ inputs.suite }}' \
         '--filter=${{ inputs.filter }}' \
         '--options=${{ inputs.options }}' \
-        '--summary=${{ inputs.workdir }}/${{ inputs.builddir }}/summary.md'
-      echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
-      cat ${{ inputs.workdir }}/${{ inputs.builddir }}/summary.md >> $GITHUB_STEP_SUMMARY
+        '--summary=$GITHUB_STEP_SUMMARY'
 
   # Logs
 
