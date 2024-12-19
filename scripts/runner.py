@@ -163,7 +163,7 @@ if __name__ == "__main__":
             if opt_node["env"]:
                 for k, v in opt_node["env"].items():
                     if k in name:
-                        env |= v
+                        env.update(v)
 
         filter = []
         if args.filter:
