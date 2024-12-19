@@ -41,7 +41,7 @@ runs:
         '--suite=${{ inputs.suite }}' \
         '--filter=${{ inputs.filter }}' \
         '--options=${{ inputs.options }}' \
-        '--summary=$GITHUB_STEP_SUMMARY'
+        "--summary=$GITHUB_STEP_SUMMARY"
 
   # Logs
 
