@@ -25,6 +25,10 @@ inputs:
 
 runs:
   using: "composite"
+
+  env:
+    PYTHONPATH: '${{ inputs.workdir }}/${{ inputs.builddir }}/python_loader:$PYTHONPATH'
+
   steps:
 
   # Test

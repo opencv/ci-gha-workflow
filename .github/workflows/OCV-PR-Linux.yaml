@@ -130,7 +130,6 @@ jobs:
         OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
         OPENCV_TEST_REQUIRE_DATA: 1
         OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
-        PYTHONPATH: '${{ env.HOME }}/build/python_loader:$PYTHONPATH'
       with:
         workdir: '${{ env.HOME }}'
         builddir: ${{ (github.event.repository.name == 'opencv_contrib') && 'build-contrib' || 'build' }}
