@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     suite = []
     for one_suite in args.suite:
-        suite.extend(plan["suites"][one.suite])
+        suite.extend(plan["suites"][one_suite])
 
     sumfd = None
     if args.summary:
