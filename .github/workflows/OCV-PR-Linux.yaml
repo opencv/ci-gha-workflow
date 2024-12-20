@@ -133,7 +133,7 @@ jobs:
         PYTHONPATH: '${{ env.HOME }}/build/python_loader:$PYTHONPATH'
       with:
         workdir: '${{ env.HOME }}'
-        builddir: 'build'
+        builddir: ${{ github.event.repository.name == 'opencv_contrib' && 'build-contrib' || 'build' }}
         suite: "[ 'linux-${{ matrix.branch }}', ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }} ]"
         filter: "[ 'ubuntu-common', ${{ matrix.avx2 && '''ubuntu-avx2''' }} ]"
         enable_python: "true"
