@@ -179,8 +179,8 @@ if __name__ == "__main__":
 
         actual_exe = args.workdir / args.bindir / Path(actual_exe)
         if not actual_exe.exists() or not actual_exe.is_file():
-            print("Executable not found: {}".format(actual_exe))
-            res = -3
+            print("::error::Executable not found: {}".format(actual_exe))
+            res = False
         else:
             cmd = wrap + [actual_exe] + extra_args
             logname = args.workdir / args.logdir / (args.prefix + name + ".txt")

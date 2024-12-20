@@ -38,7 +38,6 @@
             "opencv_test_face",
             "opencv_test_fuzzy",
             "opencv_test_hdf",
-            "opencv_test_img_aug",
             "opencv_test_img_hash",
             "opencv_test_intensity_transform",
             "opencv_test_line_descriptor",
