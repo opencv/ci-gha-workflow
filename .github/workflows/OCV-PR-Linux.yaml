@@ -21,7 +21,7 @@ concurrency:
 jobs:
 
   FixWorkspace:
-    runs-on: opencv-cn-lin-x86-64-5
+    runs-on: fix
     defaults:
       run:
         shell: bash
