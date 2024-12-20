@@ -51,7 +51,7 @@ jobs:
           - '22.04'
           - '20.04'
         # branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
-        branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '[4.x, 5.x]' || '[ ${{ github.base_ref }} ]' }}
+        branch: ${{ github.event.repository.name == 'ci-gha-workflow' && fromJSON('[4.x, 5.x]') || '[ ${{ github.base_ref }} ]' }}
         include:
           - version: '24.04'
             image: '24.04:20241031'
