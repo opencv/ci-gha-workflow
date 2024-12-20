@@ -36,6 +36,7 @@ jobs:
             ls -la
             ls -laR
             rm -rf ci-gha-workflow
+            chown -R -c ubuntu:ubuntu *
 
   # branch_eval:
   #   runs-on: ubuntu-latest
