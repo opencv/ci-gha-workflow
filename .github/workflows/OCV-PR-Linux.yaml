@@ -20,25 +20,9 @@ concurrency:
 
 jobs:
 
-  # branch_eval:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     branches: ${{ steps.determine-branches.outputs.branches }}
-  #   steps:
-  #       - id: determine-branches
-  #         shell: bash
-  #         run: |
-  #           if [ "${{ github.event.repository.name == 'ci-gha-workflow' }}" = "true" ] ; then
-  #             echo "branches=[ '4.x', '5.x' ]" >> "$GITHUB_OUTPUT"
-  #           else
-  #             echo "branches=[ '${{ github.base_ref }}' ]" >> "$GITHUB_OUTPUT"
-  #           fi
-
   Ubuntu:
     # runs-on: opencv-ru-lin-riscv
     runs-on: opencv-cn-lin-x86-64
-    # needs:
-    #   - branch_eval
     strategy:
       # Debugging
       # fail-fast: true
@@ -50,7 +34,6 @@ jobs:
           - '24.04'
           - '22.04'
           - '20.04'
-        # branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         branch: ${{ github.event.repository.name == 'ci-gha-workflow' && fromJSON('["4.x", "5.x"]') || fromJSON(format('[ "{0}" ]', github.base_ref)) }}
         include:
           - version: '24.04'

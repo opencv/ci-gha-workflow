@@ -78,6 +78,7 @@ runs:
       echo "OPENCV_CONTRIB_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads https://github.com/${{ inputs.author }}/opencv_contrib ${{ inputs.source_branch }})" >> $GITHUB_ENV
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'contrib') && inputs.source_branch && env.OPENCV_CONTRIB_FORK }}
+    working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
       echo "::group::Merge opencv_contrib"
@@ -108,6 +109,7 @@ runs:
       echo "OPENCV_EXTRA_FORK=$(HOME=${{ inputs.home }} git ls-remote --heads https://github.com/${{ inputs.author }}/opencv_extra ${{ inputs.source_branch }})" >> $GITHUB_ENV
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'extra') && inputs.source_branch && env.OPENCV_EXTRA_FORK }}
+    working-directory: ${{ inputs.workdir }}
     shell: bash
     run: |
       echo "::group::Merge opencv_extra"
