@@ -8,7 +8,7 @@ inputs:
     description: "Build directory"
     default: "build"
   suite:
-    description: "Suite in test plan (gtest)"
+    description: "Suite in test plan (gtest) (JSON list)"
   filter:
     description: "Filter(s) in test plan (gtest) (JSON list)"
   options:
@@ -38,7 +38,7 @@ runs:
         '--bindir=bin' \
         '--logdir=.' \
         '--plan=scripts/test-plan.json' \
-        '--suite=${{ inputs.suite }}' \
+        --suite=${{ join(fromJSON(inputs.suite), '--suite=') }} \
         --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
         '--options=${{ inputs.options }}' \
         "--summary=$GITHUB_STEP_SUMMARY"

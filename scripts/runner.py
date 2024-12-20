@@ -111,7 +111,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run gtest executable in GHA context')
 
     parser.add_argument('--plan', type=Path, required=True, help='Path to test plan file (JSON)')
-    parser.add_argument('--suite', required=True, help='Suite in test plan (set of executables)')
+    parser.add_argument('--suite', action='append', required=True, help='Suite in test plan (set of executables), multiple allowed')
     parser.add_argument('--filter', action='append', help='Filter in test plan (skip some testcases), multiple allowed')
     parser.add_argument('--options', default="default", help='Options in test plan (extra run options)')
 
@@ -129,7 +129,10 @@ if __name__ == "__main__":
 
     with open(args.plan) as f:
         plan = json.load(f)
-    suite = plan["suites"][args.suite]
+
+    suite = []
+    for one_suite in args.suite:
+        suite.extend(plan["suites"][one.suite])
 
     sumfd = None
     if args.summary:
