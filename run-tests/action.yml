@@ -25,14 +25,15 @@ inputs:
 
 runs:
   using: "composite"
-
   env:
-    PYTHONPATH: '${{ inputs.workdir }}/${{ inputs.builddir }}/python_loader:$PYTHONPATH'
-
+    
   steps:
 
-  # Test
+  - shell: bash
+    run: echo "PYTHONPATH=${{ inputs.workdir }}/${{ inputs.builddir }}/python_loader:$PYTHONPATH" >> $GITHUB_ENV
 
+  # Test
+  
   - if: ${{ always() }}
     shell: bash
     run: |
