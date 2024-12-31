@@ -23,15 +23,17 @@ def warnings_count(filename, verbose):
     warnings = 0
     suppressed = 0
     total = 0
+    seen_warnings = []
     for line in open(filename):
         total += 1
         match = rx.search(line)
         if match:
             if is_suppressed(line):
                 suppressed += 1
-            else:
+            elif line not in seen_warnings:
                 print("***> {}".format(line.rstrip()))
                 warnings += 1
+                seen_warnings.append(line)
                 continue
         if verbose:
             print(line.rstrip())
