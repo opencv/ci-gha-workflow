@@ -1,21 +1,21 @@
-name: OCV WinPack:4.x W10
+name: OCV WinPack:4.11.0 W10
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-WinPack-4.x-W10.yaml'
+      - '.github/workflows/OCV-WinPack-4.11.0-W10.yaml'
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: OCV-WinPack-4.x-W10-${{ github.ref }}
+  group: OCV-WinPack-4.11.0-W10-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  BRANCH_NAME: 4.x
+  BRANCH_NAME: 4.11.0
 
 jobs:
   Build:
