@@ -89,7 +89,7 @@ jobs:
         run: cd /home/ci/build && zip -r -9 -y OpenCV3Android.zip OpenCV-android-sdk
       - name: Release Package
         timeout-minutes: 60
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
         with:
           name: OpenCV3AndroidSDK
