@@ -172,9 +172,8 @@ jobs:
     - name: Accuracy:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: |
-        # batch script is used to run videoio accuracy test iteratively in case of random failures in a parallel run on a self-hosted runner
-        cd ${{ github.workspace }}\build && %CI_SCRIPTS%\videoio.bat
+      # batch script is used to run videoio accuracy test iteratively in case of random failures in a parallel run on a self-hosted runner
+      run: cd ${{ github.workspace }}\build && %CI_SCRIPTS%\videoio.bat
     - name: Performance:calib3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
