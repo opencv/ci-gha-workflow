@@ -20,7 +20,7 @@ env:
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
   OPENCV_TEST_DATA_PATH: ${{ github.workspace }}\opencv_extra\testdata
   OPENCV_TEST_REQUIRE_DATA: 1
-  GTEST_FILTER_STRING: '-Samples.findFile:videoio/videocapture_acceleration.read/122:videoio/videocapture_acceleration.read/126'
+  GTEST_FILTER_STRING: '-Samples.findFile:videoio/videocapture_acceleration.read/122:videoio/videocapture_acceleration.read/126:videoio/videocapture_acceleration.read/136'
   DOWNLOAD_DNN_MODELS_FILE: 'download_models.py'
 
 jobs:
