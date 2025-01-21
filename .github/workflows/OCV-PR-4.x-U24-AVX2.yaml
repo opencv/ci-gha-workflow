@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DCPU_BASELINE=AVX2 -DBUILD_JAVA=OFF -DOPENCV_ENABLE_NONFREE=ON'
+  EXTRA_CMAKE_OPTIONS: '-DCPU_BASELINE=AVX2 -DWITH_IMGCODEC_GIF=ON -DWITH_AVIF=ON -DBUILD_JAVA=OFF -DOPENCV_ENABLE_NONFREE=ON'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
