@@ -27,7 +27,7 @@ env:
   # GStreamer 1.20 distributed with Ubuntu 22.04 as bug in JPEG integration
   # Details: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1122
   # G-API bug with GCC 11+: https://github.com/opencv/opencv/issues/19678
-  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:videoio/videoio_synthetic.write_read_position/10:videoio/videoio_synthetic.write_read_position/13:videoio/videoio_synthetic.write_read_position/26:videoio/videoio_synthetic.write_read_position/29:videoio/videocapture_acceleration.read/24:videoio/videocapture_acceleration.read/26'
+  GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*:videoio/videoio_synthetic.write_read_position/10:videoio/videoio_synthetic.write_read_position/13:videoio/videoio_synthetic.write_read_position/26:videoio/videoio_synthetic.write_read_position/29:videoio/videocapture_acceleration.read/24:videoio/videocapture_acceleration.read/26:AsyncAPICancelation/cancel/*'
   PARALLEL_JOBS: 8
 
 jobs:
@@ -181,6 +181,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_fuzzy --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_gapi --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:hdf
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -353,6 +357,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_features --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:gapi
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_gapi --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
