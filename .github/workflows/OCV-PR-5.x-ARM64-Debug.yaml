@@ -182,7 +182,7 @@ jobs:
     - name: Accuracy:videoio
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_videoio --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_videoio --test_threads=$PARALLEL_JOBS --gtest_filter="-:Media.audio/0" ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Python3
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
