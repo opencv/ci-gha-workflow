@@ -1,0 +1,131 @@
+{
+    "suites": {
+        "short": [ "opencv_test_core", "opencv_test_imgproc", "opencv_test_photo" ],
+
+        "linux": [
+            "opencv_test_3d",
+            "opencv_test_calib",
+            "opencv_test_core",
+            "opencv_test_dnn_classic",
+            "opencv_test_dnn",
+            "opencv_test_features",
+            "opencv_test_flann",
+            "opencv_test_highgui",
+            "opencv_test_imgcodecs",
+            "opencv_test_imgproc",
+            "opencv_test_objdetect",
+            "opencv_test_photo",
+            "opencv_test_stereo",
+            "opencv_test_stitching",
+            "opencv_test_video",
+            "opencv_test_videoio",
+            "opencv_perf_3d",
+            "opencv_perf_calib",
+            "opencv_perf_core",
+            "opencv_perf_dnn",
+            "opencv_perf_features",
+            "opencv_perf_imgcodecs",
+            "opencv_perf_imgproc",
+            "opencv_perf_objdetect",
+            "opencv_perf_photo",
+            "opencv_perf_stereo",
+            "opencv_perf_stitching",
+            "opencv_perf_video",
+            "opencv_perf_videoio"
+        ],
+
+        "linux-contrib": [
+            "opencv_test_bgsegm",
+            "opencv_test_bioinspired",
+            "opencv_test_dnn_superres",
+            "opencv_test_face",
+            "opencv_test_fuzzy",
+            "opencv_test_gapi",
+            "opencv_test_hdf",
+            "opencv_test_img_hash",
+            "opencv_test_intensity_transform",
+            "opencv_test_line_descriptor",
+            "opencv_test_mcc",
+            "opencv_test_ml",
+            "opencv_test_optflow",
+            "opencv_test_phase_unwrapping",
+            "opencv_test_quality",
+            "opencv_test_rapid",
+            "opencv_test_reg",
+            "opencv_test_rgbd",
+            "opencv_test_saliency",
+            "opencv_test_sfm",
+            "opencv_test_shape",
+            "opencv_test_structured_light",
+            "opencv_test_superres",
+            "opencv_test_text",
+            "opencv_test_tracking",
+            "opencv_test_videostab",
+            "opencv_test_wechat_qrcode",
+            "opencv_test_xfeatures2d",
+            "opencv_test_ximgproc",
+            "opencv_test_xobjdetect",
+            "opencv_test_xphoto",
+            "opencv_test_xstereo",
+            "opencv_perf_bioinspired",
+            "opencv_perf_dnn_superres",
+            "opencv_perf_gapi",
+            "opencv_perf_line_descriptor",
+            "opencv_perf_optflow",
+            "opencv_perf_reg",
+            "opencv_perf_superres",
+            "opencv_perf_tracking",
+            "opencv_perf_xfeatures2d",
+            "opencv_perf_ximgproc",
+            "opencv_perf_xobjdetect",
+            "opencv_perf_xphoto",
+            "opencv_perf_xstereo"
+        ]
+    },
+    "filters": {
+        "ubuntu-common": {
+            "test_gapi": [
+                "AsyncAPICancelation/cancel/*"
+            ],
+            "test_videoio": [
+                "videoio/videoio_synthetic.write_read_position/9",
+                "videoio/videoio_synthetic.write_read_position/12",
+                "videoio/videoio_synthetic.write_read_position/25",
+                "videoio/videoio_synthetic.write_read_position/28",
+                "videoio/videoio_synthetic.write_read_position/10",
+                "videoio/videoio_synthetic.write_read_position/13",
+                "videoio/videoio_synthetic.write_read_position/26",
+                "videoio/videoio_synthetic.write_read_position/29",
+                "videoio/videocapture_acceleration.read/24",
+                "videoio/videocapture_acceleration.read/26",
+                "videoio/videowriter_acceleration.write/40",
+                "videoio/videowriter_acceleration.write/42"
+            ]
+        },
+        "ubuntu-avx2": {
+            "test_core": [
+                "Core_InRangeS/ElemWiseTest.accuracy/0",
+                "Core_InRange/ElemWiseTest.accuracy/0"
+            ]
+        }
+    },
+    "options": {
+        "default": {
+            "wrap": {
+                "highgui": "xvfb-run -a"
+            },
+            "args": {
+                "test": "--skip_unstable=1",
+                "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"
+            },
+            "exe": {
+                "opencv_test_dnn_classic": "opencv_test_dnn"
+            },
+            "env": {
+                "opencv_test_dnn_classic": {
+                    "OPENCV_FORCE_DNN_ENGINE": "1"
+                }
+            }
+        }
+    }
+}

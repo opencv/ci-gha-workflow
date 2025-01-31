@@ -1,0 +1,199 @@
+name: OCV PR Linux
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-Linux.yaml'
+      # TODO: are following paths necessary?
+      - 'checkout-and-merge/*'
+      - 'configure-and-build/*'
+      - 'run-tests/*'
+      - 'scripts/runner.py'
+      - 'scripts/test-plan.json'
+  workflow_call:
+    inputs:
+      workflow_branch:
+        description: "Branch for ci-gha-workflow repository"
+        default: "main"
+        required: false
+        type: string
+
+concurrency:
+  group: OCV-PR-Linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  branch_eval:
+    runs-on: ubuntu-24.04
+    outputs:
+      branches: ${{ steps.determine-branches.outputs.branches }}
+    steps:
+        - id: determine-branches
+          shell: bash
+          run: |
+            if [ "${{ github.event.repository.name == 'ci-gha-workflow' }}" = "true" ] ; then
+              echo "branches=[ '4.x', '5.x' ]" >> "$GITHUB_OUTPUT"
+            else
+              echo "branches=[ '${{ github.base_ref }}' ]" >> "$GITHUB_OUTPUT"
+            fi
+
+  Ubuntu:
+    # runs-on: opencv-ru-lin-riscv
+    runs-on: opencv-cn-lin-x86-64
+    needs:
+      - branch_eval
+    strategy:
+      # NOTE: Debugging
+      # fail-fast: true
+      # max-parallel: 3
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        version:
+          - '24.04'
+          - '22.04'
+          - '20.04'
+          # TODO: enable later
+          # - '24.04_asan'
+        branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
+        include:
+          - version: '24.04'
+            image: '24.04:20241031'
+            jpegxl: true
+            avif: true
+            avx2: true
+          # TODO: enable later
+          # - version: '24.04_asan'
+          #   image: '24.04:20241031'
+          #   asan: true
+          #   jpegxl: true
+          #   avif: true
+          - version: '22.04'
+            image: '22.04:20230602'
+            avif: true
+            plugins: true
+          - version: '20.04'
+            image: '20.04:20230413'
+            limited_api: true
+
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: 'quay.io/opencv-ci/opencv-ubuntu-${{ matrix.image }}'
+      volumes:
+        # NOTE: RU config
+        # - /mnt/cache/git_cache:/opt/git_cache
+        # - /mnt/cache/ci_cache/opencv:/opt/.ccache
+        # - /mnt/cache/binaries_cache:/opt/binaries_cache
+        # - vol_dnn_models:/opt/dnn-models
+        # NOTE: CN config
+        - /home/opencv-cn/git_cache:/opt/git_cache
+        - /home/opencv-cn/ci_cache/opencv:/opt/.ccache
+        - /home/opencv-cn/binaries_cache:/opt/binaries_cache
+        - /home/opencv-cn/dnn-models:/opt/dnn-models
+      options: '--user root:root'
+    env:
+      ANT_HOME: '/usr/share/ant'
+      DNN_MODELS: '/opt/dnn-models'
+      CCACHE_DIR: '/opt/.ccache'
+      CCACHE_MAXSIZE: '3G'
+      OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
+      CMAKE_OPT: >-
+        -DBUILD_DOCS=ON
+        -DBUILD_EXAMPLES=ON
+        -DOPENCV_ENABLE_NONFREE=ON
+        -DWITH_IMGCODEC_GIF=ON
+        ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
+        ${{ matrix.avif && '-DWITH_AVIF=ON' }}
+        ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
+        ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
+        ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
+        ${{ matrix.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
+      HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
+      MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
+      # NOTE: CN config
+      OPENCV_FOR_THREADS_NUM: 8
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
+      # NOTE: RU config
+      # OPENCV_FOR_THREADS_NUM: 10
+      # CMAKE_BUILD_PARALLEL_LEVEL: 20
+
+    # ==========
+
+    steps:
+
+    - name: Checkout workflow repository
+      uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: "${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || inputs.workflow_branch }}"
+
+    - name: Checkout and merge OpenCV
+      uses: ./checkout-and-merge
+      with:
+        target_branch: "${{ matrix.branch }}"
+        author: "${{ github.event.pull_request.user.login }}"
+        source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
+        gitcache: '/opt/git_cache'
+        home: '${{ env.HOME }}'
+        workdir: '${{ env.HOME }}'
+
+    - name: Update extra dnn models
+      timeout-minutes: 60
+      working-directory: '${{ env.HOME }}'
+      run: |
+        ls -lR ${{ env.DNN_MODELS }}
+        python3 opencv_extra/testdata/dnn/download_models.py \
+          --cleanup \
+          --dst '${{ env.DNN_MODELS }}/dnn'
+        echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
+
+    - if: ${{ github.event.repository.name != 'opencv_contrib' }}
+      name: Configure and build OpenCV
+      uses: ./configure-and-build
+      with:
+        workdir: '${{ env.HOME }}'
+        builddir: 'build'
+        generator: 'Ninja'
+        options: '${{ env.CMAKE_OPT }}'
+
+    - name: Configure and build OpenCV with contrib
+      uses: ./configure-and-build
+      with:
+        workdir: '${{ env.HOME }}'
+        builddir: 'build-contrib'
+        generator: 'Ninja'
+        options: '-DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
+
+    - name: Run OpenCV tests
+      uses: ./run-tests
+      env:
+        OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
+        OPENCV_TEST_REQUIRE_DATA: 1
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+        PYTHONPATH: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
+        # TODO: enable later
+        # ASAN_OPTIONS: 'detect_leaks=0'
+      with:
+        workdir: '${{ env.HOME }}'
+        builddir: '${{ env.MAIN_BUILD_DIR }}'
+        plan: "test-plan-${{ matrix.branch }}.json"
+        # NOTE: Just keeping this construction here for possible future use:
+        #   ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }}
+        suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''linux-contrib'''  || '''linux''' }} ]"
+        filter: "[ 'ubuntu-common', ${{ matrix.avx2 && '''ubuntu-avx2''' }} ]"
+        enable_python: "true"
+        enable_java: "true"
+        suffix: '${{ matrix.version }}_${{ matrix.branch }}'
+
+    - if: ${{ always() }}
+      name: Finalize
+      run: |
+        if [ "$WARNINGS" -ne 0 ]; then
+          echo "Warnings detected. Exiting with non-zero status."
+          exit 1
+        fi

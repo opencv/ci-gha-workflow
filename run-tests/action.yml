@@ -1,0 +1,97 @@
+name: run-tests
+description: "Run OpenCV tests"
+
+inputs:
+  workdir:
+    description: "Work directory"
+  builddir:
+    description: "Build directory"
+    default: "build"
+  plan:
+    description: "Test plan (relative to scripts subfolder)"
+  suite:
+    description: "Suite in test plan (gtest) (JSON list)"
+  filter:
+    description: "Filter(s) in test plan (gtest) (JSON list)"
+  options:
+    description: "Options in test plan (gtest)"
+    default: "default"
+  enable_python:
+    description: "Enable Python testing"
+    default: "false"
+  enable_java:
+    description: "Enable Java testing"
+    default: "false"
+  suffix:
+    description: "Extra suffix for artifacts"
+
+runs:
+  using: "composite"
+  steps:
+
+  # Test
+
+  - if: ${{ always() }}
+    shell: bash
+    run: |
+      echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
+      python3 scripts/runner.py \
+        '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
+        '--bindir=bin' \
+        '--logdir=.' \
+        '--plan=scripts/${{ inputs.plan }}' \
+        --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
+        --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
+        '--options=${{ inputs.options }}' \
+        "--summary=$GITHUB_STEP_SUMMARY"
+
+  # Logs
+
+  - if: ${{ always() }}
+    uses: actions/upload-artifact@v4
+    with:
+      name: test_logs_${{ inputs.suffix }}
+      path: '${{ inputs.workdir }}/${{ inputs.builddir }}/out_*.txt'
+      compression-level: 9
+      retention-days: 14
+
+  # Python
+
+  - if: ${{ always() && fromJSON(inputs.enable_python) }}
+    shell: bash
+    working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}
+    run: |
+      echo "::group::Python test"
+      python3 ../opencv/modules/python/test/test.py --repo ../opencv -v
+      echo "::endgroup::"
+
+  - if: ${{ always() && fromJSON(inputs.enable_python) }}
+    shell: bash
+    working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}
+    run: |
+      echo "::group::Python app test"
+      if [ -f "../opencv/apps/python_app_test.py" ]; then
+        python3 "../opencv/apps/python_app_test.py" --repo ../opencv -v
+      fi
+      echo "::endgroup::"
+
+    # Java
+
+  - if: ${{ always() && fromJSON(inputs.enable_java) }}
+    id: java-test
+    shell: bash
+    working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}
+    run: |
+      echo "::group::Java test"
+      ${{ inputs.wrapper }} python3 ../opencv/modules/ts/misc/run.py . -a -t java
+      echo "::endgroup::"
+
+  # Logs
+
+  - if: ${{ always() }}
+    uses: actions/upload-artifact@v4
+    with:
+      name: junit_report_${{ inputs.suffix }}
+      path: '${{ inputs.workdir }}/${{ inputs.builddir }}/java_test/testResults/junit-noframes.html'
+      compression-level: 9
+      retention-days: 14
