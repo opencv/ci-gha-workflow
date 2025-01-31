@@ -199,7 +199,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
-        name: junit-html-ubuntu20-arm64
+        name: junit-html-ubuntu20-arm64-debug
         path: /home/ci/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:

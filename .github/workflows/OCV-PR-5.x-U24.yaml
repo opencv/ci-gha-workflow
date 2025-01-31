@@ -262,7 +262,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
-        name: junit-html-ubuntu22-x86-64
+        name: junit-html-ubuntu24-x86-64
         path: /home/ubuntu/build/java_test/testResults/junit-noframes.html
     - name: Pylint
       timeout-minutes: 60
