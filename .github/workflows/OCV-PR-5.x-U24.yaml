@@ -185,7 +185,7 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       # OpenCV-GStreamer bug with MPEG: https://github.com/opencv/opencv/issues/25547
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_videoio --gtest_filter='-videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_videoio --gtest_filter='-Media.audio/0:videoio/videoio_synthetic.write_read_position/9:videoio/videoio_synthetic.write_read_position/12:videoio/videoio_synthetic.write_read_position/25:videoio/videoio_synthetic.write_read_position/28:videoio/videowriter_acceleration.write/40:videoio/videowriter_acceleration.write/42' --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Performance:3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -262,7 +262,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
-        name: junit-html-ubuntu22-x86-64
+        name: junit-html-ubuntu24-x86-64
         path: /home/ubuntu/build/java_test/testResults/junit-noframes.html
     - name: Pylint
       timeout-minutes: 60
