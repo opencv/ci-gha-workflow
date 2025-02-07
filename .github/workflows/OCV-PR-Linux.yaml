@@ -191,10 +191,8 @@ jobs:
         enable_java: "true"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'
 
-    - if: ${{ always() }}
-      name: Finalize
+    - if: ${{ always() && env.WARNINGS == '1' }}
+      name: Warnings check
       run: |
-        if [ "$WARNINGS" -ne 0 ]; then
-          echo "Warnings detected. Exiting with non-zero status."
-          exit 1
-        fi
+        echo "::error Warnings have been found!"
+        exit 1
