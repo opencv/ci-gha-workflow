@@ -37,7 +37,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-main:20240709
+      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-main:20241102
       volumes:
         - /mnt/cache/git_cache:/home/ci/git_cache
         - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
