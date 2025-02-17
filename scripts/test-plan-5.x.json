@@ -107,6 +107,12 @@
                 "Core_InRangeS/ElemWiseTest.accuracy/0",
                 "Core_InRange/ElemWiseTest.accuracy/0"
             ]
+        },
+        "ubuntu-24": {
+            "test_calib": [
+                "RegisterCamerasTest.hetero1",
+                "RegisterCamerasTest.hetero2"
+            ]
         }
     },
     "options": {
