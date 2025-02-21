@@ -39,7 +39,7 @@ async def read_process(proc, verbose, logfd):
         line = await proc.stdout.readline()
         if not line:
             break
-        
+
         if logfd:
             logfd.write(line)
             logfd.flush()
@@ -106,7 +106,7 @@ async def run_one(name, cmd, logname, env, args):
         status = proc.returncode
         print("Return: {}".format(safe_signal_string(status)), flush=True)
     except asyncio.TimeoutError:
-        proc.kill()   
+        proc.kill()
         await proc.wait()
         status = proc.returncode
         print("Timeout {} min: {}".format(args.timeout, safe_signal_string(status)), flush=True)
@@ -137,11 +137,14 @@ if __name__ == "__main__":
     parser.add_argument("--timeout", type=int, default=10, help="Timeout in minutes")
     parser.add_argument("--prefix", default="out_", help="Prefix to add to logs")
     parser.add_argument("--workdir", default=".", type=Path, help="Working directory")
-    parser.add_argument("--logdir", default=".", type=Path, help="Directory to store logs (relative to workdir)")
+    parser.add_argument("--logdir", default=".", type=Path, help="Directory to store logs (either absolute or relative to workdir)")
     parser.add_argument("--bindir", default="bin", type=Path, help="Directory with binaries (relative to workdir)")
     parser.add_argument("--verbose", action='store_true', help="Output all lines")
     parser.add_argument("--summary", type=Path, help="Path to summary file to generate")
     args = parser.parse_args()
+
+    if not args.logdir.is_absolute():
+        args.logdir = args.workdir / args.logdir
 
     status = True
 
@@ -196,7 +199,7 @@ if __name__ == "__main__":
             extra_args.append("--gtest_filter=*:-{}".format(":".join(filter)))
 
         actual_exe = args.workdir / args.bindir / Path(actual_exe)
-        if not actual_exe.exists() or not actual_exe.is_file():
+        if len(wrap) == 0 and (not actual_exe.exists() or not actual_exe.is_file()):
             print("Executable not found: {}".format(actual_exe))
             res = -3
         else:

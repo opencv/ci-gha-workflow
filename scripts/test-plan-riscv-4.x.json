@@ -1,0 +1,117 @@
+{
+    "suites": {
+        "default": [
+            "opencv_test_core",
+            "opencv_test_imgproc",
+            "opencv_test_calib3d",
+            "opencv_test_dnn",
+            "opencv_test_features2d",
+            "opencv_test_objdetect",
+            "opencv_test_photo",
+            "opencv_test_stitching",
+            "opencv_test_video"
+        ],
+        "short": [
+            "opencv_test_core",
+            "opencv_test_imgproc"
+        ]
+    },
+    "filters": {
+        "071": {
+            "test_core": [
+                "Samples.findFile",
+                "Core_Or*/ElemWiseTest.accuracy/0",
+                "Core_Xor*/ElemWiseTest.accuracy/0"
+            ],
+            "test_dnn": [
+                "Test_Int8_layers.InnerProduct/0",
+                "Test_Caffe_layers.InnerProduct/0",
+                "Test_Caffe_layers.layer_prelu_fc/0",
+                "Test_TensorFlow_layers.matmul/0",
+                "Test_TensorFlow_layers.lstm/0",
+                "Test_Torch_layers.run_reshape_single_sample/0"
+            ],
+            "test_video": [
+                "Video_RunningAvg.accuracy"
+            ]
+        },
+        "main": {
+            "test_core": [
+                "Samples.findFile"
+            ],
+            "test_dnn": [
+                "Test_Caffe_layers.InnerProduct/0"
+            ],
+            "test_features2d": [
+                "KAZE/DetectorScaleInvariance.scale/*"
+            ]
+        },
+        "nds": {
+        },
+        "sc": {
+            "test_core": [
+                "hal_intrin128.float64x2_BASELINE",
+                "Core_ArithmMask.uninitialized",
+                "Core_ConvertScale*/ElemWiseTest.accuracy/*",
+                "Core_Add/ElemWiseTest.accuracy/*",
+                "Core_Sub/ElemWiseTest.accuracy/*",
+                "Core_AddS/ElemWiseTest.accuracy/*",
+                "Core_SubRS/ElemWiseTest.accuracy/*",
+                "Core_ScaleAdd/ElemWiseTest.accuracy/*"
+            ],
+            "test_dnn": [
+                "Test_ONNX_layers.*",
+                "Test_ONNX_conformance.*",
+                "Test_Int8_layers.InnerProduct/0",
+                "Test_Caffe_layers.InnerProduct/0"
+            ],
+            "test_calib3d": [
+                "Calib3d_CalibrateCamera_CPP.*",
+                "Calib3d_InitUndistortRectifyMap.*",
+                "usac_Fundamental.accuracy"
+            ]
+        }
+    },
+    "options": {
+        "071": {
+            "wrap": {
+                "": "ssh lichee1 OPENCV_TEST_DATA_PATH=./testdata"
+            },
+            "args": {
+                "test": "--skip_unstable=1"
+            },
+            "exe": {},
+            "env": {}
+        },
+        "main": {
+            "wrap": {
+                "": "ssh canmv1 OPENCV_TEST_DATA_PATH=./testdata"
+            },
+            "args": {
+                "test": "--skip_unstable=1 --test_tag_skip=mem_512mb"
+            },
+            "exe": {},
+            "env": {}
+        },
+        "nds": {
+            "wrap": {
+                "": "/opt/andes/bin/qemu-riscv64 -cpu andes-ax25 -L /opt/andes/sysroot"
+            },
+            "args": {
+                "test": "--skip_unstable=1"
+            },
+            "exe": {},
+            "env": {}
+        },
+        "sc": {
+            "wrap": {
+                "": "/opt/sc-dt/tools/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/sc-dt/riscv-gcc/sysroot"
+            },
+            "args": {
+                "test": "--skip_unstable=1"
+            },
+            "exe": {},
+            "env": {}
+        }
+    }
+}

@@ -182,6 +182,7 @@ jobs:
       with:
         workdir: '${{ env.HOME }}'
         builddir: '${{ env.MAIN_BUILD_DIR }}'
+        logdir: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}'
         plan: "test-plan-${{ matrix.branch }}.json"
         # NOTE: Just keeping this construction here for possible future use:
         #   ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }}

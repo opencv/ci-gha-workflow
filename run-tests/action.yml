@@ -7,12 +7,17 @@ inputs:
   builddir:
     description: "Build directory"
     default: "build"
+  logdir:
+    description: "Log directory"
   plan:
     description: "Test plan (relative to scripts subfolder)"
   suite:
     description: "Suite in test plan (gtest) (JSON list)"
   filter:
     description: "Filter(s) in test plan (gtest) (JSON list)"
+  timeout:
+    description: "One test timeout (min)"
+    default: "10"
   options:
     description: "Options in test plan (gtest)"
     default: "default"
@@ -38,8 +43,9 @@ runs:
       python3 scripts/runner.py \
         '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
         '--bindir=bin' \
-        '--logdir=.' \
+        '--logdir=${{ inputs.logdir }}' \
         '--plan=scripts/${{ inputs.plan }}' \
+        '--timeout=${{ inputs.timeout }}' \
         --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
         --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
         '--options=${{ inputs.options }}' \
@@ -51,7 +57,7 @@ runs:
     uses: actions/upload-artifact@v4
     with:
       name: test_logs_${{ inputs.suffix }}
-      path: '${{ inputs.workdir }}/${{ inputs.builddir }}/out_*.txt'
+      path: '${{ inputs.logdir }}/out_*.txt'
       compression-level: 9
       retention-days: 14
 
@@ -88,7 +94,7 @@ runs:
 
   # Logs
 
-  - if: ${{ always() }}
+  - if: ${{ always() && fromJSON(inputs.enable_java) }}
     uses: actions/upload-artifact@v4
     with:
       name: junit_report_${{ inputs.suffix }}
