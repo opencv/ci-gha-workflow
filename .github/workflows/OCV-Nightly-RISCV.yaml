@@ -26,526 +26,125 @@ env:
 
 
 jobs:
-  BuildAndTest07:
+
+  RISC-V:
+    runs-on: opencv-ru-lin-riscv
+    concurrency:
+      group: OCV-Nightly-RISCV-${{ matrix.remote && matrix.host || matrix.version }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        version:
+          - '071'
+          - 'main'
+          - 'nds'
+          - 'sc'
+        branch: ['4.x', '5.x']
+        include:
+          - version: '071'
+            image: '20240117'
+            remote: true
+            host: 'lichee1'
+          - version: 'main'
+            image: '20240709'
+            remote: true
+            host: 'canmv1'
+          - version: 'nds'
+            image: '20240709'
+          - version: 'sc'
+            image: '20250216'
+
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      image: 'quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-${{ matrix.version }}:${{ matrix.image }}'
+      volumes:
+        - /mnt/cache/git_cache:/opt/git_cache
+        - /mnt/cache/ci_cache/opencv:/opt/.ccache
+        - /mnt/cache/binaries_cache:/opt/binaries_cache
+        - /home/build/.ssh:/root/.ssh
+      options: '--user root:root'
+
     env:
-      REMOTE_HOST: 'lichee1'
+      CCACHE_DIR: '/opt/.ccache'
+      CCACHE_MAXSIZE: '3G'
+      OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
+      CMAKE_OPT: >-
+        -DBUILD_EXAMPLES=ON
+        -DOPENCV_ENABLE_NONFREE=ON
+        -DBUILD_SHARED_LIBS=OFF
+        -DWITH_OPENCL=OFF
+        ${{ matrix.version == '071' && '-DCMAKE_TOOLCHAIN_FILE=${HOME}/opencv/platforms/linux/riscv64-071-gcc.toolchain.cmake -DCORE=C910V' || '' }}
+        ${{ matrix.version == 'main' && '-DCMAKE_TOOLCHAIN_FILE=${HOME}/opencv/platforms/linux/riscv64-clang.toolchain.cmake -DCPU_BASELINE=RVV -DCPU_BASELINE_REQUIRE=RVV -DRISCV_RVV_SCALABLE=ON' || '' }}
+        ${{ matrix.version == 'nds' && '-DCMAKE_TOOLCHAIN_FILE=${HOME}/opencv/platforms/linux/riscv64-andes-gcc.toolchain.cmake -DRISCV_GCC_INSTALL_ROOT=/opt/andes -DWITH_NDSRVP=ON' || '' }}
+        ${{ matrix.version == 'sc' && '-DCMAKE_TOOLCHAIN_FILE=${HOME}/opencv/platforms/linux/riscv64-clang.toolchain.cmake -DRISCV_CLANG_BUILD_ROOT=/opt/sc-dt/llvm -DRISCV_GCC_INSTALL_ROOT=/opt/sc-dt/riscv-gcc -DCPU_BASELINE=RVV -DCPU_BASELINE_REQUIRE=RVV -DRISCV_RVV_SCALABLE=ON' || '' }}
+      HOME: '/home/ci'
+      OPENCV_FOR_THREADS_NUM: 10
+      CMAKE_BUILD_PARALLEL_LEVEL: 20
+      REMOTE_HOST: ${{ matrix.host }}
       REMOTE_BIN: './bin'
       REMOTE_DATA: './testdata'
-      TEST_RUNNER: 'ssh lichee1'
-      BRANCH: '${{ matrix.branch }}'
-      MOD_FEATURES: "${{ matrix.branch == '4.x' && 'features2d' || 'features' }}"
-    strategy:
-      max-parallel: 1
-      matrix:
-        branch: ['4.x', '5.x']
-    runs-on: opencv-ru-lin-riscv
-    defaults:
-      run:
-        shell: bash
-    container:
-      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-071:20240117
-      volumes:
-        - /mnt/cache/git_cache:/home/ci/git_cache
-        - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
-        - /mnt/cache/binaries_cache:/home/ci/binaries_cache
-        - /home/build/.ssh:/root/.ssh
+
+
     steps:
-    - name: Define proper HOME path
-      timeout-minutes: 60
-      run: echo "HOME=/home/ci" >> $GITHUB_ENV
-    - name: Fetch opencv
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
-          https://github.com/opencv/opencv.git \
-          ${{ env.SRC_OPENCV }}
-    - name: Fetch opencv_contrib
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV_CONTRIB }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
-          https://github.com/opencv/opencv_contrib.git \
-          ${{ env.SRC_OPENCV_CONTRIB }}
-    - name: Fetch opencv_extra
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV_EXTRA }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
-          https://github.com/opencv/opencv_extra.git \
-          ${{ env.SRC_OPENCV_EXTRA }}
-    - name: Configure OpenCV
-      timeout-minutes: 60
-      run: |
-        cmake -G Ninja \
-          -S ${{ env.SRC_OPENCV }} \
-          -B ${{ env.BUILD_DIR }} \
-          -DCMAKE_TOOLCHAIN_FILE=${{ env.SRC_OPENCV }}/platforms/linux/riscv64-071-gcc.toolchain.cmake \
-          -DCORE=C910V \
-          -DBUILD_SHARED_LIBS=OFF \
-          -DWITH_OPENCL=OFF \
-          -DOPENCV_EXTRA_MODULES_PATH=${{ env.SRC_OPENCV_CONTRIB }}/modules \
-          -DCMAKE_INSTALL_PREFIX=${{ env.BUILD_DIR }}/install
-    - name: Build OpenCV
-      timeout-minutes: 60
-      id: build
-      run: |
-        ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
-    - name: Deploy to remote host
-      timeout-minutes: 60
+
+    - name: Checkout workflow repository
+      uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: "${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}"
+
+    - name: Checkout and merge OpenCV
+      uses: ./checkout-and-merge
+      with:
+        target_branch: "${{ matrix.branch }}"
+        author: ''
+        source_branch: ''
+        gitcache: '/opt/git_cache'
+        home: '${{ env.HOME }}'
+        workdir: '${{ env.HOME }}'
+
+    - name: Configure and build OpenCV
+      uses: ./configure-and-build
+      with:
+        workdir: '${{ env.HOME }}'
+        builddir: 'build'
+        generator: 'Ninja'
+        options: '${{ env.CMAKE_OPT }}'
+
+    - if: ${{ matrix.remote }}
+      name: Deploy to remote host
+      timeout-minutes: 15
       id: deploy
       run: |
-        rsync -az --stats ${{ env.BUILD_DIR }}/bin/ ${REMOTE_HOST}:${REMOTE_BIN} --delete
-        rsync -az --stats ${{ env.SRC_OPENCV_EXTRA }}/testdata/ ${REMOTE_HOST}:${REMOTE_DATA} --delete
-    - name: Run core test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_core \
-              --gtest_filter=*:-Samples.findFile:Core_Or*/ElemWiseTest.accuracy/0:Core_Xor*/ElemWiseTest.accuracy/0
-    - name: Run imgproc test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_imgproc
-    - name: Run calib3d test
-      timeout-minutes: 60
-      if: ${{ always() && matrix.branch == '4.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_calib3d
-    - name: Run 3d test
-      timeout-minutes: 60
-      if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_3d \
-              --gtest_filter=*:-Volume/VolumeTestFixture.*
-    - name: Run calib test
-      timeout-minutes: 60
-      if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_calib
-    - name: Run dnn test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_dnn \
-              --gtest_filter=*:-Test_Int8_layers.InnerProduct/0:Test_Caffe_layers.InnerProduct/0:Test_Caffe_layers.layer_prelu_fc/0:Test_TensorFlow_layers.matmul/0:Test_TensorFlow_layers.lstm/0:Test_Torch_layers.run_reshape_single_sample/0
-    - name: Run features test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_${MOD_FEATURES}
-    - name: Run objdetect test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_objdetect
-    - name: Run photo test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_photo
-    - name: Run stitching test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_stitching
-    - name: Run video test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_video \
-              --gtest_filter=*:-Video_RunningAvg.accuracy
+        rsync -az --stats ${{ env.HOME }}/build/bin/ ${REMOTE_HOST}:${REMOTE_BIN} --delete
+        rsync -az --stats ${{ env.HOME }}/opencv_extra/testdata/ ${REMOTE_HOST}:${REMOTE_DATA} --delete
 
-  BuildAndTest10:
-    env:
-      REMOTE_HOST: 'canmv1'
-      REMOTE_BIN: './bin'
-      REMOTE_DATA: './testdata'
-      TEST_RUNNER: 'ssh canmv1'
-      TEST_OPT: '--test_tag_skip=mem_512mb'
-      BRANCH: '${{ matrix.branch }}'
-      MOD_FEATURES: "${{ matrix.branch == '4.x' && 'features2d' || 'features' }}"
-    strategy:
-      max-parallel: 1
-      matrix:
-        branch: ['4.x', '5.x']
-    runs-on: opencv-ru-lin-riscv
-    defaults:
-      run:
-        shell: bash
-    container:
-      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-main:20240709
-      volumes:
-        - /mnt/cache/git_cache:/home/ci/git_cache
-        - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
-        - /mnt/cache/binaries_cache:/home/ci/binaries_cache
-        - /home/build/.ssh:/root/.ssh
-    steps:
-    - name: Define proper HOME path
-      timeout-minutes: 60
-      run: echo "HOME=/home/ci" >> $GITHUB_ENV
-    - name: Fetch opencv
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
-          https://github.com/opencv/opencv.git \
-          ${{ env.SRC_OPENCV }}
-    - name: Fetch opencv_contrib
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV_CONTRIB }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
-          https://github.com/opencv/opencv_contrib.git \
-          ${{ env.SRC_OPENCV_CONTRIB }}
-    - name: Fetch opencv_extra
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV_EXTRA }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
-          https://github.com/opencv/opencv_extra.git \
-          ${{ env.SRC_OPENCV_EXTRA }}
-    - name: Configure OpenCV
-      timeout-minutes: 60
-      run: |
-        cmake -G Ninja \
-          -S ${{ env.SRC_OPENCV }} \
-          -B ${{ env.BUILD_DIR }} \
-          -DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake \
-          -DCPU_BASELINE=RVV \
-          -DCPU_BASELINE_REQUIRE=RVV \
-          -DRISCV_RVV_SCALABLE=ON \
-          -DBUILD_SHARED_LIBS=OFF \
-          -DWITH_OPENCL=OFF \
-          -DOPENCV_EXTRA_MODULES_PATH=${{ env.SRC_OPENCV_CONTRIB }}/modules \
-          -DCMAKE_INSTALL_PREFIX=${{ env.BUILD_DIR }}/install
-    - name: Build OpenCV
-      timeout-minutes: 60
-      id: build
-      run: |
-        ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
-    - name: Deploy to remote host
-      timeout-minutes: 60
-      id: deploy
-      run: |
-        rsync -az --stats ${{ env.BUILD_DIR }}/bin/ ${REMOTE_HOST}:${REMOTE_BIN} --delete
-        rsync -az --stats ${{ env.SRC_OPENCV_EXTRA }}/testdata/ ${REMOTE_HOST}:${REMOTE_DATA} --delete
-    - name: Run core test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_core ${TEST_OPT} --gtest_filter=*:-Samples.findFile
-    - name: Run imgproc test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_imgproc ${TEST_OPT} --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
-    - name: Run calib3d test
-      timeout-minutes: 60
-      if: ${{ always() && matrix.branch == '4.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_calib3d ${TEST_OPT}
-    - name: Run 3d test
-      timeout-minutes: 60
-      if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_3d ${TEST_OPT}
-    - name: Run calib test
-      timeout-minutes: 60
-      if: ${{ always() && matrix.branch == '5.x' && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_calib ${TEST_OPT} --gtest_filter=*:-RegisterCamerasTest.hetero*
-    - name: Run dnn test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_dnn ${TEST_OPT} --gtest_filter=*:-Test_Caffe_layers.InnerProduct/0
-    - name: Run features test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_${MOD_FEATURES} ${TEST_OPT} --gtest_filter=*:-KAZE/DetectorScaleInvariance.scale/*
-    - name: Run objdetect test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_objdetect ${TEST_OPT}
-    - name: Run photo test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_photo ${TEST_OPT}
-    - name: Run stitching test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_stitching ${TEST_OPT}
-    - name: Run video test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' && steps.deploy.outcome == 'success' }}
-      run: |
-        $TEST_RUNNER \
-          OPENCV_TEST_DATA_PATH=${REMOTE_DATA} \
-            ${REMOTE_BIN}/opencv_test_video ${TEST_OPT}
+    - name: Run OpenCV tests
+      uses: ./run-tests
+      env:
+        OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+      with:
+        workdir: '${{ matrix.remote && ''.'' || env.HOME }}'
+        builddir: '${{ matrix.remote && ''.'' || ''build'' }}'
+        logdir: '${{ env.HOME }}/build'
+        plan: "test-plan-riscv-${{ matrix.branch }}.json"
+        suite: '[ ''${{ matrix.version == ''sc'' && ''short'' || ''default'' }}'' ]'
+        filter: "[ '${{ matrix.version }}' ]"
+        options: "${{ matrix.version }}"
+        timeout: "45"
+        enable_python: "false"
+        enable_java: "false"
+        suffix: '${{ matrix.version }}_${{ matrix.branch }}'
 
-  BuildAndTestNDS:
-    env:
-      BRANCH: '${{ matrix.branch }}'
-      OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
-      OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
-      TEST_RUNNER: '/opt/andes/bin/qemu-riscv64 -cpu andes-ax25 -L /opt/andes/sysroot'
-      TEST_OPT: '--skip_unstable=1'
-    strategy:
-      max-parallel: 1
-      matrix:
-        branch: ['4.x', '5.x']
-    runs-on: opencv-ru-lin-riscv
-    defaults:
-      run:
-        shell: bash
-    container:
-      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-nds:20240709
-      volumes:
-        - /mnt/cache/git_cache:/home/ci/git_cache
-        - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
-        - /mnt/cache/binaries_cache:/home/ci/binaries_cache
-        - /home/build/.ssh:/root/.ssh
-    steps:
-    - name: Define proper HOME path
-      timeout-minutes: 60
-      run: echo "HOME=/home/ci" >> $GITHUB_ENV
-    - name: Fetch opencv
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
-          https://github.com/opencv/opencv.git \
-          ${{ env.SRC_OPENCV }}
-    - name: Fetch opencv_contrib
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV_CONTRIB }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
-          https://github.com/opencv/opencv_contrib.git \
-          ${{ env.SRC_OPENCV_CONTRIB }}
-    - name: Fetch opencv_extra
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV_EXTRA }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
-          https://github.com/opencv/opencv_extra.git \
-          ${{ env.SRC_OPENCV_EXTRA }}
-    - name: Configure OpenCV
-      timeout-minutes: 60
-      run: |
-        cmake -G Ninja \
-          -S ${{ env.SRC_OPENCV }} \
-          -B ${{ env.BUILD_DIR }} \
-          -DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-andes-gcc.toolchain.cmake \
-          -DRISCV_GCC_INSTALL_ROOT=/opt/andes \
-          -DWITH_NDSRVP=ON \
-          -DBUILD_SHARED_LIBS=OFF \
-          -DWITH_OPENCL=OFF \
-          -DOPENCV_EXTRA_MODULES_PATH=${{ env.SRC_OPENCV_CONTRIB }}/modules \
-          -DCMAKE_INSTALL_PREFIX=${{ env.BUILD_DIR }}/install
-    - name: Build OpenCV
-      timeout-minutes: 60
-      id: build
-      run: |
-        ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
-    - name: Run core test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: |
-        cd $HOME/build
-        $TEST_RUNNER bin/opencv_test_core \
-          $TEST_OPT \
-          --gtest_filter=*
-    - name: Run imgproc test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: |
-        cd $HOME/build
-        $TEST_RUNNER bin/opencv_test_imgproc \
-          $TEST_OPT \
-          --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
-    - name: Run dnn test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: |
-        cd $HOME/build
-        $TEST_RUNNER bin/opencv_test_dnn \
-          $TEST_OPT \
-          --gtest_filter=*
-
-  BuildAndTestSC:
-    env:
-      BRANCH: '${{ matrix.branch }}'
-      OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
-      OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
-      TEST_RUNNER: '/opt/sc-dt/tools/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/sc-dt/riscv-gcc/sysroot'
-      TEST_OPT: '--skip_unstable=1'
-    strategy:
-      max-parallel: 1
-      matrix:
-        branch: ['4.x', '5.x']
-    runs-on: opencv-ru-lin-riscv
-    defaults:
-      run:
-        shell: bash
-    container:
-      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-sc:20241102
-      volumes:
-        - /mnt/cache/git_cache:/home/ci/git_cache
-        - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
-        - /mnt/cache/binaries_cache:/home/ci/binaries_cache
-        - /home/build/.ssh:/root/.ssh
-    steps:
-    - name: Define proper HOME path
-      timeout-minutes: 60
-      run: echo "HOME=/home/ci" >> $GITHUB_ENV
-    - name: Fetch opencv
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv.git \
-          https://github.com/opencv/opencv.git \
-          ${{ env.SRC_OPENCV }}
-    - name: Fetch opencv_contrib
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV_CONTRIB }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_contrib.git \
-          https://github.com/opencv/opencv_contrib.git \
-          ${{ env.SRC_OPENCV_CONTRIB }}
-    - name: Fetch opencv_extra
-      timeout-minutes: 60
-      run: |
-        rm -rf ${{ env.SRC_OPENCV_EXTRA }}
-        git clone \
-          --single-branch \
-          --branch ${{ env.BRANCH }} \
-          --reference-if-able ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git \
-          https://github.com/opencv/opencv_extra.git \
-          ${{ env.SRC_OPENCV_EXTRA }}
-    - name: Configure OpenCV
-      timeout-minutes: 60
-      run: |
-        cmake -G Ninja \
-          -S ${{ env.SRC_OPENCV }} \
-          -B ${{ env.BUILD_DIR }} \
-          -DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake \
-          -DRISCV_CLANG_BUILD_ROOT=/opt/sc-dt/llvm \
-          -DRISCV_GCC_INSTALL_ROOT=/opt/sc-dt/riscv-gcc \
-          -DCPU_BASELINE=RVV \
-          -DCPU_BASELINE_REQUIRE=RVV \
-          -DRISCV_RVV_SCALABLE=ON \
-          -DBUILD_SHARED_LIBS=OFF \
-          -DWITH_OPENCL=OFF \
-          -DOPENCV_EXTRA_MODULES_PATH=${{ env.SRC_OPENCV_CONTRIB }}/modules \
-          -DCMAKE_INSTALL_PREFIX=${{ env.BUILD_DIR }}/install
-    - name: Build OpenCV
-      timeout-minutes: 60
-      id: build
-      run: |
-        ninja -C ${{ env.BUILD_DIR }} install | tee ${{ env.BUILD_DIR }}/build-log.txt
-    - name: Run core test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: |
-        cd $HOME/build
-        $TEST_RUNNER bin/opencv_test_core \
-          $TEST_OPT \
-          --gtest_filter=*:-hal_intrin128.float64x2_BASELINE:Core_ArithmMask.uninitialized:Core_ConvertScale*/ElemWiseTest.accuracy/*:Core_Add/ElemWiseTest.accuracy/*:Core_Sub/ElemWiseTest.accuracy/*:Core_AddS/ElemWiseTest.accuracy/*:Core_SubRS/ElemWiseTest.accuracy/*:Core_ScaleAdd/ElemWiseTest.accuracy/*
-    - name: Run imgproc test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: |
-        cd $HOME/build
-        $TEST_RUNNER bin/opencv_test_imgproc \
-          $TEST_OPT \
-          --gtest_filter=*:-Imgproc_Hist_Compare.accuracy
-    - name: Run dnn test
-      timeout-minutes: 60
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: |
-        cd $HOME/build
-        $TEST_RUNNER bin/opencv_test_dnn \
-          $TEST_OPT \
-          --gtest_filter=*:-Test_ONNX_layers.*:Test_ONNX_conformance.*:Test_Int8_layers.InnerProduct/0
+    # TODO: enable
+    # - if: ${{ always() && env.WARNINGS == '1' }}
+    #   name: Warnings check
+    #   run: |
+    #     echo "::error Warnings have been found!"
+    #     exit 1
