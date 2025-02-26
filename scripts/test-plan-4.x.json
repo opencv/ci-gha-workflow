@@ -84,18 +84,10 @@
                 "AsyncAPICancelation/cancel/*"
             ],
             "test_videoio": [
-                "videoio/videoio_synthetic.write_read_position/9",
-                "videoio/videoio_synthetic.write_read_position/12",
-                "videoio/videoio_synthetic.write_read_position/25",
-                "videoio/videoio_synthetic.write_read_position/28",
-                "videoio/videoio_synthetic.write_read_position/10",
-                "videoio/videoio_synthetic.write_read_position/13",
-                "videoio/videoio_synthetic.write_read_position/26",
-                "videoio/videoio_synthetic.write_read_position/29",
-                "videoio/videocapture_acceleration.read/24",
-                "videoio/videocapture_acceleration.read/26",
-                "videoio/videowriter_acceleration.write/40",
-                "videoio/videowriter_acceleration.write/42"
+                "videoio/videoio_synthetic.write_read_position/*_MPEG_GSTREAMER",
+                "videoio/videoio_synthetic.write_read_position/*_MJPG_GSTREAMER",
+                "videoio/videocapture_acceleration.read/yuv420p_mjpeg_mp4_GSTREAMER_*_MAT",
+                "videoio/videowriter_acceleration.write/mkv_MPEG_GSTREAMER_*_MAT"
             ]
         },
         "ubuntu-avx2": {
