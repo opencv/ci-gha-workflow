@@ -61,13 +61,13 @@ jobs:
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         include:
           - version: '24.04'
-            image: '24.04:20241031'
+            image: '24.04:20250207'
             jpegxl: true
             avif: true
             avx2: true
           # TODO: enable later
           # - version: '24.04_asan'
-          #   image: '24.04:20241031'
+          #   image: '24.04:20250207'
           #   asan: true
           #   jpegxl: true
           #   avif: true
@@ -75,9 +75,11 @@ jobs:
             image: '22.04:20230602'
             avif: true
             plugins: true
+            lapack: true
           - version: '20.04'
-            image: '20.04:20230413'
+            image: '20.04:20250207'
             limited_api: true
+            lapack: true
 
     defaults:
       run:
@@ -187,7 +189,7 @@ jobs:
         # NOTE: Just keeping this construction here for possible future use:
         #   ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }}
         suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''linux-contrib'''  || '''linux''' }} ]"
-        filter: "[ 'ubuntu-common', ${{ matrix.avx2 && '''ubuntu-avx2''' }} ]"
+        filter: "[ 'ubuntu-common', ${{ matrix.avx2 && '''ubuntu-avx2''' }}, ${{ matrix.version == '24.04' && matrix.branch == '5.x' && '''ubuntu-24'''}} ]"
         enable_python: "true"
         enable_java: "true"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'

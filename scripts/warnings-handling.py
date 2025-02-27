@@ -2,6 +2,7 @@ import argparse
 import os
 import re
 import sys
+from collections import OrderedDict
 
 
 def is_suppressed(line):
@@ -18,37 +19,43 @@ def is_suppressed(line):
     return False
 
 
-def warnings_count(filename, verbose):
+def warnings_count(filename, verbose, direct):
     rx = re.compile(r'warning[: ]', re.I)
-    warnings = 0
+    warnings = OrderedDict()
     suppressed = 0
     total = 0
     for line in open(filename):
         total += 1
         match = rx.search(line)
+        val = line.rstrip()
         if match:
             if is_suppressed(line):
                 suppressed += 1
             else:
-                print("::warning::{}".format(line.rstrip()), flush=True)
-                warnings += 1
+                warnings[val] = warnings.get(val, 0) + 1
+                if direct:
+                    print("::warning::{}".format(val), flush=True)
                 continue
         if verbose:
-            print(line.rstrip())
+            print(val)
+    if not direct:
+        for k, v in warnings.items():
+            print("::warning::(x {}) {}".format(v, k), flush=True)
     return total, suppressed, warnings
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Check warnings produced during build')
     parser.add_argument('filename', help='Path to the log file.', default='build-log.txt')
+    parser.add_argument('--direct', action='store_true', help='Print warnings as they are found, do not count duplicates')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print all lines and mark warnings')
     args = parser.parse_args()
 
     print("::group::Warning check", flush=True)
-    total, suppressed, warnings = warnings_count(args.filename, args.verbose)
+    total, suppressed, warnings = warnings_count(args.filename, args.verbose, args.direct)
     print("::endgroup::", flush=True)
-    print("::notice::Warning stats => total lines: {}, suppressed: {}, warnings: {}".format(total, suppressed, warnings), flush=True)
+    print("::notice::Warning stats => total lines: {}, suppressed: {}, warnings: {}".format(total, suppressed, len(warnings)), flush=True)
 
-    if warnings != 0:
+    if len(warnings) != 0:
         sys.exit(1)
     sys.exit(0)
