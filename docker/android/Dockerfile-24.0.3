@@ -1,0 +1,84 @@
+# Version: 20220721
+# Image name: quay.io/opencv-ci/opencv-androidsdk-24
+# For 3.4 branch
+
+FROM ubuntu:20.04
+
+ARG ANT_VERSION=1.10.12
+ARG ANDROID_BUILD_TOOLS_VERSION=24.0.3
+ARG ANDROID_PLATFORM_VERSION=android-21
+ARG ANDROID_PLATFORM_VERSION_TEST1=android-14
+ARG ANDROID_PLATFORM_VERSION_TEST2=android-17
+ARG ANDROID_TOOLS_ARCHIVE=tools_r25.2.5-linux.zip
+ARG NDK_VERSION=r10e
+ARG CMAKE_VERSION=3.6.4111459
+
+USER root
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN \
+  apt-get update && \
+  apt-get install -y --no-install-recommends \
+    software-properties-common \
+    build-essential ccache ninja-build \
+    python3 python3-pip curl zip unzip file \
+    openjdk-8-jdk openjdk-8-jre libncurses5 \
+    && \
+  add-apt-repository ppa:git-core/ppa && \
+  apt-get install -y --no-install-recommends git && \
+  rm -rf /var/lib/apt/lists/*
+
+RUN \
+  dpkg --add-architecture i386 && \
+  apt-get update && \
+  apt-get install -y --no-install-recommends \
+    libncurses5:i386 libstdc++6:i386 zlib1g:i386 \
+    && \
+  rm -rf /var/lib/apt/lists/*
+
+RUN curl -o /tmp/apache-ant-$ANT_VERSION-bin.zip https://downloads.apache.org/ant/binaries/apache-ant-$ANT_VERSION-bin.zip && \
+    unzip -d /opt/ant /tmp/apache-ant-$ANT_VERSION-bin.zip && \
+    rm /tmp/apache-ant-$ANT_VERSION-bin.zip
+
+ENV ANDROID_HOME="/opt/android-sdk"
+
+# find+chmod fixes permission issue for old tools package
+RUN cd ~ && mkdir $ANDROID_HOME .android \
+    && cd $ANDROID_HOME \
+    && curl -o sdk.zip "https://dl.google.com/android/repository/$ANDROID_TOOLS_ARCHIVE" \
+    && unzip sdk.zip \
+    && rm sdk.zip \
+    && find $ANDROID_HOME -executable -exec chmod a+rx {} \; \
+    && echo "y\n" > /tmp/yes \
+    && $ANDROID_HOME/tools/bin/sdkmanager "platform-tools" < /tmp/yes
+
+RUN $ANDROID_HOME/tools/bin/sdkmanager "build-tools;$ANDROID_BUILD_TOOLS_VERSION" < /tmp/yes
+RUN $ANDROID_HOME/tools/bin/sdkmanager "platforms;$ANDROID_PLATFORM_VERSION" < /tmp/yes
+RUN $ANDROID_HOME/tools/bin/sdkmanager "platforms;$ANDROID_PLATFORM_VERSION_TEST1" < /tmp/yes
+RUN $ANDROID_HOME/tools/bin/sdkmanager "platforms;$ANDROID_PLATFORM_VERSION_TEST2" < /tmp/yes
+RUN $ANDROID_HOME/tools/bin/sdkmanager "cmake;$CMAKE_VERSION" < /tmp/yes
+
+# find+chmod fixes permission issue for old ndk package
+RUN cd ~ && curl -o ndk.zip "https://dl.google.com/android/repository/android-ndk-$NDK_VERSION-linux-x86_64.zip" && \
+    cd /opt/ && unzip ~/ndk.zip && rm ~/ndk.zip && \
+    chmod -R a+r /opt/android-ndk-$NDK_VERSION && \
+    find /opt/android-ndk-$NDK_VERSION -executable -exec chmod a+rx {} \;
+
+# Self-hosted runner UID is 1000
+RUN useradd ci -m -s /bin/bash -G users --uid=1000
+USER ci
+
+RUN git config --global --add safe.directory "*" && \
+    git config --global user.email "opencv.ci" && \
+    git config --global user.name "opencv.ci" && \
+    git config --global pull.rebase false
+
+ENV ANT_HOME=/opt/ant/apache-ant-$ANT_VERSION
+ENV ANDROID_HOME="/opt/android-sdk"
+ENV ANDROID_SDK="/opt/android-sdk"
+ENV ANDROID_NDK="/opt/android-ndk-$NDK_VERSION"
+ENV ANDROID_NDK_HOME="/opt/android-ndk-$NDK_VERSION"
+ENV PATH=$ANT_HOME/bin:$ANDROID_HOME/cmake/$CMAKE_VERSION/bin:$PATH
+
+ENTRYPOINT bash
