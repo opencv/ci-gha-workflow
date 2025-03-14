@@ -101,7 +101,7 @@ jobs:
       ANT_HOME: '/usr/share/ant'
       DNN_MODELS: '/opt/dnn-models'
       CCACHE_DIR: '/opt/.ccache'
-      CCACHE_MAXSIZE: '3G'
+      CCACHE_MAXSIZE: '5G'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
       CMAKE_OPT: >-
         -DBUILD_DOCS=ON
