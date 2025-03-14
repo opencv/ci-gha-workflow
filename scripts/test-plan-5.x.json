@@ -45,7 +45,6 @@
             "opencv_test_img_hash",
             "opencv_test_intensity_transform",
             "opencv_test_line_descriptor",
-            "opencv_test_mcc",
             "opencv_test_ml",
             "opencv_test_optflow",
             "opencv_test_phase_unwrapping",
