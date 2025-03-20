@@ -91,9 +91,9 @@ jobs:
         # - /mnt/cache/binaries_cache:/opt/binaries_cache
         # - vol_dnn_models:/opt/dnn-models
         # NOTE: CN config
-        - /home/opencv-cn/git_cache:/opt/git_cache
-        - /home/opencv-cn/ci_cache/opencv:/opt/.ccache
-        - /home/opencv-cn/binaries_cache:/opt/binaries_cache
+        - /home/opencv-cn/git_cache/${{ matrix.version }}:/opt/git_cache
+        - /home/opencv-cn/ci_cache/opencv/${{ matrix.version }}:/opt/.ccache
+        - /home/opencv-cn/binaries_cache/${{ matrix.version }}:/opt/binaries_cache
         - /home/opencv-cn/dnn-models:/opt/dnn-models
       # NOTE: RU config
       # options: '--user root:root'
@@ -101,7 +101,7 @@ jobs:
       ANT_HOME: '/usr/share/ant'
       DNN_MODELS: '/opt/dnn-models'
       CCACHE_DIR: '/opt/.ccache'
-      CCACHE_MAXSIZE: '5G'
+      CCACHE_MAXSIZE: '8G'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
       CMAKE_OPT: >-
         -DBUILD_DOCS=ON
