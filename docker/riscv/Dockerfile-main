@@ -1,0 +1,136 @@
+# Version: 20240709
+# Image name: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-main
+# Command: docker build -f ubuntu-github-actions-riscv--22.04/Dockerfile-main -t quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-main:20240709 .
+
+# 1. LLVM toolchain
+
+FROM ubuntu:22.04 AS builder_llvm
+ARG LLVM_TAG=llvmorg-17.0.6
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && apt install -y \
+    cmake \
+    ccache \
+    ninja-build \
+    git \
+    g++ \
+    python3
+
+# 📄 Clone repository
+RUN git clone \
+        -b ${LLVM_TAG} \
+        --depth=1 \
+        --recurse-submodules \
+        --shallow-submodules \
+        https://github.com/llvm/llvm-project
+WORKDIR llvm-project
+
+# 🛠 Build toolchain
+RUN cmake \
+    -S llvm \
+    -B build \
+    -G Ninja \
+    -DCMAKE_INSTALL_PREFIX=/opt/rvv-llvm \
+    -DLLVM_ENABLE_PROJECTS='clang;lld;compiler-rt' \
+    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
+    -DCMAKE_BUILD_TYPE=Release
+RUN cmake --build build --target install
+
+#==============================================================
+# 2. GCC toolchain
+
+FROM ubuntu:22.04 AS builder_gcc
+ARG COLLAB_TAG=2024.04.12
+ARG GCC_TAG=releases/gcc-14.1.0
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && apt install -y \
+    cmake \
+    ccache \
+    ninja-build \
+    git \
+    autoconf \
+    automake \
+    autotools-dev \
+    curl \
+    python3 \
+    python3-pip \
+    libmpc-dev \
+    libmpfr-dev \
+    libgmp-dev \
+    gawk \
+    build-essential \
+    bison \
+    flex \
+    texinfo \
+    gperf \
+    libtool \
+    patchutils \
+    bc \
+    zlib1g-dev \
+    libexpat-dev \
+    libglib2.0-dev
+
+# 📄 Clone repository
+RUN git clone \
+        --depth=1 \
+        -b ${COLLAB_TAG} \
+        https://github.com/riscv-collab/riscv-gnu-toolchain
+
+WORKDIR riscv-gnu-toolchain
+
+# Use latest GCC for RVV support
+RUN git submodule init && git submodule update
+RUN git -C gcc remote update && git -C gcc fetch origin ${GCC_TAG} && git -C gcc checkout ${GCC_TAG}
+
+RUN ./configure --enable-linux --prefix=/opt/riscv
+RUN make -j${CPUNUM} linux
+RUN make -j${CPUNUM} build-qemu
+
+#====================================================================
+# 3. Common utils
+
+FROM ubuntu:22.04
+COPY --from=builder_llvm /opt/rvv-llvm /opt/rvv-llvm
+COPY --from=builder_gcc /opt/riscv /opt/riscv
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN \
+  apt update && apt install -y \
+    software-properties-common \
+    cmake \
+    ccache \
+    ninja-build \
+    gpg-agent \
+    curl \
+    git \
+    htop \
+    man \
+    zip \
+    unzip \
+    vim \
+    wget \
+    ncdu \
+    mc \
+    nano \
+    time \
+    rsync \
+    file
+
+RUN \
+  add-apt-repository ppa:git-core/ppa && \
+  apt update && apt install -y \
+    git
+
+RUN \
+  mkdir -p /home/ci/opencv /home/ci/opencv_contrib /home/ci/build /home/ci/scripts && \
+  git config --global --add safe.directory "*" && \
+  git config --global user.email "opencv.ci" && \
+  git config --global user.name "opencv.ci" && \
+  git config --global pull.rebase false
+
+COPY scripts/warnings-handling.py /home/ci/scripts/warnings-handling.py
+
+WORKDIR /home/ci
+
+CMD bash
