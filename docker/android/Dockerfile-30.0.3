@@ -1,0 +1,74 @@
+# Version: 20240213
+# Image name: quay.io/opencv-ci/opencv-androidsdk-30
+# For 4.x branch
+
+FROM ubuntu:20.04
+
+ARG GRADLE_VERSION=7.6.3
+ARG ANDROID_BUILD_TOOLS_VERSION=30.0.3
+ARG ANDROID_PLATFORM_VERSION=android-31
+ARG ANDROID_TOOLS_ARCHIVE=commandlinetools-linux-6858069_latest.zip
+ARG NDK_VERSION=25.2.9519653
+ARG CMAKE_VERSION=3.22.1
+
+USER root
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN \
+  apt-get update && \
+  apt-get install -y --no-install-recommends \
+    software-properties-common \
+    build-essential ccache ninja-build \
+    python3 python3-pip curl zip unzip file \
+    openjdk-8-jdk openjdk-17-jre libncurses5 \
+    && \
+  add-apt-repository ppa:git-core/ppa && \
+  apt-get install -y --no-install-recommends git && \
+  rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/gradle && \
+    curl -L -o /opt/gradle/gradle-$GRADLE_VERSION-bin.zip https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
+    unzip -d /opt/gradle /opt/gradle/gradle-$GRADLE_VERSION-bin.zip
+
+ENV ANDROID_HOME="/opt/android-sdk"
+
+# find+chmod fixes permission issue for old tools package
+RUN cd ~ && mkdir $ANDROID_HOME .android tmp \
+    && cd tmp \
+    && curl -o sdk.zip "https://dl.google.com/android/repository/$ANDROID_TOOLS_ARCHIVE" \
+    && unzip sdk.zip \
+    && rm sdk.zip \
+    && find $ANDROID_HOME -executable -exec chmod a+rx {} \; \
+    && mkdir -p $ANDROID_HOME/cmdline-tools/latest \
+    && mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/ \
+    && yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools"
+
+RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;$ANDROID_BUILD_TOOLS_VERSION"
+RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;$ANDROID_PLATFORM_VERSION"
+RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;$NDK_VERSION"
+RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "cmake;$CMAKE_VERSION"
+
+# Self-hosted runner UID is 1000
+RUN useradd ci -m -s /bin/bash -G users --uid=1000
+USER ci
+
+RUN git config --global --add safe.directory "*" && \
+    git config --global user.email "opencv.ci" && \
+    git config --global user.name "opencv.ci" && \
+    git config --global pull.rebase false
+
+ENV GRADLE_VERSION=$GRADLE_VERSION
+ENV GRADLE_HOME=/opt/gradle/gradle-$GRADLE_VERSION
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+ENV ANDROID_HOME="/opt/android-sdk"
+ENV ANDROID_SDK="/opt/android-sdk"
+ENV ANDROID_NDK="/opt/android-sdk/ndk/$NDK_VERSION"
+ENV ANDROID_NDK_HOME="/opt/android-sdk/ndk/$NDK_VERSION"
+ENV PATH=$GRADLE_HOME/bin:$ANDROID_HOME/cmake/$CMAKE_VERSION/bin:$PATH
+
+# Run docker build from the root directory of the repository
+COPY scripts/warnings-handling.py /home/ci/scripts/warnings-handling.py
+
+ENTRYPOINT bash

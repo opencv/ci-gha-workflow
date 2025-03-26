@@ -1,0 +1,123 @@
+# Version: 20240709
+# Image name: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-main
+# Command: docker build -f ubuntu-github-actions-riscv--22.04/Dockerfile-nds -t quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-nds:20240709 .
+
+# 1. Build toolchain
+
+FROM ubuntu:22.04 AS builder
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && apt install -y \
+cmake \
+ccache \
+ninja-build \
+git \
+autoconf \
+automake \
+autotools-dev \
+curl \
+python3 \
+python3-pip \
+libmpc-dev \
+    libmpfr-dev \
+    libgmp-dev \
+    gawk \
+    build-essential \
+    bison \
+    flex \
+    texinfo \
+    gperf \
+    libtool \
+    patchutils \
+    bc \
+    sed \
+    zlib1g-dev \
+    libexpat-dev \
+    libglib2.0-dev \
+    libncurses-dev
+
+ARG NDS_TAG=ast-v5_3_1-release-linux
+ARG QEMU_BRANCH=ast-v5_2_0-RVP-branch
+ARG QEMU_TAG=4b6ffe758ea581a2442ebe4780b7070fbd46e8b8
+
+# 📄 Clone repository
+RUN git clone \
+        -b ${NDS_TAG} \
+        --depth=1 \
+        --recurse-submodules \
+        --shallow-submodules \
+        https://github.com/andestech/nds-gnu-toolchain
+WORKDIR nds-gnu-toolchain
+
+RUN sed -i -e 's/^TARGET=.*$/TARGET=riscv64-linux/' build_linux_toolchain.sh
+RUN sed -i -e 's/^PREFIX=.*$/PREFIX=\/opt\/andes/' build_linux_toolchain.sh
+RUN sed -i -e 's/^ARCH=.*$/ARCH=rv64imafdcxandes/' build_linux_toolchain.sh
+RUN sed -i -e 's/^ABI=.*$/ABI=lp64d/' build_linux_toolchain.sh
+RUN sed -i -e 's/^CPU=.*$/CPU=andes-25-series/' build_linux_toolchain.sh
+RUN sed -i -e 's/^XLEN=.*$/XLEN=64/' build_linux_toolchain.sh
+RUN sed -i -e 's/^BUILD=.*$/BUILD=`pwd`\/build-nds64le-linux-glibc-v5d/' build_linux_toolchain.sh
+
+# 🛠 Build toolchain
+RUN bash ./build_linux_toolchain.sh
+
+
+# 📄 Clone QEMU repository
+RUN git clone \
+        -b ${QEMU_BRANCH} \
+        --depth=1 \
+        --recurse-submodules \
+        --shallow-submodules \
+        https://github.com/andestech/qemu
+WORKDIR qemu
+RUN git checkout ${QEMU_TAG}
+
+# 🛠 Build QEMU
+RUN ./configure --prefix=/opt/andes --target-list=riscv64-linux-user --disable-werror --static
+RUN make -j4 install
+
+#====================================================================
+# 2. Common utils
+
+FROM ubuntu:22.04
+COPY --from=builder /opt/andes /opt/andes
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN \
+  apt update && apt install -y \
+    software-properties-common \
+    cmake \
+    ccache \
+    ninja-build \
+    gpg-agent \
+    curl \
+    git \
+    htop \
+    man \
+    zip \
+    unzip \
+    vim \
+    wget \
+    ncdu \
+    mc \
+    nano \
+    time \
+    rsync \
+    file
+
+RUN \
+  add-apt-repository ppa:git-core/ppa && \
+  apt update && apt install -y \
+    git
+
+RUN \
+  mkdir -p /home/ci/opencv /home/ci/opencv_contrib /home/ci/build /home/ci/scripts && \
+  git config --global --add safe.directory "*" && \
+  git config --global user.email "opencv.ci" && \
+  git config --global user.name "opencv.ci" && \
+  git config --global pull.rebase false
+
+COPY scripts/warnings-handling.py /home/ci/scripts/warnings-handling.py
+
+WORKDIR /home/ci
+
+CMD bash
