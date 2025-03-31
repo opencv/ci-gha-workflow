@@ -1,7 +1,7 @@
 # Version: 20250329
 # Image name: quay.io/opencv-ci/opencv-ubuntu-24.04
 
-FROM ubuntu:24.04 AS base
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -19,12 +19,6 @@ RUN \
     time \
     git \
     file
-
-#===============================================================================
-
-FROM base
-
-ENV DEBIAN_FRONTEND=noninteractive
 
 RUN \
   apt-get update && \
@@ -71,6 +65,7 @@ RUN \
     libopenblas-dev \
     libeigen3-dev \
     libglfw3-dev \
+    libceres-dev \
     lcov \
     xvfb \
     pkg-config
