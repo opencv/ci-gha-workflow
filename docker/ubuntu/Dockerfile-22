@@ -1,0 +1,93 @@
+# Version: 20230602
+# Image name: quay.io/opencv-ci/opencv-ubuntu-22.04
+
+FROM ubuntu:22.04
+
+RUN \
+  apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    software-properties-common \
+    curl zip unzip wget rsync mc nano time git file && \
+  rm -rf /var/lib/apt/lists/*
+
+# libraw: https://github.com/opencv/opencv/pull/23462
+# reportlab, svglib, pycairo: https://github.com/opencv/opencv/pull/23363
+# libavif: https://github.com/opencv/opencv/pull/23596
+RUN \
+  apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    cmake \
+    build-essential \
+    ccache \
+    ninja-build \
+    python3-dev \
+    python3-numpy \
+    python3-setuptools \
+    python3-pip \
+    zlib1g-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libopenjp2-7-dev \
+    libraw-dev \
+    libavif-dev \
+    libgtk-3-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    ant \
+    ant-optional \
+    default-jdk \
+    hdf5-tools \
+    libhdf5-dev \
+    liblept5 \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    libtesseract-dev \
+    libtesseract4 \
+    libgdal-dev \
+    libvtk7-dev \
+    libgoogle-glog-dev \
+    libatlas-base-dev \
+    libeigen3-dev \
+    libsuitesparse-dev \
+    liblapacke-dev \
+    libceres-dev \
+    libeigen3-dev \
+    libgtkglext1-dev \
+    libopenni2-dev \
+    libglfw3-dev \
+    lcov \
+    xvfb \
+    pkg-config \
+    && \
+  apt-get clean && python3 -m pip install --upgrade pip && \
+  pip install requests pylint==2.4.4 reportlab svglib pycairo rlPyCairo && pip cache purge
+
+RUN \
+  apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+        gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-libav \
+    libopenni2-dev \
+    libdc1394-dev \
+    libgphoto2-dev \
+    && \
+  rm -rf /var/lib/apt/lists/*
+
+# Self-hosted runner UID is 1000
+RUN useradd ci -m -s /bin/bash -G users --uid=1000
+
+USER ci
+
+RUN \
+  mkdir $HOME/opencv $HOME/opencv_contrib $HOME/build && \
+  git config --global --add safe.directory "*" && \
+  git config --global user.email "opencv.ci" && \
+  git config --global user.name "opencv.ci" && \
+  git config --global pull.rebase false
+
+# Run docker build from the root directory of the repository
+COPY scripts/warnings-handling.py /home/ci/scripts/warnings-handling.py
+
+CMD bash
