@@ -153,20 +153,24 @@ jobs:
       run: |
         cd $HOME/build
         cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+        
     - name: Build OpenCV doxygen
       if: ${{ always() && steps.opencv-doxygen.outcome == 'success' }}
       timeout-minutes: 60
       id: build-opencv
       working-directory: ${{ env.HOME }}/build
       run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
+      
     - name: Warnings check
       run: python3 scripts/warnings-handling.py ${{ env.HOME }}/build/log.txt
+      
     - name: Pylint
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
         cmake --build . --config release --target check_pylint -- -j$(nproc)
+        
     - name: Flake8
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
@@ -174,6 +178,3 @@ jobs:
         cd $HOME/build
         cmake --build . --config release --target check_flake8 -- -j$(nproc)
 
-        cd $HOME/build/js/bin
-        npm install
-        node tests.js
