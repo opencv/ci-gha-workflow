@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DOPENCV_ENABLE_NONFREE=ON -DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON -DOPENCV_DOCS_HAVE_DOT=YES -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON  -DBUILD_PERF_TESTS=ON -DWITH_IPP=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DOPENCV_JS_LOCATION=/home/ci/build/js/bin/opencv.js -DOPENCV_ENABLE_NONFREE=ON -DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON -DOPENCV_DOCS_HAVE_DOT=YES -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON  -DBUILD_PERF_TESTS=ON -DWITH_IPP=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -29,7 +29,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-docs-22.04:20241202
+      image: quay.io/opencv-ci/opencv-docs-22.04:20250404
       options: --user ci
     steps:
     - uses: actions/checkout@v4
@@ -130,6 +130,21 @@ jobs:
         cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
         git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_CONTRIB }}..HEAD || true
         python3 $HOME/scripts/patch_size.py
+    - name: Build js
+      if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build
+        emcmake python ../opencv/platforms/js/build_js.py js --build_test
+        
+    - name: Run js tests
+      if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build/js/bin
+        npm install
+        node tests.js
+        
     - name: Configure OpenCV doxygen
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
       id: opencv-doxygen
