@@ -199,10 +199,6 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_line_descriptor.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
-    - name: Accuracy:mcc
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd ${{ github.workspace }}\build && bin\opencv_test_mcc.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:ml
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
