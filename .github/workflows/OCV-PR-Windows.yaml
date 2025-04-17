@@ -1,0 +1,114 @@
+name: OCV PR Linux
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-Windows.yaml'
+      # TODO: are following paths necessary?
+      - 'checkout-and-merge/*'
+      - 'configure-and-build/*'
+      - 'run-tests/*'
+      - 'scripts/runner.py'
+      - 'scripts/test-plan.json'
+  workflow_call:
+    inputs:
+      workflow_branch:
+        description: "Branch for ci-gha-workflow repository"
+        default: "main"
+        required: false
+        type: string
+
+concurrency:
+  group: OCV-PR-Windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  branch_eval:
+    runs-on: ubuntu-24.04
+    outputs:
+      branches: ${{ steps.determine-branches.outputs.branches }}
+    steps:
+        - id: determine-branches
+          shell: bash
+          run: |
+            if [ "${{ github.event.repository.name == 'ci-gha-workflow' }}" = "true" ] ; then
+              echo "branches=[ '4.x', '5.x' ]" >> "$GITHUB_OUTPUT"
+            else
+              echo "branches=[ '${{ github.base_ref }}' ]" >> "$GITHUB_OUTPUT"
+            fi
+
+  Windows:
+    runs-on: opencv-cn-win
+    needs:
+      - branch_eval
+    strategy:
+      # NOTE: Debugging
+      fail-fast: true
+      # fail-fast: false
+      max-parallel: 3
+      matrix:
+        config:
+          - 'base'
+          - 'vulkan'
+          - 'uwp'
+
+        branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
+
+    defaults:
+      run:
+        shell: bash
+    env:
+      EXTRA_CMAKE_OPTIONS: '-DCL_Z_OPTION=/Z7 -DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DCMAKE_BUILD_TYPE=Release'
+      OPENCV_TEST_DATA_PATH: ${{ github.workspace }}\opencv_extra\testdata
+      OPENCV_TEST_REQUIRE_DATA: 1
+      OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+      PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+      SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+      TARGET_BRANCH_NAME: ${{ github.base_ref }}
+      GTEST_FILTER_STRING: '-Samples.findFile:videoio/videocapture_acceleration.read/yuv420p_libvpxxvp9_mp4_MSMF_NONE_MAT:Drawing.ttf_text'
+      DOWNLOAD_DNN_MODELS_FILE: 'download_models.py'
+
+      ANT_HOME: '/usr/share/ant'
+      DNN_MODELS: '/opt/dnn-models'
+      CCACHE_DIR: '/opt/.ccache'
+      CCACHE_MAXSIZE: '8G'
+      OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
+      CMAKE_OPT: >-
+        -DBUILD_DOCS=ON
+        -DBUILD_EXAMPLES=ON
+        -DOPENCV_ENABLE_NONFREE=ON
+        -DWITH_IMGCODEC_GIF=ON
+        ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
+        ${{ matrix.avif && '-DWITH_AVIF=ON' }}
+        ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
+        ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
+        ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
+        ${{ matrix.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
+      HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
+      MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
+      OPENCV_FOR_THREADS_NUM: 8
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
+
+    # ==========
+
+    steps:
+
+    - name: Checkout workflow repository
+      uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: "${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || inputs.workflow_branch }}"
+
+    # - name: Checkout and merge OpenCV
+    #   uses: ./checkout-and-merge
+    #   with:
+    #     target_branch: "${{ matrix.branch }}"
+    #     author: "${{ github.event.pull_request.user.login }}"
+    #     source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
+    #     gitcache: '/opt/git_cache'
+    #     home: '${{ env.HOME }}'
+    #     workdir: '${{ env.HOME }}'
