@@ -20,12 +20,12 @@ runs:
       shell: bash
       run: |
         echo "::group::Configure"
-        rm -rf ${{ inputs.builddir }}
-        mkdir -p ${{ inputs.builddir }}
+        rm -rf '${{ inputs.builddir }}'
+        mkdir -p '${{ inputs.builddir }}'
         cmake \
           -S opencv \
-          -B ${{ inputs.builddir }} \
-          -G ${{ inputs.generator }} \
+          -B '${{ inputs.builddir }}' \
+          -G '${{ inputs.generator }}' \
           ${{ inputs.options }}
         echo "::endgroup::"
 
@@ -33,14 +33,14 @@ runs:
       shell: bash
       run: |
         echo "::group::Build"
-        cmake --build ${{ inputs.builddir }} 2>&1 | tee ${{ inputs.builddir }}/log.txt
+        cmake --build '${{ inputs.builddir }}' 2>&1 | tee '${{ inputs.builddir }}/log.txt'
         echo "::endgroup::"
 
     - shell: bash
       run: |
         set +e
         python3 ./scripts/warnings-handling.py \
-          ${{ inputs.workdir }}/${{ inputs.builddir }}/log.txt
+          '${{ inputs.workdir }}/${{ inputs.builddir }}/log.txt'
         if [ $? -ne 0 ]; then
           echo "WARNINGS=1" >> $GITHUB_ENV
         fi
