@@ -61,7 +61,6 @@ jobs:
       run:
         shell: bash
     env:
-      OPENCV_DOWNLOAD_PATH: "$BINARIES_CACHE"
       CMAKE_OPT: >-
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
@@ -115,8 +114,25 @@ jobs:
       timeout-minutes: 60
       working-directory: '${{ github.workspace }}'
       run: |
-        # ls -lR '${{ env.DNN_MODELS }}'
         python opencv_extra/testdata/dnn/download_models.py \
           --cleanup \
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
+
+
+    - if: ${{ github.event.repository.name != 'opencv_contrib' }}
+      name: Configure and build OpenCV
+      uses: ./configure-and-build
+      with:
+        workdir: '${{ github.workspace }}'
+        builddir: 'build'
+        generator: 'Visual Studio 16 2019'
+        options: '-A x64 ${{ env.CMAKE_OPT }}'
+
+    - name: Configure and build OpenCV with contrib
+      uses: ./configure-and-build
+      with:
+        workdir: '${{ github.workspace }}'
+        builddir: 'build-contrib'
+        generator: 'Visual Studio 16 2019'
+        options: '-A x64 -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
