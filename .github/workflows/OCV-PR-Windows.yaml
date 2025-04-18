@@ -89,7 +89,7 @@ jobs:
         repository: opencv/ci-gha-workflow
         ref: "${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || inputs.workflow_branch }}"
 
-    - working-directory: ${{ github.workspace }}
+    - working-directory: '${{ github.workspace }}'
       shell: bash
       run: |
         pwd
@@ -103,8 +103,18 @@ jobs:
     - name: Checkout and merge OpenCV
       uses: ./checkout-and-merge
       with:
-        target_branch: "${{ matrix.branch }}"
-        author: "${{ github.event.pull_request.user.login }}"
+        target_branch: '${{ matrix.branch }}'
+        author: '${{ github.event.pull_request.user.login }}'
         source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
-        gitcache: "${{ env.GIT_CACHE_PATH }}"
-        workdir: "${{ github.workspace }}"
+        gitcache: '${{ env.GIT_CACHE_PATH }}'
+        workdir: '${{ github.workspace }}'
+
+    - name: Update extra dnn models
+      timeout-minutes: 60
+      working-directory: '${{ github.workspace }}'
+      run: |
+        ls -lR ${{ env.BINARIES_CACHE }}
+        python3 opencv_extra\\testdata\\dnn\\download_models.py \
+          --cleanup \
+          --dst '${{ env.BINARIES_CACHE }}\\dnn'
+        echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.BINARIES_CACHE }}" >> $GITHUB_ENV
