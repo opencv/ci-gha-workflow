@@ -65,6 +65,8 @@ jobs:
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
+        ${{ matrix.config == 'uwp' && -DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION=10.0 -DBUILD_opencv_gapi=OFF -DWITH_MSMF=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_opencv_apps=OFF }}
+        ${{ matrix.config == 'vulcan' && '-DWITH_OPENCL=OFF -DWITH_VULKAN=ON' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       OPENCV_FOR_THREADS_NUM: 8
       CMAKE_BUILD_PARALLEL_LEVEL: 8
