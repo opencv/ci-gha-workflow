@@ -115,7 +115,7 @@ jobs:
       timeout-minutes: 60
       working-directory: '${{ github.workspace }}'
       run: |
-        ls -lR '${{ env.DNN_MODELS }}'
+        # ls -lR '${{ env.DNN_MODELS }}'
         python3 opencv_extra/testdata/dnn/download_models.py \
           --cleanup \
           --dst '${{ env.DNN_MODELS }}/dnn'
