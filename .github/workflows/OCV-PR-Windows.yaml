@@ -1,4 +1,4 @@
-name: OCV PR Linux
+name: OCV PR Windows
 
 on:
   pull_request:
@@ -61,34 +61,11 @@ jobs:
       run:
         shell: bash
     env:
-      EXTRA_CMAKE_OPTIONS: '-DCL_Z_OPTION=/Z7 -DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DCMAKE_BUILD_TYPE=Release'
-      OPENCV_TEST_DATA_PATH: ${{ github.workspace }}\opencv_extra\testdata
-      OPENCV_TEST_REQUIRE_DATA: 1
-      OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
-      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-      PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
-      SOURCE_BRANCH_NAME: ${{ github.head_ref }}
-      TARGET_BRANCH_NAME: ${{ github.base_ref }}
-      GTEST_FILTER_STRING: '-Samples.findFile:videoio/videocapture_acceleration.read/yuv420p_libvpxxvp9_mp4_MSMF_NONE_MAT:Drawing.ttf_text'
-      DOWNLOAD_DNN_MODELS_FILE: 'download_models.py'
-
-      ANT_HOME: '/usr/share/ant'
-      DNN_MODELS: '/opt/dnn-models'
-      CCACHE_DIR: '/opt/.ccache'
-      CCACHE_MAXSIZE: '8G'
-      OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
+      OPENCV_DOWNLOAD_PATH: "${{ env.BINARIES_CACHE }}"
       CMAKE_OPT: >-
-        -DBUILD_DOCS=ON
+        -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
-        -DWITH_IMGCODEC_GIF=ON
-        ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
-        ${{ matrix.avif && '-DWITH_AVIF=ON' }}
-        ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
-        ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
-        ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
-        ${{ matrix.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
-      HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       OPENCV_FOR_THREADS_NUM: 8
       CMAKE_BUILD_PARALLEL_LEVEL: 8
@@ -109,6 +86,5 @@ jobs:
         target_branch: "${{ matrix.branch }}"
         author: "${{ github.event.pull_request.user.login }}"
         source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
-        gitcache: '${{ env.GIT_CACHE }}'
-        home: '${{ env.HOME }}'
-        workdir: '${{ github.workspace }}'
+        gitcache: "${{ env.GIT_CACHE }}"
+        workdir: "${{ github.workspace }}"
