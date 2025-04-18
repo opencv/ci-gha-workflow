@@ -74,6 +74,15 @@ jobs:
 
     steps:
 
+    - name: Propagate environment
+      run: |
+        echo "GIT_CACHE=$GIT_CACHE" >> "$GITHUB_ENV"
+        echo "GIT_CACHE_PATH=$GIT_CACHE_PATH" >> "$GITHUB_ENV"
+        echo "DNN_MODELS=$DNN_MODELS" >> "$GITHUB_ENV"
+        echo "BINARIES_CACHE=$BINARIES_CACHE" >> "$GITHUB_ENV"
+        echo "OPENCV_DOWNLOAD_PATH=$BINARIES_CACHE" >> "$GITHUB_ENV"
+
+
     - name: Checkout workflow repository
       uses: actions/checkout@v4
       with:
@@ -90,14 +99,12 @@ jobs:
         id
         echo "BINARIES_CACHE = ${{ env.BINARIES_CACHE }}"
         echo "GIT_CACHE = ${{ env.GIT_CACHE }}"
-        echo "GIT_CACHE = $GIT_CACHE"
 
-
-    # - name: Checkout and merge OpenCV
-    #   uses: ./checkout-and-merge
-    #   with:
-    #     target_branch: "${{ matrix.branch }}"
-    #     author: "${{ github.event.pull_request.user.login }}"
-    #     source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
-    #     gitcache: "${{ env.GIT_CACHE }}"
-    #     workdir: "${{ github.workspace }}"
+    - name: Checkout and merge OpenCV
+      uses: ./checkout-and-merge
+      with:
+        target_branch: "${{ matrix.branch }}"
+        author: "${{ github.event.pull_request.user.login }}"
+        source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
+        gitcache: "${{ env.GIT_CACHE }}"
+        workdir: "${{ github.workspace }}"
