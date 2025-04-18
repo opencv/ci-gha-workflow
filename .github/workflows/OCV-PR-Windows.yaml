@@ -97,6 +97,8 @@ jobs:
         export
         whoami
         id
+        wslpath "$BINARIES_CACHE"
+        wslpath "$GIT_CACHE"
         echo "BINARIES_CACHE = ${{ env.BINARIES_CACHE }}"
         echo "GIT_CACHE = ${{ env.GIT_CACHE }}"
 
@@ -109,12 +111,12 @@ jobs:
         gitcache: '${{ env.GIT_CACHE_PATH }}'
         workdir: '${{ github.workspace }}'
 
-    - name: Update extra dnn models
-      timeout-minutes: 60
-      working-directory: '${{ github.workspace }}'
-      run: |
-        ls -lR ${{ env.BINARIES_CACHE }}
-        python3 opencv_extra\\testdata\\dnn\\download_models.py \
-          --cleanup \
-          --dst '${{ env.BINARIES_CACHE }}\\dnn'
-        echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.BINARIES_CACHE }}" >> $GITHUB_ENV
+    # - name: Update extra dnn models
+    #   timeout-minutes: 60
+    #   working-directory: '${{ github.workspace }}'
+    #   run: |
+    #     ls -lR ${{ env.BINARIES_CACHE }}
+    #     python3 opencv_extra\\testdata\\dnn\\download_models.py \
+    #       --cleanup \
+    #       --dst '${{ env.BINARIES_CACHE }}\\dnn'
+    #     echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.BINARIES_CACHE }}" >> $GITHUB_ENV
