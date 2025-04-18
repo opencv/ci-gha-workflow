@@ -115,8 +115,8 @@ jobs:
       timeout-minutes: 60
       working-directory: '${{ github.workspace }}'
       run: |
-        ls -lR '${{ env.BINARIES_CACHE }}/dnn'
+        ls -lR '${{ env.DNN_MODELS }}'
         python3 opencv_extra/testdata/dnn/download_models.py \
           --cleanup \
-          --dst '${{ env.BINARIES_CACHE }}/dnn'
-        echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.BINARIES_CACHE }}" >> $GITHUB_ENV
+          --dst '${{ env.DNN_MODELS }}/dnn'
+        echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
