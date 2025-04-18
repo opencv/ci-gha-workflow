@@ -108,7 +108,7 @@ jobs:
         target_branch: '${{ matrix.branch }}'
         author: '${{ github.event.pull_request.user.login }}'
         source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
-        gitcache: '${{ env.GIT_CACHE_PATH }}'
+        gitcache: '${{ env.GIT_CACHE }}'
         workdir: '${{ github.workspace }}'
 
     - name: Update extra dnn models
