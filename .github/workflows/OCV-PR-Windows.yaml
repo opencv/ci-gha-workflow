@@ -97,8 +97,8 @@ jobs:
         export
         whoami
         id
-        wslpath "$BINARIES_CACHE"
-        wslpath "$GIT_CACHE"
+        cygpath -u "$BINARIES_CACHE"
+        cygpath -u "$GIT_CACHE"
         echo "BINARIES_CACHE = ${{ env.BINARIES_CACHE }}"
         echo "GIT_CACHE = ${{ env.GIT_CACHE }}"
 
