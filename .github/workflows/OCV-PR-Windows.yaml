@@ -88,6 +88,9 @@ jobs:
         export
         whoami
         id
+        echo "BINARIES_CACHE = ${{ env.BINARIES_CACHE }}"
+        echo "GIT_CACHE = ${{ env.GIT_CACHE }}"
+        echo "GIT_CACHE = $GIT_CACHE"
 
 
     # - name: Checkout and merge OpenCV
