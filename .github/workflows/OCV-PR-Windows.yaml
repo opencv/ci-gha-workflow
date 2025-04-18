@@ -80,11 +80,21 @@ jobs:
         repository: opencv/ci-gha-workflow
         ref: "${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || inputs.workflow_branch }}"
 
-    - name: Checkout and merge OpenCV
-      uses: ./checkout-and-merge
-      with:
-        target_branch: "${{ matrix.branch }}"
-        author: "${{ github.event.pull_request.user.login }}"
-        source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
-        gitcache: "${{ env.GIT_CACHE }}"
-        workdir: "${{ github.workspace }}"
+    - working-directory: ${{ github.workspace }}
+      shell: bash
+      run: |
+        pwd
+        ls -l
+        export
+        whoami
+        id
+
+
+    # - name: Checkout and merge OpenCV
+    #   uses: ./checkout-and-merge
+    #   with:
+    #     target_branch: "${{ matrix.branch }}"
+    #     author: "${{ github.event.pull_request.user.login }}"
+    #     source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
+    #     gitcache: "${{ env.GIT_CACHE }}"
+    #     workdir: "${{ github.workspace }}"
