@@ -61,7 +61,7 @@ jobs:
       run:
         shell: bash
     env:
-      OPENCV_DOWNLOAD_PATH: "${{ env.BINARIES_CACHE }}"
+      OPENCV_DOWNLOAD_PATH: "$BINARIES_CACHE"
       CMAKE_OPT: >-
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
