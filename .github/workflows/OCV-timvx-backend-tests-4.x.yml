@@ -20,7 +20,7 @@ env:
 
 jobs:
   x86-simulator-build-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container: quay.io/opencv-ci/opencv-ubuntu-20.04-timvx:20220901
     steps:
       - name: Define proper HOME path

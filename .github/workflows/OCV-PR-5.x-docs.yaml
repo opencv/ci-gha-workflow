@@ -24,7 +24,7 @@ env:
 
 jobs:
   BuildAndTest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -136,7 +136,7 @@ jobs:
       run: |
         cd $HOME/build
         emcmake python ../opencv/platforms/js/build_js.py js --build_test
-        
+
     - name: Run js tests
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
       timeout-minutes: 60
@@ -144,7 +144,7 @@ jobs:
         cd $HOME/build/js/bin
         npm install
         node tests.js
-        
+
     - name: Configure OpenCV doxygen
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
       id: opencv-doxygen

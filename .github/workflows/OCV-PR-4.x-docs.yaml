@@ -24,7 +24,7 @@ env:
 
 jobs:
   BuildAndTest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -130,14 +130,14 @@ jobs:
         cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
         git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_CONTRIB }}..HEAD || true
         python3 $HOME/scripts/patch_size.py
-        
+
     - name: Build js
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
       timeout-minutes: 60
       run: |
         cd $HOME/build
         emcmake python ../opencv/platforms/js/build_js.py js --build_test
-        
+
     - name: Run js tests
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
       timeout-minutes: 60
@@ -145,7 +145,7 @@ jobs:
         cd $HOME/build/js/bin
         npm install
         node tests.js
-        
+
     - name: Configure OpenCV doxygen
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
       id: opencv-doxygen
@@ -153,24 +153,24 @@ jobs:
       run: |
         cd $HOME/build
         cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
-        
+
     - name: Build OpenCV doxygen
       if: ${{ always() && steps.opencv-doxygen.outcome == 'success' }}
       timeout-minutes: 60
       id: build-opencv
       working-directory: ${{ env.HOME }}/build
       run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
-      
+
     - name: Warnings check
       run: python3 scripts/warnings-handling.py ${{ env.HOME }}/build/log.txt
-      
+
     - name: Pylint
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
         cmake --build . --config release --target check_pylint -- -j$(nproc)
-        
+
     - name: Flake8
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
