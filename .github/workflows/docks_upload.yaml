@@ -86,10 +86,14 @@ jobs:
       id: build-opencv
       working-directory: ${{ env.HOME }}/build
       run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
-      
+
+    - name: Set DOC_VERSION
+      run: |
+        echo "DOC_VERSION=$(basename '${{ github.ref_name }}')" >> $GITHUB_ENV
+        
     - name: Archive docs
       uses: actions/upload-artifact@v4
       with:
-        name: opencv-docs-html
+        name: opencv-docs-${{ env.DOC_VERSION }}
         path: ${{ env.HOME }}/build/doc/doxygen/html
 
