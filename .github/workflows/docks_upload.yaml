@@ -89,7 +89,7 @@ jobs:
 
     - name: Set DOC_VERSION
       run: |
-        echo "DOC_VERSION=$(basename '${{ github.ref_name }}')" >> $GITHUB_ENV
+        echo "DOC_VERSION=$(basename '${{ env.SOURCE_BRANCH_NAME }}')" >> $GITHUB_ENV
         
     - name: Archive docs
       uses: actions/upload-artifact@v4
