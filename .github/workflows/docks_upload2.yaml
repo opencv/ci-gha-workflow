@@ -1,14 +1,14 @@
 name: build docks
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  schedule:
-    - cron: '0 4 * * *' 
+#on:
+#  push:
+#    branches:
+#      - main
+#  pull_request:
+#    branches:
+#      - main
+#  schedule:
+#    - cron: '0 4 * * *' 
 
 env:
   EXTRA_CMAKE_OPTIONS: '-DOPENCV_ENABLE_NONFREE=ON -DBUILD_DOCS_JS_BINDINGS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON -DOPENCV_DOCS_HAVE_DOT=YES -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON  -DBUILD_PERF_TESTS=ON -DWITH_IPP=OFF'
