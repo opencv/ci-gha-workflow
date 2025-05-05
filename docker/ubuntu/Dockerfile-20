@@ -1,4 +1,4 @@
-# Version: 20230413
+# Version: 20250505
 # Image name: quay.io/opencv-ci/opencv-ubuntu-20.04
 
 FROM ubuntu:20.04
@@ -35,6 +35,7 @@ RUN \
     libtiff5-dev \
     libopenjp2-7-dev \
     libraw-dev \
+    libopenexr-dev \
     libgtk-3-dev \
     libavcodec-dev \
     libavformat-dev \
@@ -67,7 +68,7 @@ RUN \
     pkg-config \
     && \
   apt-get clean && python3 -m pip install --upgrade pip && \
-  pip install requests pylint==2.4.4 reportlab svglib && pip cache purge
+  pip install requests pylint==2.4.4 reportlab svglib pycairo rlPyCairo && pip cache purge
 
 RUN \
   apt-get update && \
