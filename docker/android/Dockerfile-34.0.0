@@ -1,4 +1,4 @@
-# Version: 20240917
+# Version: 20250516
 # Image name: quay.io/opencv-ci/opencv-androidsdk-34
 # For 4.x branch
 
@@ -8,7 +8,7 @@ ARG GRADLE_VERSION=8.11.1
 ARG ANDROID_BUILD_TOOLS_VERSION=34.0.0
 ARG ANDROID_PLATFORM_VERSION=android-34
 ARG ANDROID_TOOLS_ARCHIVE=commandlinetools-linux-6858069_latest.zip
-ARG NDK_VERSION=26.3.11579264
+ARG NDK_VERSION=27.2.12479018
 ARG CMAKE_VERSION=3.22.1
 
 USER root

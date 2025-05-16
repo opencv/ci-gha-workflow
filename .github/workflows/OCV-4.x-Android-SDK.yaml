@@ -33,7 +33,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-androidsdk-34:20240917
+      image: quay.io/opencv-ci/opencv-androidsdk-34:20250516
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
