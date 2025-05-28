@@ -9,17 +9,18 @@ env:
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   OPENCV_EXTRA_DOCKER_WORKDIR: '/home/ci/opencv_extra'
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
+  OPENCV_SRC: /home/ci/opencv
+  OPENCV_BUILD: /home/ci/opencv-build
+  JAVA_DOC: /home/ci/opencv-build/doc/doxygen/html/javadoc
 
 jobs:
+
   build-docs:
     name: Build Docs ${{ matrix.branch }}
     runs-on: ubuntu-22.04
     container:
-      image: quay.io/opencv-ci/opencv-docs-22.04:20241202
+      image: quay.io/ivan_avdeev/opencv_test:opencv-docs-22.04-jdk-20250526
       options: --user ci
-    defaults:
-      run:
-        shell: bash
     strategy:
       matrix:
         branch: [4.x, 5.x]
@@ -47,40 +48,43 @@ jobs:
       - name: Clean workspace
         run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
 
-      - name: Clone OpenCV
+      - name: Clone Repositories
         run: |
           git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
-          cd ${{ env.OPENCV_DOCKER_WORKDIR }}
-          echo "LATEST_COMMIT_OPENCV=$(git log -n 1 ${{ env.TARGET_BRANCH_NAME }} --pretty=format:'%H')" >> $GITHUB_ENV
+          git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_extra.git ${{ env.OPENCV_EXTRA_DOCKER_WORKDIR }}
+          git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_contrib.git ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
 
-      - name: Clone OpenCV Extra
+      - name: Generate JavaDoc
         run: |
-          git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_extra.git $HOME/opencv_extra
-          cd ${{ env.OPENCV_EXTRA_DOCKER_WORKDIR }}
-          echo "LATEST_COMMIT_OPENCV_EXTRA=$(git log -n 1 ${{ env.TARGET_BRANCH_NAME }} --pretty=format:'%H')" >> $GITHUB_ENV
-
-      - name: Clone OpenCV Contrib
-        id: last-repo-step
-        run: |
-          git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_contrib.git $HOME/opencv_contrib
-          cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
-          echo "LATEST_COMMIT_OPENCV_CONTRIB=$(git log -n 1 ${{ env.TARGET_BRANCH_NAME }} --pretty=format:'%H')" >> $GITHUB_ENV
-
+          mkdir -p ${{ env.OPENCV_BUILD }}
+          cd ${{ env.OPENCV_BUILD }}
+          cmake -DBUILD_SHARED_LIBS=OFF \
+                -DBUILD_opencv_java=ON \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules \
+                -DANT_EXECUTABLE=/usr/bin/ant \
+                ${{ env.OPENCV_DOCKER_WORKDIR }}
+          make -j2
+          cd modules/java/jar/opencv
+          ant javadoc
+          
       - name: Configure Doxygen
-        if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
-        id: opencv-doxygen
         run: |
           mkdir -p $HOME/build
           cd $HOME/build
           cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
-
+          
+      - name: Patch layout.xml to add JavaDoc link
+        run: |
+          doxygen -l layout.xml
+          sed -i '/<\/navindex>/i <usergroup title="Java Documentation"><useritem url="javadoc/index.html" title="Java API"/></usergroup>' layout.xml
+          echo "LAYOUT_FILE = layout.xml" >> ${{ env.OPENCV_SRC }}/doc/Doxyfile
+  
       - name: Build Doxygen
-        if: ${{ always() && steps.opencv-doxygen.outcome == 'success' }}
-        id: build-opencv
         working-directory: ${{ env.HOME }}/build
         run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
 
-      - name: Archive Docs
+      - name: Archive Doxygen Docs
         uses: actions/upload-artifact@v4
         with:
           name: opencv-docs-${{ matrix.branch }}
