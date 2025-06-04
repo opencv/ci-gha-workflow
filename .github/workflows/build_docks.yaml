@@ -101,4 +101,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: opencv-docs-${{ matrix.branch }}
-          path: ${{ env.HOME }}/build/doc/doxygen/html
+          path: |
+            ${{ env.HOME }}/build/doc/doxygen/html
+            ${{ env.HOME }}/build/js/bin/opencv.js
