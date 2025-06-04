@@ -86,12 +86,6 @@ jobs:
           mkdir -p $HOME/build
           cd $HOME/build
           cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
-          
-      - name: Patch layout.xml to add JavaDoc link
-        run: |
-          doxygen -l layout.xml
-          sed -i '/<\/navindex>/i <usergroup title="Java Documentation"><useritem url="javadoc/index.html" title="Java API"/></usergroup>' layout.xml
-          echo "LAYOUT_FILE = layout.xml" >> ${{ env.OPENCV_SRC }}/doc/Doxyfile
   
       - name: Build Doxygen
         working-directory: ${{ env.HOME }}/build
