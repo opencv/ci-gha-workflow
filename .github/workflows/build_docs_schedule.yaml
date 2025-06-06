@@ -20,7 +20,7 @@ jobs:
     name: Build Docs ${{ matrix.branch }}
     runs-on: ubuntu-22.04
     container:
-      image: quay.io/ivan_avdeev/opencv_test:opencv-docs-22.04-jdk-20250526
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20250526
       options: --user ci
     strategy:
       matrix:
