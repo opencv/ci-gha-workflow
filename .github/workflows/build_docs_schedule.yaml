@@ -1,4 +1,4 @@
-name: build docks
+name: build docs schedule
 
 on:
   schedule:
