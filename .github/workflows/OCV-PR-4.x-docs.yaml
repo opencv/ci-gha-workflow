@@ -21,6 +21,8 @@ env:
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   OPENCV_EXTRA_DOCKER_WORKDIR: '/home/ci/opencv_extra'
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
+  OPENCV_BUILD: /home/ci/opencv-build
+  JAVA_DOC: /home/ci/opencv-build/doc/doxygen/html/javadoc
 
 jobs:
   BuildAndTest:
@@ -29,7 +31,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-docs-22.04:20250404
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20250526
       options: --user ci
     steps:
     - uses: actions/checkout@v4
@@ -130,6 +132,20 @@ jobs:
         cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
         git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_CONTRIB }}..HEAD || true
         python3 $HOME/scripts/patch_size.py
+        
+    - name: Generate JavaDoc
+      run: |
+          mkdir -p ${{ env.OPENCV_BUILD }}
+          cd ${{ env.OPENCV_BUILD }}
+          cmake -DBUILD_SHARED_LIBS=OFF \
+                -DBUILD_opencv_java=ON \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules \
+                -DANT_EXECUTABLE=/usr/bin/ant \
+                ${{ env.OPENCV_DOCKER_WORKDIR }}
+          make -j2
+          cd modules/java/jar/opencv
+          ant javadoc
 
     - name: Build js
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
