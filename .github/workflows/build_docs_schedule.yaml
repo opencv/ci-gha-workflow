@@ -1,0 +1,101 @@
+name: build docs schedule
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DOPENCV_JS_LOCATION=/home/ci/build/js/bin/opencv.js -DOPENCV_ENABLE_NONFREE=ON -DBUILD_DOCS_JS_BINDINGS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON -DOPENCV_DOCS_HAVE_DOT=YES -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON  -DBUILD_PERF_TESTS=ON -DWITH_IPP=OFF'
+  OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
+  OPENCV_EXTRA_DOCKER_WORKDIR: '/home/ci/opencv_extra'
+  OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
+  OPENCV_SRC: /home/ci/opencv
+  OPENCV_BUILD: /home/ci/opencv-build
+  JAVA_DOC: /home/ci/opencv-build/doc/doxygen/html/javadoc
+
+jobs:
+
+  build-docs:
+    name: Build Docs ${{ matrix.branch }}
+    runs-on: ubuntu-22.04
+    container:
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20250526
+      options: --user ci
+    strategy:
+      matrix:
+        branch: [4.x, 5.x]
+    env:
+      SOURCE_BRANCH_NAME: ${{ github.head_ref || matrix.branch }}
+      TARGET_BRANCH_NAME: ${{ github.base_ref || matrix.branch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
+
+      - name: Define HOME
+        run: echo "HOME=/home/ci" >> $GITHUB_ENV
+
+      - name: Force TARGET_BRANCH_NAME (if in ci-gha-workflow repo)
+        if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+        run: echo "TARGET_BRANCH_NAME=${{ matrix.branch }}" >> $GITHUB_ENV
+
+      - name: Info
+        run: |
+          echo "SOURCE_BRANCH_NAME=${{ env.SOURCE_BRANCH_NAME }}"
+          echo "TARGET_BRANCH_NAME=${{ env.TARGET_BRANCH_NAME }}"
+
+      - name: Clean workspace
+        run: find ${{ env.OPENCV_DOCKER_WORKDIR }} -mindepth 1 -delete
+
+      - name: Clone Repositories
+        run: |
+          git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+          git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_extra.git ${{ env.OPENCV_EXTRA_DOCKER_WORKDIR }}
+          git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_contrib.git ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
+
+      - name: Generate JavaDoc
+        run: |
+          mkdir -p ${{ env.OPENCV_BUILD }}
+          cd ${{ env.OPENCV_BUILD }}
+          cmake -DBUILD_SHARED_LIBS=OFF \
+                -DBUILD_opencv_java=ON \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules \
+                -DANT_EXECUTABLE=/usr/bin/ant \
+                ${{ env.OPENCV_DOCKER_WORKDIR }}
+          make -j2
+          cd modules/java/jar/opencv
+          ant javadoc
+          
+      - name: Build js
+        timeout-minutes: 60
+        run: |
+          cd $HOME/build
+          emcmake python ../opencv/platforms/js/build_js.py js --build_test
+
+      - name: Run js tests
+        timeout-minutes: 60
+        run: |
+          cd $HOME/build/js/bin
+          npm install
+          node tests.js
+          
+      - name: Configure Doxygen
+        run: |
+          mkdir -p $HOME/build
+          cd $HOME/build
+          cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+  
+      - name: Build Doxygen
+        working-directory: ${{ env.HOME }}/build
+        run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
+
+      - name: Archive Doxygen Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencv-docs-${{ matrix.branch }}
+          path: |
+            ${{ env.HOME }}/build/doc/doxygen/html
+            ${{ env.HOME }}/build/js/bin/opencv.js
