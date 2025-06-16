@@ -1,15 +1,15 @@
-name: OCV Contrib PR:4.x ARM64 FastCV
+name: OCV Contrib PR:5.x ARM64 FastCV
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-Contrib-PR-4.x-ARM64-FastCV.yaml'
+      - '.github/workflows/OCV-Contrib-PR-5.x-ARM64-FastCV.yaml'
   workflow_call:
 
 concurrency:
-  group: OCV-Contrib-PR-4.x-ARM64-FastCV-${{ github.ref }}
+  group: OCV-Contrib-PR-5.x-ARM64-FastCV-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -22,7 +22,6 @@ env:
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
   PYTHONPATH: /home/ci/build/python_loader:$PYTHONPATH
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
-  OPENCV_TEST_REQUIRE_DATA: 1
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
   DNN_MODELS: '/home/ci/dnn-models'
   GTEST_FILTER_STRING: '-tracking_GOTURN.GOTURN/*'
@@ -48,13 +47,14 @@ jobs:
     - name: Define proper HOME path
       timeout-minutes: 60
       run: echo "HOME=/home/ci" >> $GITHUB_ENV
+    - name: Setup test environment
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        echo "EXTRA_GTEST_OPTIONS=--skip_unstable=1" >> $GITHUB_ENV
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
-      run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
-    - name: Setup test environment
-      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
-      run: echo "EXTRA_GTEST_OPTIONS=--skip_unstable=1" >> $GITHUB_ENV
+      run: echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
     - name: PR info
       timeout-minutes: 60
       run: |
@@ -135,6 +135,10 @@ jobs:
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
+    - name: Accuracy:3d
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_3d --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:bgsegm
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -143,10 +147,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_bioinspired --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:calib3d
+    - name: Accuracy:calib
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_calib3d --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_calib --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -163,14 +167,14 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_face --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:features2d
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_features2d --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:fastcv
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_fastcv --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy:features
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_features --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:flann
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -191,16 +195,6 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_img_hash --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:img_aug
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: |
-        cd $HOME/build
-        if [[ -f bin/opencv_test_imgaug ]]; then
-          xvfb-run -a bin/opencv_test_imgaug --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
-        else
-          echo "No Augmentation module"
-        fi
     - name: Accuracy:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -217,10 +211,6 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_line_descriptor --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:mcc
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_mcc --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:ml
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -317,18 +307,30 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_ximgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy:xobjdetect
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_xobjdetect --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:xphoto
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_xphoto --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy:xstereo
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_xstereo --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Performance:3d
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:bioinspired
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_bioinspired --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
-    - name: Performance:calib3d
+    - name: Performance:calib
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_calib3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_calib --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:core
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -341,14 +343,14 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_dnn_superres --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
-    - name: Performance:features2d
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_features2d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:fastcv
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_fastcv --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:features
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_features --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:imgcodecs
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -377,10 +379,6 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_reg --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
-    - name: Performance:rgbd
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_rgbd --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:stereo
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
@@ -413,11 +411,19 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_ximgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Performance:xobjdetect
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_xobjdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
     - name: Performance:xphoto
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_xphoto --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
-    - name: Python3 Bindings
+    - name: Performance:xstereo
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_perf_xstereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=${{ env.PARALLEL_JOBS }}
+    - name: Python3 Bingings
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: |
