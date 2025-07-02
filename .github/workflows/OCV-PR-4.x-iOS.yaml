@@ -1,18 +1,18 @@
-name: OCV PR:4.x iOS
+name: OCV PR:4.12.0 iOS
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-PR-4.x-iOS.yaml'
+      - '.github/workflows/OCV-PR-4.12.0-iOS.yaml'
   workflow_call:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
 
 concurrency:
-  group: OCV-PR-4.x-iOS-${{ github.ref }}
+  group: OCV-PR-4.12.0-iOS-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -29,7 +29,7 @@ jobs:
         timeout-minutes: 60
         run: |
           if [[ "${{ github.event.repository.name }}" == "ci-gha-workflow" || "${{ github.event_name }}" == "schedule" ]]; then
-            echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
+            echo "TARGET_BRANCH_NAME=4.12.0" >> $GITHUB_ENV
           else
             echo "BUILD_PRECOMMIT=1" >> $GITHUB_ENV
           fi
@@ -58,11 +58,11 @@ jobs:
           cd ${{ github.workspace }} && python3 opencv/platforms/ios/build_framework.py ios
       - name: Create Artifact
         timeout-minutes: 10
-        run: cd ${{ github.workspace }}/ios && zip -r -9 -y opencv-4.x-ios-framework.zip opencv2.framework
+        run: cd ${{ github.workspace }}/ios && zip -r -9 -y opencv-4.12.0-ios-framework.zip opencv2.framework
       - name: Upload Artifact
         timeout-minutes: 60
         uses: actions/upload-artifact@v4
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
         with:
           name: OpenCViOSFramework
-          path: ${{ github.workspace }}/ios/opencv-4.x-ios-framework.zip
+          path: ${{ github.workspace }}/ios/opencv-4.12.0-ios-framework.zip

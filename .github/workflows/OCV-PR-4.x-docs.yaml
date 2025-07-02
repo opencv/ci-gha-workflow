@@ -1,4 +1,4 @@
-name: OCV PR:4.x docs
+name: OCV PR:4.12.0 docs
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: OCV-PR-4.x-docs-${{ github.ref }}
+  group: OCV-PR-4.12.0-docs-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -44,7 +44,7 @@ jobs:
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
-      run: echo "TARGET_BRANCH_NAME=4.x" >> $GITHUB_ENV
+      run: echo "TARGET_BRANCH_NAME=4.12.0" >> $GITHUB_ENV
     - name: PR info
       timeout-minutes: 60
       run: |
@@ -132,7 +132,7 @@ jobs:
         cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
         git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_CONTRIB }}..HEAD || true
         python3 $HOME/scripts/patch_size.py
-        
+
     - name: Generate JavaDoc
       run: |
           mkdir -p ${{ env.OPENCV_BUILD }}
