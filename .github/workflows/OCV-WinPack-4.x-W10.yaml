@@ -219,7 +219,7 @@ jobs:
       run: cd ${{ github.workspace }} && rm -rf *
     - name: Download WinPack
       timeout-minutes: 60
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: WinPack
     - name: Unzip WinPack
