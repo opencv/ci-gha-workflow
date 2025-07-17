@@ -132,7 +132,7 @@ jobs:
         cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
         git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_CONTRIB }}..HEAD || true
         python3 $HOME/scripts/patch_size.py
-        
+
     - name: Generate JavaDoc
       run: |
           mkdir -p ${{ env.OPENCV_BUILD }}
@@ -143,10 +143,10 @@ jobs:
                 -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules \
                 -DANT_EXECUTABLE=/usr/bin/ant \
                 ${{ env.OPENCV_DOCKER_WORKDIR }}
-          make -j2
+          make opencv_java_jar
           cd modules/java/jar/opencv
           ant javadoc
- 
+
     - name: Build js
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
       timeout-minutes: 60
