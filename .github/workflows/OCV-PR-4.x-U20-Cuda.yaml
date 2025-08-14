@@ -25,6 +25,7 @@ env:
   OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
   OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
   DNN_MODELS: '/home/ci/dnn-models'
+  PYTHONPATH: '/home/ci/build/python_loader:$PYTHONPATH'
   PARALLEL_JOBS: 8
 
 jobs:
@@ -145,5 +146,3 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/python/test/test_cuda.py --repo ${{ env.OPENCV_DOCKER_WORKDIR }} -v
-      env:
-        PYTHONPATH: $HOME/build/lib/python3/
