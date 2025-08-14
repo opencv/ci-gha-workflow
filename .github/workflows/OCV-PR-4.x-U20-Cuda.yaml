@@ -145,3 +145,5 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/python/test/test_cuda.py --repo ${{ env.OPENCV_DOCKER_WORKDIR }} -v
+      env:
+        PYTHONPATH: $HOME/build/lib/python3/
