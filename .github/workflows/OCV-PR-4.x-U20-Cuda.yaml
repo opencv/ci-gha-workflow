@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_CUDA=ON -DBUILD_LIST=dnn,cudev,ts -DCUDA_ARCH_BIN=6.1 -DWITH_VA=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_CUDA=ON -DBUILD_LIST=dnn,cudev,ts,python3 -DCUDA_ARCH_BIN=6.1 -DWITH_VA=OFF'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -141,3 +141,7 @@ jobs:
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }} ${{ env.EXTRA_GTEST_OPTIONS }}
       env:
         GTEST_FILTER_STRING: '-Test_Model.TextRecognition/0:Test_Model.TextRecognition/1:Test_Model.TextRecognitionWithCTCPrefixBeamSearch/0:Test_Model.TextRecognitionWithCTCPrefixBeamSearch/1:Test_ONNX_layers.Convolution3D/1:Test_ONNX_layers.Convolution3D_bias/1:Test_ONNX_layers.Shape/0:Test_ONNX_layers.Shape/1:Test_ONNX_layers.Power/0:Test_ONNX_layers.Power/1:Test_ONNX_layers.Elementwise_Log/0:Test_ONNX_layers.Elementwise_Log/1:Test_ONNX_layers.Elementwise_not/0:Test_ONNX_layers.Elementwise_not/1:Test_ONNX_layers.Compare_EQ/0:Test_ONNX_layers.Compare_EQ/1:Test_ONNX_layers.Compare_GT/0:Test_ONNX_layers.Compare_GT/1:Test_ONNX_layers.Compare_LT/0:Test_ONNX_layers.Compare_LT/1:Test_ONNX_layers.Compare_GTorEQ/0:Test_ONNX_layers.Compare_GTorEQ/1:Test_ONNX_layers.Compare_LEorEQ/0:Test_ONNX_layers.Compare_LEorEQ/1:Test_ONNX_layers.Eltwise3D/0:Test_ONNX_layers.Eltwise3D/1:Test_ONNX_layers.PoolConv3D/1:Test_ONNX_layers.Div/0:Test_ONNX_layers.Div/1:Test_ONNX_layers.Split/0:Test_ONNX_layers.Split/1:Test_ONNX_layers.SubFromConst/0:Test_ONNX_layers.SubFromConst/1:Test_TensorFlow_layers.Convolution3D/1:Test_TensorFlow_layers.concat_3d/1:Test_ONNX_layers.LSTM_Activations/0:Test_ONNX_nets.LResNet100E_IR/1:Test_ONNX_nets.Emotion_ferplus/0:Test_ONNX_nets.Emotion_ferplus/1:Test_ONNX_nets.Resnet34_kinetics/1'
+    - name: Accuracy:python3
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/python/test/test_cuda.py --repo ${{ env.OPENCV_DOCKER_WORKDIR }} -v
