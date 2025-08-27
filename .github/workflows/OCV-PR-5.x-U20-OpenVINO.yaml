@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DWITH_OPENVINO=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/openvino/binaries_cache -DBUILD_EXAMPLES=ON '
+  EXTRA_CMAKE_OPTIONS: '-DWITH_OPENVINO=ON -DOPENCV_DOWNLOAD_PATH=/home/openvino/binaries_cache -DBUILD_EXAMPLES=ON '
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
