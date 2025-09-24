@@ -39,8 +39,9 @@ jobs:
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /usr/local/cuda:/usr/local/cuda
-        - /usr/lib/x86_64-linux-gnu/libnvcuvid.so:/usr/lib/x86_64-linux-gnu/libnvcuvid.so
-        - /usr/lib/x86_64-linux-gnu/libnvidia-encode.so:/usr/lib/x86_64-linux-gnu/libnvidia-encode.so
+        - /lib/x86_64-linux-gnu/libnvidia-encode.so.1:/lib/x86_64-linux-gnu/libnvidia-encode.so.1
+        - /lib/x86_64-linux-gnu/libnvcuvid.so.1:/lib/x86_64-linux-gnu/libnvcuvid.so.1
+        
     steps:
     - name: Brief system information
       timeout-minutes: 60
