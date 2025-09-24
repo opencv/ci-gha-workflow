@@ -41,7 +41,6 @@ jobs:
         - /usr/local/cuda:/usr/local/cuda
         - /usr/lib/x86_64-linux-gnu/libnvcuvid.so:/usr/lib/x86_64-linux-gnu/libnvcuvid.so
         - /usr/lib/x86_64-linux-gnu/libnvidia-encode.so:/usr/lib/x86_64-linux-gnu/libnvidia-encode.so
-        - /usr/lib/x86_64-linux-gnu/libcuda.so.1:/usr/lib/x86_64-linux-gnu/libcuda.so
     steps:
     - name: Brief system information
       timeout-minutes: 60
