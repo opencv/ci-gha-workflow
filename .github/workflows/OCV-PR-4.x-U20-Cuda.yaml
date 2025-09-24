@@ -43,9 +43,6 @@ jobs:
         - /home/opencv-cn/binaries_cache:/home/ci/binaries_cache
         - /home/opencv-cn/dnn-models:/home/ci/dnn-models
         - /usr/local/cuda:/usr/local/cuda
-        - /usr/lib/x86_64-linux-gnu/libnvcuvid.so:/usr/lib/x86_64-linux-gnu/libnvcuvid.so
-        - /usr/lib/x86_64-linux-gnu/libnvidia-encode.so:/usr/lib/x86_64-linux-gnu/libnvidia-encode.so
-        - /usr/lib/x86_64-linux-gnu/libcuda.so.1:/usr/lib/x86_64-linux-gnu/libcuda.so
     steps:
     - name: Brief system information
       timeout-minutes: 60
@@ -140,11 +137,6 @@ jobs:
         cd $HOME/build
         ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
         
-    - name: Accuracy:cudacodecs
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudacodec --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
-      
     - name: Accuracy:cudev
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
