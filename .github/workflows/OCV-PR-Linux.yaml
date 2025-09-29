@@ -78,6 +78,7 @@ jobs:
           - version: '20.04'
             image: '20.04:20250505'
             limited_api: true
+            gdal: true
 
     defaults:
       run:
@@ -111,6 +112,7 @@ jobs:
         ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
         ${{ matrix.avif && '-DWITH_AVIF=ON' }}
         ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
+        ${{ matrix.gdal && '-DWITH_GDAL=ON'}}
         ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
         ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
         ${{ matrix.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
