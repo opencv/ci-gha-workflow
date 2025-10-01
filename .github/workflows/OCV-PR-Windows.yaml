@@ -61,7 +61,9 @@ jobs:
             uwp: true
 
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
-
+        exclude:
+          - branch: '5.x'
+            config: 'vulkan'
     defaults:
       run:
         shell: bash
