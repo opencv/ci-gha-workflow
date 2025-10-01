@@ -7,11 +7,11 @@ on:
     paths:
       - '.github/workflows/OCV-PR-Linux.yaml'
       # TODO: are following paths necessary?
-      - 'checkout-and-merge/*'
-      - 'configure-and-build/*'
-      - 'run-tests/*'
-      - 'scripts/runner.py'
-      - 'scripts/test-plan.json'
+      # - 'checkout-and-merge/*'
+      # - 'configure-and-build/*'
+      # - 'run-tests/*'
+      # - 'scripts/runner.py'
+      # - 'scripts/test-plan.json'
   workflow_call:
     inputs:
       workflow_branch:
@@ -91,7 +91,7 @@ jobs:
         # - /mnt/cache/binaries_cache:/opt/binaries_cache
         # - vol_dnn_models:/opt/dnn-models
         # NOTE: CN config
-        - /home/opencv-cn/git_cache/:/opt/git_cache
+        - /home/opencv-cn/git_cache:/opt/git_cache
         - /home/opencv-cn/ci_cache/opencv/${{ matrix.version }}:/opt/.ccache
         - /home/opencv-cn/binaries_cache/${{ matrix.version }}:/opt/binaries_cache
         - /home/opencv-cn/dnn-models:/opt/dnn-models
