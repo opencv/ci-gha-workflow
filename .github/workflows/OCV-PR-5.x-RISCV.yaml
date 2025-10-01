@@ -121,7 +121,7 @@ jobs:
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
     - name: Accuracy:core
-      timeout-minutes: 60
+      timeout-minutes: 90
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
