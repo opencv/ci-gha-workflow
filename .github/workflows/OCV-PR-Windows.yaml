@@ -41,7 +41,7 @@ jobs:
             fi
 
   Windows:
-    runs-on: opencv-cn-win
+    runs-on: ${{ matrix.runner }}
     needs:
       - branch_eval
     strategy:
@@ -50,20 +50,50 @@ jobs:
       # fail-fast: false
       max-parallel: 3
       matrix:
-        config:
-          - 'base'
-          - 'vulkan'
-          - 'uwp'
+        arch: [ x64, arm64 ]
+        config: [ base, vulkan, uwp ]
         include:
-          - config: 'vulkan'
+          - arch: x64
+            config: vulkan
+            runner: opencv-cn-win
+            vs: 'Visual Studio 16 2019'
+            cmake_arch: x64
             vulkan: true
-          - config: 'uwp'
+          - arch: x64
+            config: uwp
+            runner: opencv-cn-win
+            vs: 'Visual Studio 16 2019'
+            cmake_arch: x64
             uwp: true
+            uwp_proc: x86_64
+          - arch: x64
+            config: base
+            runner: opencv-cn-win
+            vs: 'Visual Studio 16 2019'
+            cmake_arch: x64
+            uwp_proc: x86_64
+          - arch: arm64
+            config: base
+            runner: windows-11-arm
+            vs: 'Visual Studio 17 2022'
+            cmake_arch: ARM64
+            uwp_proc: ARM64
+            no_opencl: true
+          - arch: arm64
+            config: uwp
+            runner: windows-11-arm
+            vs: 'Visual Studio 17 2022'
+            cmake_arch: ARM64
+            uwp: true
+            uwp_proc: ARM64
+            no_opencl: true
 
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         exclude:
           - branch: '5.x'
             config: 'vulkan'
+          - arch: arm64
+            config: vulkan
     defaults:
       run:
         shell: bash
@@ -72,8 +102,9 @@ jobs:
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
-        ${{ matrix.uwp && '-DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION=10.0 -DCMAKE_SYSTEM_PROCESSOR=x86_64 -DBUILD_opencv_gapi=OFF -DWITH_MSMF=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_opencv_apps=OFF' }}
-        ${{ matrix.vulkan && '-DWITH_OPENCL=OFF -DWITH_VULKAN=ON' }}
+        ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }} 
+        ${{ matrix.uwp && format('-DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION=10.0 -DCMAKE_SYSTEM_PROCESSOR={0} -DBUILD_opencv_gapi=OFF -DWITH_MSMF=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_opencv_apps=OFF', matrix.uwp_proc) || '' }} 
+        ${{ matrix.config == 'vulkan' && '-DWITH_OPENCL=OFF -DWITH_VULKAN=ON' || '' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       OPENCV_FOR_THREADS_NUM: 8
       CMAKE_BUILD_PARALLEL_LEVEL: 8
@@ -135,13 +166,13 @@ jobs:
       with:
         workdir: '${{ github.workspace }}'
         builddir: 'build'
-        generator: 'Visual Studio 16 2019'
-        options: '-A x64 ${{ env.CMAKE_OPT }}'
+        generator: '${{ matrix.vs }}'
+        options: '-A ${{ matrix.cmake_arch }} ${{ env.CMAKE_OPT }}'
 
     - name: Configure and build OpenCV with contrib
       uses: ./configure-and-build
       with:
         workdir: '${{ github.workspace }}'
         builddir: 'build-contrib'
-        generator: 'Visual Studio 16 2019'
-        options: '-A x64 -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
+        generator: '${{ matrix.vs }}'
+        options: '-A ${{ matrix.cmake_arch }} -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
