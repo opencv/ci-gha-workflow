@@ -136,6 +136,7 @@ jobs:
       run: |
         cd $HOME/build
         ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
+        
     - name: Accuracy:cudev
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
