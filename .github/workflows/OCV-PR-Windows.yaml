@@ -150,6 +150,10 @@ jobs:
         gitcache: '${{ env.GIT_CACHE }}'
         workdir: '${{ github.workspace }}'
 
+    - name: Install Python deps for DNN download
+      if: ${{ matrix.arch == 'arm64' }}
+      run: python -m pip install requests
+      
     - name: Update extra dnn models
       timeout-minutes: 60
       working-directory: '${{ github.workspace }}'
