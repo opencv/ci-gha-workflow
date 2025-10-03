@@ -149,12 +149,9 @@ jobs:
         source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
         gitcache: '${{ env.GIT_CACHE }}'
         workdir: '${{ github.workspace }}'
-
-    - name: Install Python deps for DNN download
-      if: ${{ matrix.arch == 'arm64' }}
-      run: python -m pip install requests
       
     - name: Update extra dnn models
+      if: ${{ matrix.arch != 'arm64' }}
       timeout-minutes: 60
       working-directory: '${{ github.workspace }}'
       run: |
@@ -162,7 +159,6 @@ jobs:
           --cleanup \
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
-
 
     - if: ${{ github.event.repository.name != 'opencv_contrib' }}
       name: Configure and build OpenCV
