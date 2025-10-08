@@ -57,6 +57,7 @@ jobs:
             config: base
             runner: opencv-cn-win
             vs: 'Visual Studio 16 2019'
+            cmake_arch: Win32
           - arch: x64
             config: base
             runner: opencv-cn-win
