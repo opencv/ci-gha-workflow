@@ -126,7 +126,7 @@ jobs:
         source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
         gitcache: '${{ env.GIT_CACHE }}'
         workdir: '${{ github.workspace }}'
-      
+
     - name: Update extra dnn models
       if: ${{ matrix.arch != 'arm64' }}
       timeout-minutes: 60
@@ -153,3 +153,31 @@ jobs:
         builddir: 'build-contrib'
         generator: '${{ matrix.vs }}'
         options: '-A ${{ matrix.cmake_arch }} -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
+
+    - name: Run OpenCV tests
+      uses: ./run-tests
+      env:
+        OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
+        OPENCV_TEST_REQUIRE_DATA: 1
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+        PYTHONPATH: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
+        # TODO: enable later
+        # ASAN_OPTIONS: 'detect_leaks=0'
+      with:
+        workdir: '${{ env.HOME }}'
+        builddir: '${{ env.MAIN_BUILD_DIR }}'
+        logdir: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}'
+        plan: "test-plan-${{ matrix.branch }}.json"
+        # NOTE: Just keeping this construction here for possible future use:
+        #   ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }}
+        suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''linux-contrib'''  || '''linux''' }} ]"
+        filter: "[ 'ubuntu-common', ${{ matrix.avx2 && '''ubuntu-avx2''' }} ]"
+        enable_python: "true"
+        enable_java: "true"
+        suffix: '${{ matrix.version }}_${{ matrix.branch }}'
+
+    - if: ${{ always() && env.WARNINGS == '1' }}
+      name: Warnings check
+      run: |
+        echo "::error Warnings have been found!"
+        exit 1
