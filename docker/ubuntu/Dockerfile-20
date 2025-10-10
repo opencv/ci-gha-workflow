@@ -1,4 +1,4 @@
-# Version: 20250505
+# Version: 20251010
 # Image name: quay.io/opencv-ci/opencv-ubuntu-20.04
 
 FROM ubuntu:20.04
@@ -41,6 +41,7 @@ RUN \
     libavformat-dev \
     libswscale-dev \
     libavresample-dev \
+    libavdevice-dev \
     ant \
     ant-optional \
     default-jdk \

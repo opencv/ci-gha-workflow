@@ -1,4 +1,4 @@
-# Version: 20230602
+# Version: 20251010
 # Image name: quay.io/opencv-ci/opencv-ubuntu-22.04
 
 FROM ubuntu:22.04
@@ -35,6 +35,7 @@ RUN \
     libavcodec-dev \
     libavformat-dev \
     libswscale-dev \
+    libavdevice-dev \
     ant \
     ant-optional \
     default-jdk \
