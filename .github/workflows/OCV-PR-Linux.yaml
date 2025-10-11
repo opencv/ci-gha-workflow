@@ -61,7 +61,7 @@ jobs:
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         include:
           - version: '24.04'
-            image: '24.04:20250505'
+            image: '24.04:20251010'
             jpegxl: true
             avif: true
             avx2: true
@@ -72,11 +72,11 @@ jobs:
           #   jpegxl: true
           #   avif: true
           - version: '22.04'
-            image: '22.04:20230602'
+            image: '22.04:20251010'
             avif: true
             plugins: true
           - version: '20.04'
-            image: '20.04:20250505'
+            image: '20.04:20251010'
             limited_api: true
 
     defaults:
