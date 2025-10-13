@@ -37,6 +37,9 @@ runs:
         --single-branch \
         --branch ${{ inputs.target_branch }} \
         https://github.com/opencv/opencv.git
+        cd opencv
+        git config user.email "opencv.ci"
+        git config user.name "opencv.ci"
       echo "::endgroup::"
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'main') && inputs.source_branch }}
@@ -66,6 +69,9 @@ runs:
         --single-branch \
         --branch ${{ inputs.target_branch }} \
         https://github.com/opencv/opencv_contrib.git
+        cd opencv_contrib
+        git config user.email "opencv.ci"
+        git config user.name "opencv.ci"
       echo "::endgroup::"
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'contrib') && inputs.source_branch }}
@@ -95,6 +101,9 @@ runs:
         --single-branch \
         --branch ${{ inputs.target_branch }} \
         https://github.com/opencv/opencv_extra.git
+        cd opencv_extra
+        git config user.email "opencv.ci"
+        git config user.name "opencv.ci"
       echo "::endgroup::"
 
   - if: ${{ github.event.repository.name != 'ci-gha-workflow' && contains(inputs.repos, 'extra') && inputs.source_branch }}
