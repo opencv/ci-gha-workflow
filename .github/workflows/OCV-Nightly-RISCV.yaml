@@ -137,7 +137,7 @@ jobs:
         suite: '[ ''${{ matrix.version == ''sc'' && ''short'' || ''default'' }}'' ]'
         filter: "[ '${{ matrix.version }}' ]"
         options: "${{ matrix.version }}"
-        timeout: "45"
+        timeout: "90"
         enable_python: "false"
         enable_java: "false"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'

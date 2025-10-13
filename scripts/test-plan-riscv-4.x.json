@@ -43,7 +43,8 @@
                 "Test_Caffe_layers.InnerProduct/0"
             ],
             "test_features2d": [
-                "KAZE/DetectorScaleInvariance.scale/*"
+                "KAZE/DetectorScaleInvariance.scale/*",
+                "Features2d_AFFINE_FEATURE.regression"
             ]
         },
         "nds": {

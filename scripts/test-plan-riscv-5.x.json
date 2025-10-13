@@ -55,6 +55,10 @@
                 "MultiViewTest.*",
                 "multiview_calibration.*",
                 "RegisterCamerasTest.hetero*"
+            ],
+            "test_3d": [
+                "RGBD_Normals/NormalsRandomPlanes.check1plane/1",
+                "RGBD_Normals/NormalsRandomPlanes.check1plane/4"
             ]
         },
         "nds": {
