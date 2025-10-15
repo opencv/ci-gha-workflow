@@ -1,4 +1,4 @@
-# Version: 20251010
+# Version: 20251015
 # Image name: quay.io/opencv-ci/opencv-ubuntu-24.04
 
 FROM ubuntu:24.04
@@ -77,10 +77,8 @@ RUN python3 -m pip install --break-system-packages \
     numpy \
     pylint \
     requests \
-    reportlab \
-    svglib \
-    pycairo \
-    rlPyCairo
+    cairosvg && \
+    pip cache purge
 
 # Self-hosted runner UID is 1000
 
