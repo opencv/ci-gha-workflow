@@ -46,8 +46,8 @@ jobs:
       - branch_eval
     strategy:
       # NOTE: Debugging
-      fail-fast: true
-      # fail-fast: false
+      #fail-fast: true
+      fail-fast: false
       max-parallel: 3
       matrix:
         arch: [ x86, x64, arm64 ]
