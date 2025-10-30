@@ -33,7 +33,10 @@ runs:
       shell: bash
       run: |
         echo "::group::Build"
-        cmake --build '${{ inputs.builddir }}' 2>&1 | tee '${{ inputs.builddir }}/log.txt'
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          cfg="--config Release"
+        fi
+        cmake ${cfg} --build '${{ inputs.builddir }}' 2>&1 | tee '${{ inputs.builddir }}/log.txt'
         echo "::endgroup::"
 
     - shell: bash
