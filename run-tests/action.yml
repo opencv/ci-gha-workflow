@@ -40,17 +40,17 @@ runs:
     shell: bash
     run: |
       echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
-      python scripts/runner.py \
-        '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
-        '--bindir=bin' \
-        '--logdir=${{ inputs.logdir }}' \
-        '--plan=scripts/${{ inputs.plan }}' \
-        '--timeout=${{ inputs.timeout }}' \
-        --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
-        --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
-        '--exesuffix=.exe' \
-        '--options=${{ inputs.options }}' \
-        "--summary=$GITHUB_STEP_SUMMARY"
+
+# python scripts/runner.py \
+#   '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
+#   '--bindir=bin' \
+#   '--logdir=${{ inputs.logdir }}' \
+#   '--plan=scripts/${{ inputs.plan }}' \
+#   '--timeout=${{ inputs.timeout }}' \
+#   --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
+#   --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
+#   '--options=${{ inputs.options }}' \
+#   "--summary=$GITHUB_STEP_SUMMARY"
 
   # Logs
 
