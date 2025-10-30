@@ -40,11 +40,7 @@ runs:
     shell: bash
     run: |
       echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
-      pyexe=python3
-      if [ $RUNNER_OS == Windows ]; then
-        pyexe=python
-      fi
-      ${pyexe} scripts/runner.py \
+      python scripts/runner.py \
         '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
         '--bindir=bin' \
         '--logdir=${{ inputs.logdir }}' \
