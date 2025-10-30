@@ -40,14 +40,15 @@ runs:
     shell: bash
     run: |
       echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
-      python3 scripts/runner.py \
-        '--workdir=$(wslpath ${{ inputs.workdir }}/${{ inputs.builddir }})' \
+      python scripts/runner.py \
+        '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
         '--bindir=bin' \
-        '--logdir=$(wslpath ${{ inputs.logdir }})' \
+        '--logdir=${{ inputs.logdir }}' \
         '--plan=scripts/${{ inputs.plan }}' \
         '--timeout=${{ inputs.timeout }}' \
         --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
         --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
+        '--exesuffix=.exe' \
         '--options=${{ inputs.options }}' \
         "--summary=$GITHUB_STEP_SUMMARY"
 
@@ -68,7 +69,11 @@ runs:
     working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}
     run: |
       echo "::group::Python test"
-      python3 ../opencv/modules/python/test/test.py --repo ../opencv -v
+      pyexe=python3
+      if [ "$RUNNER_OS" == "Windows" ]; then
+        pyexe=python
+      fi
+      ${pyexe} ../opencv/modules/python/test/test.py --repo ../opencv -v
       echo "::endgroup::"
 
   - if: ${{ always() && fromJSON(inputs.enable_python) }}
@@ -76,8 +81,12 @@ runs:
     working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}
     run: |
       echo "::group::Python app test"
+      pyexe=python3
+      if [ "$RUNNER_OS" == "Windows" ]; then
+        pyexe=python
+      fi
       if [ -f "../opencv/apps/python_app_test.py" ]; then
-        python3 "../opencv/apps/python_app_test.py" --repo ../opencv -v
+        ${pyexe} "../opencv/apps/python_app_test.py" --repo ../opencv -v
       fi
       echo "::endgroup::"
 
@@ -89,7 +98,11 @@ runs:
     working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}
     run: |
       echo "::group::Java test"
-      ${{ inputs.wrapper }} python3 ../opencv/modules/ts/misc/run.py . -a -t java
+      pyexe=python3
+      if [ "$RUNNER_OS" == "Windows" ]; then
+        pyexe=python
+      fi
+      ${{ inputs.wrapper }} ${pyexe} ../opencv/modules/ts/misc/run.py . -a -t java
       echo "::endgroup::"
 
   # Logs

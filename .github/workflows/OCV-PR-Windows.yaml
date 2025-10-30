@@ -162,12 +162,10 @@ jobs:
         OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
         PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
       with:
-        workdir: '${{ github.workspace }}'
+        workdir: '${{ env.GITHUB_WORKSPACE }}'
         builddir: '${{ env.MAIN_BUILD_DIR }}/Release'
-        logdir: '${{ github.workspace }}'
+        logdir: '${{ env.GITHUB_WORKSPACE }}'
         plan: "test-plan-win-${{ matrix.branch }}.json"
-        # NOTE: Just keeping this construction here for possible future use:
-        #   ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }}
         suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''contrib'''  || '''main''' }} ]"
         enable_python: "true"
         enable_java: "true"
