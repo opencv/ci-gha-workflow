@@ -41,8 +41,8 @@ runs:
     run: |
       echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
       pyexe=python3
-      if [ "$RUNNER_OS" == "Windows" ]; then
-        exeopt="--exesuffix .exe"
+      if [ $RUNNER_OS == Windows ]; then
+        exeopt=--exesuffix .exe
         pyexe=python
       fi
       ${pyexe} scripts/runner.py \
@@ -55,7 +55,7 @@ runs:
         --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
         '--options=${{ inputs.options }}' \
         "--summary=$GITHUB_STEP_SUMMARY" \
-        "${exeopt}"
+        ${exeopt}
 
   # Logs
 
