@@ -2,7 +2,7 @@
     "suites": {
         "short": [ "opencv_test_core", "opencv_test_imgproc", "opencv_test_photo" ],
 
-        "main": [
+        "linux": [
             "opencv_test_calib3d",
             "opencv_test_core",
             "opencv_test_dnn",
@@ -32,7 +32,7 @@
             "opencv_perf_videoio"
         ],
 
-        "contrib": [
+        "linux-contrib": [
             "opencv_test_bgsegm",
             "opencv_test_bioinspired",
             "opencv_test_dnn_superres",
@@ -99,9 +99,6 @@
     },
     "options": {
         "default": {
-            "wrap": {
-                "highgui": "xvfb-run -a"
-            },
             "args": {
                 "test": "--skip_unstable=1",
                 "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"

@@ -73,17 +73,25 @@ runs:
     shell: bash
     working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}
     run: |
+      pyexe=python3
+      if [ "$RUNNER_OS" == "Windows" ]; then
+        pyexe=python
+      fi
       echo "::group::Python test"
-      python3 ../opencv/modules/python/test/test.py --repo ../opencv -v
+      ${pyexe} ../opencv/modules/python/test/test.py --repo ../opencv -v
       echo "::endgroup::"
 
   - if: ${{ always() && fromJSON(inputs.enable_python) }}
     shell: bash
     working-directory: ${{ inputs.workdir }}/${{ inputs.builddir }}
     run: |
+      pyexe=python3
+      if [ "$RUNNER_OS" == "Windows" ]; then
+        pyexe=python
+      fi
       echo "::group::Python app test"
       if [ -f "../opencv/apps/python_app_test.py" ]; then
-        python3 "../opencv/apps/python_app_test.py" --repo ../opencv -v
+        ${pyexe} "../opencv/apps/python_app_test.py" --repo ../opencv -v
       fi
       echo "::endgroup::"
 

@@ -161,17 +161,14 @@ jobs:
         OPENCV_TEST_REQUIRE_DATA: 1
         OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
         PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
-        # TODO: enable later
-        # ASAN_OPTIONS: 'detect_leaks=0'
       with:
         workdir: '${{ github.workspace }}'
-        builddir: '${{ env.MAIN_BUILD_DIR }}'
-        logdir: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}'
-        plan: "test-plan-${{ matrix.branch }}.json"
+        builddir: '${{ env.MAIN_BUILD_DIR }}/Release'
+        logdir: '${{ github.workspace }}'
+        plan: "test-plan-win-${{ matrix.branch }}.json"
         # NOTE: Just keeping this construction here for possible future use:
         #   ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }}
-        suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''linux-contrib'''  || '''linux''' }} ]"
-        filter: "[ 'ubuntu-common', ${{ matrix.avx2 && '''ubuntu-avx2''' }} ]"
+        suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''contrib'''  || '''main''' }} ]"
         enable_python: "true"
         enable_java: "true"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'

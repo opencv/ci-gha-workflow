@@ -38,8 +38,12 @@ runs:
 
     - shell: bash
       run: |
+        pyexe=python3
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          pyexe=python
+        fi
         set +e
-        python3 ./scripts/warnings-handling.py \
+        ${pyexe} ./scripts/warnings-handling.py \
           '${{ inputs.workdir }}/${{ inputs.builddir }}/log.txt'
         if [ $? -ne 0 ]; then
           echo "WARNINGS=1" >> $GITHUB_ENV
