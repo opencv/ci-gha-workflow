@@ -42,8 +42,8 @@ runs:
       echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
       python scripts/runner.py \
         '--bindir=bin' \
+        '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
         "--summary=$GITHUB_STEP_SUMMARY"
-#   '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
 #   '--logdir=${{ inputs.logdir }}' \
 #   '--plan=scripts/${{ inputs.plan }}' \
 #   '--timeout=${{ inputs.timeout }}' \
