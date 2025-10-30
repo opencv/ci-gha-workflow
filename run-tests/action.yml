@@ -39,8 +39,13 @@ runs:
   - if: ${{ always() }}
     shell: bash
     run: |
+      pyexe=python3
+      if [ "$RUNNER_OS" == "Windows" ]; then
+        exeopt="--exesuffix .exe"
+        pyexe=python
+      fi
       echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
-      python3 scripts/runner.py \
+      ${pyexe} scripts/runner.py \
         '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
         '--bindir=bin' \
         '--logdir=${{ inputs.logdir }}' \
@@ -49,7 +54,8 @@ runs:
         --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
         --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
         '--options=${{ inputs.options }}' \
-        "--summary=$GITHUB_STEP_SUMMARY"
+        "--summary=$GITHUB_STEP_SUMMARY" \
+        ${exeopt}
 
   # Logs
 
