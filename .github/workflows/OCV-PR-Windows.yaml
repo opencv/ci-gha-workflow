@@ -46,9 +46,9 @@ jobs:
       - branch_eval
     strategy:
       # NOTE: Debugging
-      #fail-fast: true
-      fail-fast: false
-      max-parallel: 3
+      fail-fast: true
+      # fail-fast: false
+      max-parallel: 2
       matrix:
         arch: [ x86, x64, arm64 ]
         config: [ base ]
@@ -157,16 +157,16 @@ jobs:
     - name: Run OpenCV tests
       uses: ./run-tests
       env:
-        OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
+        OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
         OPENCV_TEST_REQUIRE_DATA: 1
         OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
-        PYTHONPATH: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
+        PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
         # TODO: enable later
         # ASAN_OPTIONS: 'detect_leaks=0'
       with:
-        workdir: '${{ env.HOME }}'
+        workdir: '${{ github.workspace }}'
         builddir: '${{ env.MAIN_BUILD_DIR }}'
-        logdir: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}'
+        logdir: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}'
         plan: "test-plan-${{ matrix.branch }}.json"
         # NOTE: Just keeping this construction here for possible future use:
         #   ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }}
