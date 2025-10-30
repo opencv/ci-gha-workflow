@@ -152,7 +152,7 @@ jobs:
         workdir: '${{ github.workspace }}'
         builddir: 'build-contrib'
         generator: '${{ matrix.vs }}'
-        options: '-A ${{ matrix.cmake_arch }} -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
+        options: '-A ${{ matrix.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 
     - name: Run OpenCV tests
       uses: ./run-tests

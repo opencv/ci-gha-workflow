@@ -32,11 +32,12 @@ runs:
     - working-directory: ${{ inputs.workdir }}
       shell: bash
       run: |
+        set -x
         echo "::group::Build"
         if [ "$RUNNER_OS" == "Windows" ]; then
           cfg="--config Release"
         fi
-        cmake ${cfg} --build '${{ inputs.builddir }}' 2>&1 | tee '${{ inputs.builddir }}/log.txt'
+        cmake --build '${{ inputs.builddir }}' ${cfg} 2>&1 | tee '${{ inputs.builddir }}/log.txt'
         echo "::endgroup::"
 
     - shell: bash
