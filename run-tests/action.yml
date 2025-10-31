@@ -43,10 +43,10 @@ runs:
       python scripts/runner.py \
         '--bindir=bin' \
         '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
+        '--logdir=${{ inputs.logdir }}' \
+        '--plan=scripts/${{ inputs.plan }}' \
+        '--timeout=${{ inputs.timeout }}' \
         "--summary=$GITHUB_STEP_SUMMARY"
-#   '--logdir=${{ inputs.logdir }}' \
-#   '--plan=scripts/${{ inputs.plan }}' \
-#   '--timeout=${{ inputs.timeout }}' \
 #   --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
 #   --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
 #   '--options=${{ inputs.options }}' \
