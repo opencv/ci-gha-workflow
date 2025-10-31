@@ -46,10 +46,10 @@ runs:
         '--logdir=${{ inputs.logdir }}' \
         '--plan=scripts/${{ inputs.plan }}' \
         '--timeout=${{ inputs.timeout }}' \
+        --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
+        --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
+        '--options=${{ inputs.options }}' \
         "--summary=$GITHUB_STEP_SUMMARY"
-#   --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
-#   --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
-#   '--options=${{ inputs.options }}' \
 
   # Logs
 
