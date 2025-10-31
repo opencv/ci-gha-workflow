@@ -48,8 +48,8 @@ runs:
         '--timeout=${{ inputs.timeout }}' \
         --suite=${{ join(fromJSON(inputs.suite), ' --suite=') }} \
         --filter=${{ join(fromJSON(inputs.filter), ' --filter=') }} \
-        '--options=${{ inputs.options }}' \
         "--summary=$GITHUB_STEP_SUMMARY"
+#   '--options=${{ inputs.options }}' \
 
   # Logs
 
