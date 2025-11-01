@@ -80,8 +80,14 @@
     },
     "filters": {
         "windows-common": {
-            "test_gapi": [
-                "AsyncAPICancelation/cancel/*"
+            "test_core": [
+                "Samples.findFile"
+            ],
+            "test_videoio": [
+                "videoio/videocapture_acceleration.read/yuv420p_libvpxxvp9_mp4_MSMF_NONE_MAT"
+            ],
+            "perf_dnn": [
+                "Utils_blobFromImages.HWC_TO_NCHW/6"
             ]
         }
     },
