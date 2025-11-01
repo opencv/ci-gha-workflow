@@ -45,7 +45,7 @@ runs:
       pyexe=python3
       if [ "$RUNNER_OS" == "Windows" ]; then
         pyexe=python
-        opt=--exesuffix=.exe
+        opt="--exesuffix=.exe --bindir=bin/Release"
       fi
       ${pyexe} scripts/runner.py \
         '--bindir=bin' \
