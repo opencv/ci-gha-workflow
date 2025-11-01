@@ -79,21 +79,9 @@
         ]
     },
     "filters": {
-        "ubuntu-common": {
+        "windows-common": {
             "test_gapi": [
                 "AsyncAPICancelation/cancel/*"
-            ],
-            "test_videoio": [
-                "videoio/videoio_synthetic.write_read_position/*_MPEG_GSTREAMER",
-                "videoio/videoio_synthetic.write_read_position/*_MJPG_GSTREAMER",
-                "videoio/videocapture_acceleration.read/yuv420p_mjpeg_mp4_GSTREAMER_*_MAT",
-                "videoio/videowriter_acceleration.write/mkv_MPEG_GSTREAMER_*_MAT"
-            ]
-        },
-        "ubuntu-avx2": {
-            "test_core": [
-                "Core_InRangeS/ElemWiseTest.accuracy/0",
-                "Core_InRange/ElemWiseTest.accuracy/0"
             ]
         }
     },

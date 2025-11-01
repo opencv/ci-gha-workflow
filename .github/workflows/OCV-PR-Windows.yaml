@@ -169,6 +169,7 @@ jobs:
         suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''contrib'''  || '''main''' }} ]"
         enable_python: "true"
         enable_java: "true"
+        filter: "[ 'windows-common' ]"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'
 
     - if: ${{ always() && env.WARNINGS == '1' }}
