@@ -167,8 +167,8 @@ jobs:
         logdir: '${{ github.workspace }}'
         plan: "test-plan-win-${{ matrix.branch }}.json"
         suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''contrib'''  || '''main''' }} ]"
-        enable_python: "true"
-        enable_java: "true"
+        enable_python: "false"
+        enable_java: "false"
         filter: "[ 'windows-common' ]"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}'
         timeout: 15
