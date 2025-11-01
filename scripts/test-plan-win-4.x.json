@@ -2,7 +2,7 @@
     "suites": {
         "short": [ "opencv_test_core", "opencv_test_imgproc", "opencv_test_photo" ],
 
-        "linux": [
+        "main": [
             "opencv_test_calib3d",
             "opencv_test_core",
             "opencv_test_dnn",
@@ -32,7 +32,7 @@
             "opencv_perf_videoio"
         ],
 
-        "linux-contrib": [
+        "contrib": [
             "opencv_test_bgsegm",
             "opencv_test_bioinspired",
             "opencv_test_dnn_superres",
