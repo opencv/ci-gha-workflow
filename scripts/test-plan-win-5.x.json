@@ -83,8 +83,11 @@
     },
     "filters": {
         "windows-common": {
-            "test_gapi": [
-                "AsyncAPICancelation/cancel/*"
+            "test_core": [
+                "Samples.findFile"
+            ],
+            "test_imgproc": [
+                "Drawing.ttf_text"
             ]
         }
     },

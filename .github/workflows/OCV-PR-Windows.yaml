@@ -170,7 +170,7 @@ jobs:
         enable_python: "false"
         enable_java: "false"
         filter: "[ 'windows-common' ]"
-        suffix: '${{ matrix.version }}_${{ matrix.branch }}'
+        suffix: '${{ matrix.arch }}_${{ matrix.branch }}'
         timeout: 15
 
     - if: ${{ always() && env.WARNINGS == '1' }}
