@@ -141,6 +141,7 @@ if __name__ == "__main__":
     parser.add_argument("--bindir", default="bin", type=Path, help="Directory with binaries (relative to workdir)")
     parser.add_argument("--verbose", action='store_true', help="Output all lines")
     parser.add_argument("--summary", type=Path, help="Path to summary file to generate")
+    parser.add_argument("--exesuffix", type=str, help="Suffix for executables (e.g. '.exe' or 'd.exe')")
     args = parser.parse_args()
 
     if not args.logdir.is_absolute():
@@ -199,6 +200,8 @@ if __name__ == "__main__":
             extra_args.append("--gtest_filter=*:-{}".format(":".join(filter)))
 
         actual_exe = args.workdir / args.bindir / Path(actual_exe)
+        if args.exesuffix:
+            actual_exe = actual_exe.with_suffix(args.exesuffix)
         if len(wrap) == 0 and (not actual_exe.exists() or not actual_exe.is_file()):
             print("Executable not found: {}".format(actual_exe))
             res = -3

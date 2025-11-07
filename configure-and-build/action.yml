@@ -32,14 +32,22 @@ runs:
     - working-directory: ${{ inputs.workdir }}
       shell: bash
       run: |
+        set -x
         echo "::group::Build"
-        cmake --build '${{ inputs.builddir }}' 2>&1 | tee '${{ inputs.builddir }}/log.txt'
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          cfg="--config Release"
+        fi
+        cmake --build '${{ inputs.builddir }}' ${cfg} 2>&1 | tee '${{ inputs.builddir }}/log.txt'
         echo "::endgroup::"
 
     - shell: bash
       run: |
+        pyexe=python3
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          pyexe=python
+        fi
         set +e
-        python3 ./scripts/warnings-handling.py \
+        ${pyexe} ./scripts/warnings-handling.py \
           '${{ inputs.workdir }}/${{ inputs.builddir }}/log.txt'
         if [ $? -ne 0 ]; then
           echo "WARNINGS=1" >> $GITHUB_ENV

@@ -46,11 +46,11 @@ jobs:
       - branch_eval
     strategy:
       # NOTE: Debugging
-      fail-fast: true
-      # fail-fast: false
-      max-parallel: 3
+      # fail-fast: true
+      fail-fast: false
+      max-parallel: 2
       matrix:
-        arch: [ x86, x64, arm64 ]
+        arch: [ x86, x64 ] # , arm64
         config: [ base ]
         include:
           - arch: x86
@@ -126,7 +126,7 @@ jobs:
         source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
         gitcache: '${{ env.GIT_CACHE }}'
         workdir: '${{ github.workspace }}'
-      
+
     - name: Update extra dnn models
       if: ${{ matrix.arch != 'arm64' }}
       timeout-minutes: 60
@@ -152,4 +152,29 @@ jobs:
         workdir: '${{ github.workspace }}'
         builddir: 'build-contrib'
         generator: '${{ matrix.vs }}'
-        options: '-A ${{ matrix.cmake_arch }} -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
+        options: '-A ${{ matrix.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
+
+    - name: Run OpenCV tests
+      uses: ./run-tests
+      env:
+        OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
+        OPENCV_TEST_REQUIRE_DATA: 1
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+        PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
+      with:
+        workdir: '${{ github.workspace }}'
+        builddir: '${{ env.MAIN_BUILD_DIR }}'
+        logdir: '${{ github.workspace }}'
+        plan: "test-plan-win-${{ matrix.branch }}.json"
+        suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''contrib'''  || '''main''' }} ]"
+        enable_python: "false"
+        enable_java: "false"
+        filter: "[ 'windows-common' ]"
+        suffix: '${{ matrix.arch }}_${{ matrix.branch }}'
+        timeout: 15
+
+    - if: ${{ always() && env.WARNINGS == '1' }}
+      name: Warnings check
+      run: |
+        echo "::error Warnings have been found!"
+        exit 1

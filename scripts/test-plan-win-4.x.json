@@ -79,29 +79,20 @@
         ]
     },
     "filters": {
-        "ubuntu-common": {
-            "test_gapi": [
-                "AsyncAPICancelation/cancel/*"
+        "windows-common": {
+            "test_core": [
+                "Samples.findFile"
             ],
             "test_videoio": [
-                "videoio/videoio_synthetic.write_read_position/*_MPEG_GSTREAMER",
-                "videoio/videoio_synthetic.write_read_position/*_MJPG_GSTREAMER",
-                "videoio/videocapture_acceleration.read/yuv420p_mjpeg_mp4_GSTREAMER_*_MAT",
-                "videoio/videowriter_acceleration.write/mkv_MPEG_GSTREAMER_*_MAT"
-            ]
-        },
-        "ubuntu-avx2": {
-            "test_core": [
-                "Core_InRangeS/ElemWiseTest.accuracy/0",
-                "Core_InRange/ElemWiseTest.accuracy/0"
+                "videoio/videocapture_acceleration.read/yuv420p_libvpxxvp9_mp4_MSMF_NONE_MAT"
+            ],
+            "perf_dnn": [
+                "Utils_blobFromImages.HWC_TO_NCHW/6"
             ]
         }
     },
     "options": {
         "default": {
-            "wrap": {
-                "highgui": "xvfb-run -a"
-            },
             "args": {
                 "test": "--skip_unstable=1",
                 "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"
