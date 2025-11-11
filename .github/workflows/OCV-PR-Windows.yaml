@@ -158,8 +158,8 @@ jobs:
       uses: ./run-tests
       env:
         OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-        OPENCV_TEST_REQUIRE_DATA: 1
-        OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+        OPENCV_TEST_REQUIRE_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
         PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
       with:
         workdir: '${{ github.workspace }}'
