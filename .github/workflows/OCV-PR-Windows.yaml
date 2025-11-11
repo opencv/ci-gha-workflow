@@ -63,12 +63,12 @@ jobs:
             runner: opencv-cn-win
             vs: 'Visual Studio 16 2019'
             cmake_arch: x64
-          - arch: arm64
-            config: base
-            runner: windows-11-arm
-            vs: 'Visual Studio 17 2022'
-            cmake_arch: ARM64
-            no_opencl: true
+          # - arch: arm64
+          #   config: base
+          #   runner: windows-11-arm
+          #   vs: 'Visual Studio 17 2022'
+          #   cmake_arch: ARM64
+          #   no_opencl: true
 
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
     defaults:
