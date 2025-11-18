@@ -81,7 +81,7 @@ jobs:
         -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_CAROTENE=OFF
         ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
-        ${{ matrix.arch == 'arm64' && '-DWITH_VULKAN=OFF -DBUILD_opencv_vulkan=OFF -DOPENCV_DNN_VULKAN=OFF -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=ON' || '' }}
+        ${{ matrix.arch == 'arm64' && '-DCPU_BASELINE="NEON" -DCPU_DISPATCH="" -DWITH_VULKAN=OFF -DBUILD_opencv_vulkan=OFF -DOPENCV_DNN_VULKAN=OFF -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=ON' || '' }}
         ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       OPENCV_FOR_THREADS_NUM: 8
