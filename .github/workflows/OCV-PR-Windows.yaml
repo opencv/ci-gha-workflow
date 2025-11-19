@@ -50,19 +50,9 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        arch: [ x86, x64, arm64 ]
+        arch: [ arm64 ]
         config: [ base ]
         include:
-          - arch: x86
-            config: base
-            runner: opencv-cn-win
-            vs: 'Visual Studio 16 2019'
-            cmake_arch: Win32
-          - arch: x64
-            config: base
-            runner: opencv-cn-win
-            vs: 'Visual Studio 16 2019'
-            cmake_arch: x64
           - arch: arm64
             config: base
             runner: windows-arm64
