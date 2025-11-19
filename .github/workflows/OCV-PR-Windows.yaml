@@ -50,19 +50,9 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        arch: [ x86, x64, arm64 ]
+        arch: [ arm64 ]
         config: [ base ]
         include:
-          - arch: x86
-            config: base
-            runner: opencv-cn-win
-            vs: 'Visual Studio 16 2019'
-            cmake_arch: Win32
-          - arch: x64
-            config: base
-            runner: opencv-cn-win
-            vs: 'Visual Studio 16 2019'
-            cmake_arch: x64
           - arch: arm64
             config: base
             runner: windows-11-arm
@@ -80,6 +70,7 @@ jobs:
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_CAROTENE=OFF
+        -DCMAKE_BUILD_TYPE=Release
         ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
         ${{ matrix.arch == 'arm64' && '-DCV_DISABLE_OPTIMIZATION=ON -DWITH_VULKAN=OFF -DBUILD_opencv_vulkan=OFF -DOPENCV_DNN_VULKAN=OFF -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=ON' || '' }}
         ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
