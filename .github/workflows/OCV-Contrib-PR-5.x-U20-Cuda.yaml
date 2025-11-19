@@ -22,6 +22,7 @@ env:
   GIT_CACHE_DOCKER: '/home/ci/git_cache'
   OPENCV_TEST_DATA_PATH: '/home/ci/opencv_extra/testdata'
   OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
+  PYTHONPATH: '/home/ci/build/python_loader:$PYTHONPATH'
   PARALLEL_JOBS: 8
 
 jobs:
@@ -224,3 +225,7 @@ jobs:
       run: cd $HOME/build && xvfb-run -a bin/opencv_perf_cudawarping --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }}
       env:
         GTEST_FILTER_STRING: '-Sz_Depth_Cn_Inter_Rotate.Rotate/7:Sz_Depth_Cn_Inter_Rotate.Rotate/34:Sz_Depth_Cn_Inter_Rotate.Rotate/55'
+    - name: Accuracy:python3
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: python3 $HOME/opencv/modules/python/test/test_cuda.py --repo $HOME/opencv -v
