@@ -93,4 +93,7 @@ RUN \
   git config --global user.name "opencv.ci" && \
   git config --global pull.rebase false
 
+# Run docker build from the root directory of the repository
+COPY scripts/warnings-handling.py /home/ci/scripts/warnings-handling.py
+
 CMD bash
