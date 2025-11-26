@@ -152,7 +152,9 @@ jobs:
       timeout-minutes: 60
       run: |
         cd $HOME/build
-        emcmake python ../opencv/platforms/js/build_js.py js --build_test
+        emcmake python ../opencv/platforms/js/build_js.py js \
+           --build_test \
+           --extra_modules ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules
 
     - name: Run js tests
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
