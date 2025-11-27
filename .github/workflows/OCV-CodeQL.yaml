@@ -59,9 +59,10 @@ jobs:
       - name: Checkout and merge OpenCV
         uses: ./checkout-and-merge
         with:
-          target_branch: "${{ inputs.target_branch }}"
+          repos: main
+          target_branch: ${{ github.event.repository.name == 'ci-gha-workflow' && '4.x' || inputs.target_branch }}"
           author: "${{ github.event.pull_request.user.login }}"
-          source_branch: "${{ github.event.repository.name == 'ci-gha- workflow' && '' || github.head_ref }}"
+          source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
           gitcache: '/opt/git_cache'
           home: '${{ env.HOME }}'
           workdir: '${{ env.HOME }}'
