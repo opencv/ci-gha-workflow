@@ -65,6 +65,8 @@ jobs:
             jpegxl: true
             avif: true
             avx2: true
+            gphoto2: true
+            aravis: true
           # TODO: enable later
           # - version: '24.04_asan'
           #   image: '24.04:20250505'
@@ -78,7 +80,6 @@ jobs:
           - version: '20.04'
             image: '20.04:20251015'
             limited_api: true
-
     defaults:
       run:
         shell: bash
@@ -110,6 +111,8 @@ jobs:
         -DWITH_IMGCODEC_GIF=ON
         ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
         ${{ matrix.avif && '-DWITH_AVIF=ON' }}
+        ${{ matrix.gphoto2 && '-DWITH_GPHOTO2=ON' }}
+        ${{ matrix.aravis && '-DWITH_ARAVIS=ON' }}
         ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
         ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
         ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}

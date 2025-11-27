@@ -54,6 +54,7 @@ RUN \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav \
     libopenni2-dev \
+    libaravis-dev \
     libdc1394-dev \
     libgphoto2-dev \
     hdf5-tools \
