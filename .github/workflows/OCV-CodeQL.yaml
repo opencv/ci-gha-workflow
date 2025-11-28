@@ -1,0 +1,91 @@
+name: OCV CodeQL
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-CodeQL.yaml'
+  workflow_call:
+    inputs:
+      target_branch:
+        description: "Target branch (e.g. 4.x)"
+        required: true
+        type: string
+      workflow_branch:
+        description: "Branch for ci-gha-workflow repository"
+        default: "main"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  security-events: write
+  packages: read
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: opencv-cn-lin-x86-64
+    container:
+      image: 'quay.io/opencv-ci/opencv-ubuntu-24.04:20241031'
+      volumes:
+        - /home/opencv-cn/git_cache:/opt/git_cache
+        - /home/opencv-cn/ci_cache/opencv:/opt/.ccache
+        - /home/opencv-cn/binaries_cache:/opt/binaries_cache
+        - /home/opencv-cn/dnn-models:/opt/dnn-models
+
+    env:
+      ANT_HOME: '/usr/share/ant'
+      DNN_MODELS: '/opt/dnn-models'
+      CCACHE_DIR: '/opt/.ccache'
+      CCACHE_MAXSIZE: '3G'
+      OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
+      CMAKE_OPT: >-
+        -DBUILD_DOCS=ON
+        -DBUILD_EXAMPLES=OFF
+        -DOPENCV_ENABLE_NONFREE=ON
+      HOME: '/home/ubuntu'
+      MAIN_BUILD_DIR: 'build'
+
+    steps:
+      - name: Checkout workflow repository
+        uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: "${{ inputs.workflow_branch }}"
+
+      - name: Checkout and merge OpenCV
+        uses: ./checkout-and-merge
+        with:
+          repos: main
+          target_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '4.x' || inputs.target_branch }}"
+          author: "${{ github.event.pull_request.user.login }}"
+          source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
+          gitcache: '/opt/git_cache'
+          home: '${{ env.HOME }}'
+          workdir: '${{ env.HOME }}'
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: c-cpp
+          build-mode: manual
+          queries: security-extended,security-and-quality
+
+      - name: Configure and build OpenCV
+        uses: ./configure-and-build
+        with:
+          workdir: '${{ env.HOME }}'
+          builddir: 'build'
+          generator: 'Ninja'
+          options: '${{ env.CMAKE_OPT }}'
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:c-cpp"
+
+
+
