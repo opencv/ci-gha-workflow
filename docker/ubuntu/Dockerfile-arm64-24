@@ -1,4 +1,4 @@
-# Version: 20251124
+# Version: 20251201
 # Image name: quay.io/opencv-ci/opencv-ubuntu-24.04-arm64
 
 FROM ubuntu:24.04
@@ -41,7 +41,8 @@ RUN \
     libavif-dev \
     libjxl-dev \
     libopenexr-dev \
-    libgtk-3-dev \
+    qt6-base-dev \
+    qt6-5compat-dev \
     libcamera-dev \
     libavcodec-dev \
     libavformat-dev \
