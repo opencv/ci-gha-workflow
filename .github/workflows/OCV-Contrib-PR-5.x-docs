@@ -57,8 +57,6 @@ jobs:
         echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
         echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
 
-    # --- REPOS ---
-
     - name: Clean opencv_contrib
       timeout-minutes: 60
       run: find ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }} -mindepth 1 -delete || true
@@ -119,8 +117,6 @@ jobs:
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
 
-    # --- QUALITY CHECKS ---
-
     - name: Whitespace OpenCV Contrib
       timeout-minutes: 60
       run: |
@@ -150,8 +146,6 @@ jobs:
         cd ${{ env.OPENCV_EXTRA_DOCKER_WORKDIR }}
         git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_EXTRA }}..HEAD || true
         python3 $HOME/scripts/patch_size.py
-
-    # --- JAVADOC / JS / DOCS ---
 
     - name: Generate JavaDoc
       timeout-minutes: 60
