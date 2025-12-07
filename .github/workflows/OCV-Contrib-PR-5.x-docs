@@ -1,0 +1,217 @@
+name: OCV Contrib PR:5.x docs
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-Contrib-PR-5.x-docs.yaml'
+  workflow_call:
+
+concurrency:
+  group: OCV-Contrib-PR-5.x-docs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXTRA_CMAKE_OPTIONS: '-DOPENCV_JS_LOCATION=/home/ci/build/js/bin/opencv.js -DOPENCV_ENABLE_NONFREE=ON -DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON -DOPENCV_DOCS_HAVE_DOT=YES -DBUILD_TESTS=ON -DWITH_OPENNI2=ON -DWITH_GDCM=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_EXTRA_MODULES_PATH=/home/ci/opencv_contrib/modules -DWITH_GDAL=ON -DBUILD_EXAMPLES=ON  -DBUILD_PERF_TESTS=ON -DWITH_IPP=OFF'
+  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+  OPENCV_DOCKER_WORKDIR: '/home/ci/opencv'
+  OPENCV_EXTRA_DOCKER_WORKDIR: '/home/ci/opencv_extra'
+  OPENCV_CONTRIB_DOCKER_WORKDIR: '/home/ci/opencv_contrib'
+  OPENCV_BUILD: /home/ci/opencv-build
+  JAVA_DOC: /home/ci/opencv-build/doc/doxygen/html/javadoc
+
+jobs:
+  BuildAndTest:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20250526
+      options: --user ci
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
+
+    - name: Define proper HOME path
+      timeout-minutes: 60
+      run: echo "HOME=/home/ci" >> $GITHUB_ENV
+
+    - name: Setup infra environment
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
+      run: echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
+
+    - name: PR info
+      timeout-minutes: 60
+      run: |
+        echo "PR Author: ${{ env.PR_AUTHOR }}"
+        echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+        echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+        echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+
+    # --- REPOS ---
+
+    - name: Clean opencv_contrib
+      timeout-minutes: 60
+      run: find ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }} -mindepth 1 -delete || true
+
+    - name: Clone opencv_contrib
+      timeout-minutes: 60
+      run: |
+        git clone --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_contrib.git ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
+        cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
+        echo "LATEST_COMMIT_OPENCV_CONTRIB=$(git log -n 1 ${{ env.TARGET_BRANCH_NAME }} --pretty=format:'%H')" >> $GITHUB_ENV
+
+    - name: Merge opencv_contrib with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
+        git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+
+    - name: Clone opencv
+      timeout-minutes: 60
+      run: |
+        git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv.git ${{ env.OPENCV_DOCKER_WORKDIR }}
+        cd ${{ env.OPENCV_DOCKER_WORKDIR }}
+        echo "LATEST_COMMIT_OPENCV=$(git log -n 1 ${{ env.TARGET_BRANCH_NAME }} --pretty=format:'%H')" >> $GITHUB_ENV
+
+    - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch (if fork exists)
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        OPENCV_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_FORK" ]]; then
+          echo "Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          cd ${{ env.OPENCV_DOCKER_WORKDIR }}
+          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv" "${{ env.SOURCE_BRANCH_NAME }}"
+          echo "OPENCV_FORK=1" >> $GITHUB_ENV
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+
+    - name: Clone opencv_extra
+      timeout-minutes: 60
+      run: |
+        git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} https://github.com/opencv/opencv_extra.git $HOME/opencv_extra
+        cd ${{ env.OPENCV_EXTRA_DOCKER_WORKDIR }}
+        echo "LATEST_COMMIT_OPENCV_EXTRA=$(git log -n 1 ${{ env.TARGET_BRANCH_NAME }} --pretty=format:'%H')" >> $GITHUB_ENV
+
+    - name: Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch
+      timeout-minutes: 60
+      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+      run: |
+        OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
+        if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
+          echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
+          cd ${{ env.OPENCV_EXTRA_DOCKER_WORKDIR }}
+          git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
+          echo "OPENCV_EXTRA_FORK=1" >> $GITHUB_ENV
+        else
+          echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
+        fi
+
+    # --- QUALITY CHECKS ---
+
+    - name: Whitespace OpenCV Contrib
+      timeout-minutes: 60
+      run: |
+        cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
+        git diff --check ${{ env.LATEST_COMMIT_OPENCV_CONTRIB }} --
+
+    - name: Patch size OpenCV Contrib
+      if: ${{ always() && github.event.repository.name != 'ci-gha-workflow' }}
+      timeout-minutes: 60
+      run: |
+        cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
+        git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_CONTRIB }}..HEAD || true
+        python3 $HOME/scripts/patch_size.py
+
+    - name: Patch size OpenCV
+      if: ${{ always() && env.OPENCV_FORK == 1 && github.event.repository.name != 'ci-gha-workflow' }}
+      timeout-minutes: 60
+      run: |
+        cd ${{ env.OPENCV_DOCKER_WORKDIR }}
+        git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV }}..HEAD || true
+        python3 $HOME/scripts/patch_size.py
+
+    - name: Patch size OpenCV Extra
+      if: ${{ always() && env.OPENCV_EXTRA_FORK == 1 && github.event.repository.name != 'ci-gha-workflow' }}
+      timeout-minutes: 60
+      run: |
+        cd ${{ env.OPENCV_EXTRA_DOCKER_WORKDIR }}
+        git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_EXTRA }}..HEAD || true
+        python3 $HOME/scripts/patch_size.py
+
+    # --- JAVADOC / JS / DOCS ---
+
+    - name: Generate JavaDoc
+      timeout-minutes: 60
+      run: |
+        mkdir -p ${{ env.OPENCV_BUILD }}
+        cd ${{ env.OPENCV_BUILD }}
+        cmake -DBUILD_SHARED_LIBS=OFF \
+              -DBUILD_opencv_java=ON \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DOPENCV_EXTRA_MODULES_PATH=${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}/modules \
+              -DANT_EXECUTABLE=/usr/bin/ant \
+              ${{ env.OPENCV_DOCKER_WORKDIR }}
+        make opencv_java_jar
+        cd modules/java/jar/opencv
+        ant javadoc
+
+    - name: Build js
+      if: ${{ always() }}
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build
+        emcmake python ../opencv/platforms/js/build_js.py js --build_test
+
+    - name: Run js tests
+      if: ${{ always() }}
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build/js/bin
+        npm install
+        node tests.js
+
+    - name: Configure OpenCV doxygen
+      if: ${{ always() }}
+      id: opencv-doxygen
+      timeout-minutes: 60
+      run: |
+        cd $HOME/build
+        cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+
+    - name: Build OpenCV doxygen
+      if: ${{ always() && steps.opencv-doxygen.outcome == 'success' }}
+      timeout-minutes: 60
+      id: build-opencv
+      working-directory: ${{ env.HOME }}/build
+      run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
+
+    - name: Warnings check
+      timeout-minutes: 60
+      run: python3 scripts/warnings-handling.py ${{ env.HOME }}/build/log.txt
+
+    - name: Pylint
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        cd $HOME/build
+        cmake --build . --config release --target check_pylint -- -j$(nproc)
+
+    - name: Flake8
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      run: |
+        cd $HOME/build
+        cmake --build . --config release --target check_flake8 -- -j$(nproc)
