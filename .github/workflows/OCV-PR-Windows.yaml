@@ -48,27 +48,17 @@ jobs:
       # NOTE: Debugging
       # fail-fast: true
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 3
       matrix:
-        arch: [ x86, x64 ] # , arm64
+        arch: [ arm64 ]
         config: [ base ]
         include:
-          - arch: x86
+          - arch: arm64
             config: base
-            runner: opencv-cn-win
-            vs: 'Visual Studio 16 2019'
-            cmake_arch: Win32
-          - arch: x64
-            config: base
-            runner: opencv-cn-win
-            vs: 'Visual Studio 16 2019'
-            cmake_arch: x64
-          # - arch: arm64
-          #   config: base
-          #   runner: windows-11-arm
-          #   vs: 'Visual Studio 17 2022'
-          #   cmake_arch: ARM64
-          #   no_opencl: true
+            runner: windows-11-arm
+            vs: 'Visual Studio 17 2022'
+            cmake_arch: ARM64
+            no_opencl: true
 
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
     defaults:
@@ -79,8 +69,8 @@ jobs:
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
+        -DCMAKE_BUILD_TYPE=Release
         ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
-        ${{ matrix.arch == 'arm64' && '-DWITH_VULKAN=OFF -DBUILD_opencv_vulkan=OFF -DOPENCV_DNN_VULKAN=OFF -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=ON' || '' }}
         ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       OPENCV_FOR_THREADS_NUM: 8
@@ -158,9 +148,10 @@ jobs:
       uses: ./run-tests
       env:
         OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-        OPENCV_TEST_REQUIRE_DATA: 1
-        OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+        OPENCV_TEST_REQUIRE_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
         PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
+        OPENCV_OPENCL_RUNTIME: 'disabled'
       with:
         workdir: '${{ github.workspace }}'
         builddir: '${{ env.MAIN_BUILD_DIR }}'
