@@ -33,7 +33,7 @@ jobs:
     - name: Cmake OpenCV
       timeout-minutes: 60
       env:
-        EXTRA_CMAKE_OPTIONS: '-DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install -DBUILD_SHARED_LIBS=ON -DBUILD_PERF_TESTS=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=ON -DINSTALL_PDB_COMPONENT_EXCLUDE_FROM_ALL=OFF -DCPU_BASELINE=SSE3 -DOPENCV_INSTALL_DATA_DIR_RELATIVE=${{ github.workspace }}\\opencv -DWITH_LAPACK=OFF -DVIDEOIO_PLUGIN_LIST=all -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=ON -DWITH_OPENCL=ON -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_TBB=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=OFF'
+        EXTRA_CMAKE_OPTIONS: '-DOPENCV_DOWNLOAD_PATH=%BINARIES_CACHE% -DOPENCV_PYTHON_INSTALL_PATH=python -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install -DBUILD_SHARED_LIBS=ON -DBUILD_PERF_TESTS=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_PDB=ON -DINSTALL_PDB_COMPONENT_EXCLUDE_FROM_ALL=OFF -DCPU_BASELINE=SSE3 -DOPENCV_INSTALL_DATA_DIR_RELATIVE=${{ github.workspace }}\\opencv -DWITH_LAPACK=OFF -DVIDEOIO_PLUGIN_LIST=ffmpeg -DINSTALL_CREATE_DISTRIB=ON -DBUILD_DOCS=OFF -DOPENCV_GENERATE_SETUPVARS=ON -DWITH_OPENCL=ON -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DWITH_TBB=OFF -DWITH_CUDA=OFF -DBUILD_opencv_java=OFF'
       run: |
         mkdir ${{ github.workspace }}\build && cd ${{ github.workspace }}\build
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
@@ -145,6 +145,32 @@ jobs:
       timeout-minutes: 60
       run: |
         cd ${{ github.workspace }}\build\python_312
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py313
+      timeout-minutes: 60
+      run: |
+        set PATH=c:\\Python-3.13\\;c:\\Python-3.13\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_313 && cd ${{ github.workspace }}\build\python_313
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" -DOpenCV_BINARY_DIR=${{ github.workspace }}\build ../../opencv/modules/python
+    - name: Compile py313
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_313
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
+    - name: Cmake py314
+      timeout-minutes: 60
+      run: |
+        set PATH=c:\\Python-3.14\\;c:\\Python-3.14\\Scripts\\;%PATH%
+        mkdir ${{ github.workspace }}\build\python_314 && cd ${{ github.workspace }}\build\python_314
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G ^"Visual Studio 16 2019^" -DOpenCV_BINARY_DIR=${{ github.workspace }}\build ../../opencv/modules/python
+    - name: Compile py314
+      timeout-minutes: 60
+      run: |
+        cd ${{ github.workspace }}\build\python_314
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         cmake --build . --config release --target install -- /maxcpucount:%PARALLEL_JOBS% /consoleloggerparameters:NoSummary
     - name: Pack shared
