@@ -118,13 +118,7 @@ jobs:
         ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
         ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
         ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
-        ${{ matrix.asan && '
-          -DENABLE_OMIT_FRAME_POINTER=OFF
-          -DCMAKE_C_FLAGS="-fno-omit-frame-pointer -fsanitize=address"
-          -DCMAKE_CXX_FLAGS="-fno-omit-frame-pointer -fsanitize=address"
-          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
-          -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address"
-        ' }}
+        ${{ matrix.asan && '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_C_FLAGS="-fno-omit-frame-pointer -fsanitize=address" -DCMAKE_CXX_FLAGS="-fno-omit-frame-pointer -fsanitize=address" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address"' }}
       HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       # NOTE: CN config
