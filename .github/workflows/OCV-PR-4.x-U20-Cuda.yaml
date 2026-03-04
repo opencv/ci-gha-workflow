@@ -30,7 +30,7 @@ env:
 
 jobs:
   BuildAndTest:
-    runs-on: opencv-cn-lin-x86-64
+    runs-on: opencv-linux-cuda
     defaults:
       run:
         shell: bash
