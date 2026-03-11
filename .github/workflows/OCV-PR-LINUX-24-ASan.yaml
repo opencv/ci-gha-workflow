@@ -143,6 +143,7 @@ jobs:
           enable_python: "true"
           enable_java: "true"
           suffix: '24.04_asan_${{ matrix.branch }}'
+          timeout: "90"
 
       - if: ${{ always() && env.WARNINGS == '1' }}
         name: Warnings check
