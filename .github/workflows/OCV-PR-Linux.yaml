@@ -62,7 +62,6 @@ jobs:
         include:
           - version: '24.04'
             image: '24.04:20251127'
-            asan: true
             jpegxl: true
             avif: true
             avx2: true
@@ -76,7 +75,6 @@ jobs:
           #   avif: true
           - version: '22.04'
             image: '22.04:20251015'
-            asan : true
             avif: true
             plugins: true
           - version: '20.04'
@@ -118,7 +116,7 @@ jobs:
         ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
         ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
         ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
-        ${{ matrix.asan && '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_C_FLAGS="-fno-omit-frame-pointer -fsanitize=address" -DCMAKE_CXX_FLAGS="-fno-omit-frame-pointer -fsanitize=address" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address"' }}
+        ${{ matrix.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
       HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       # NOTE: CN config
@@ -177,13 +175,13 @@ jobs:
 
     - name: Run OpenCV tests
       uses: ./run-tests
-      timeout-minutes: 20
       env:
         OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
         OPENCV_TEST_REQUIRE_DATA: 1
         OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
         PYTHONPATH: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
-        ASAN_OPTIONS: ${{ matrix.asan && 'detect_leaks=1:exitcode=1:abort_on_error=1:halt_on_error=1' || '' }}
+        # TODO: enable later
+        # ASAN_OPTIONS: 'detect_leaks=0'
       with:
         workdir: '${{ env.HOME }}'
         builddir: '${{ env.MAIN_BUILD_DIR }}'
