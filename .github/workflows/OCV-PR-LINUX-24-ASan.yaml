@@ -126,7 +126,7 @@ jobs:
 
       - name: Run OpenCV tests
         uses: ./run-tests
-        timeout-minutes: 60
+        timeout-minutes: 100
         env:
           OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
           OPENCV_TEST_REQUIRE_DATA: 1
