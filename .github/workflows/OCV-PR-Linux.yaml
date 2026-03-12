@@ -80,6 +80,11 @@ jobs:
           - version: '20.04'
             image: '20.04:20251015'
             limited_api: true
+          - version: '24.04_musl'
+            image: 'musl-24.04:20260312'
+            jpegxl: true
+            avif: true
+            avx2: true
     defaults:
       run:
         shell: bash
