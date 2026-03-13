@@ -82,6 +82,7 @@ jobs:
         -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_IMGCODEC_GIF=ON
         -DWITH_ONNXRUNTIME=ON
+        -DCMAKE_CXX_FLAGS="-Wno-suggest-override -Wno-sign-promo -Wno-array-bounds"
         ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
         ${{ matrix.avif && '-DWITH_AVIF=ON' }}
         ${{ matrix.gphoto2 && '-DWITH_GPHOTO2=ON' }}
@@ -123,6 +124,7 @@ jobs:
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
     - name: Configure and build OpenCV
+      id: build-opencv
       uses: ./configure-and-build
       with:
         workdir: '${{ env.HOME }}'
