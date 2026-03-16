@@ -82,7 +82,7 @@ jobs:
         -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_IMGCODEC_GIF=ON
         -DWITH_ONNXRUNTIME=ON
-        -DCMAKE_CXX_FLAGS="-Wno-suggest-override -Wno-sign-promo -Wno-array-bounds"
+        -DCMAKE_CXX_FLAGS_RELEASE="-Wno-suggest-override -Wno-sign-promo -Wno-array-bounds"
         ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
         ${{ matrix.avif && '-DWITH_AVIF=ON' }}
         ${{ matrix.gphoto2 && '-DWITH_GPHOTO2=ON' }}
