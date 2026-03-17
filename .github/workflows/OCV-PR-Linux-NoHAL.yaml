@@ -81,6 +81,7 @@ jobs:
         -DWITH_IPP=OFF
         -DWITH_HAL=OFF
         -DOPENCV_FORCE_3RDPARTY_BUILD=ON
+        -DWITH_OPENEXR=OFF
       HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
       MAIN_BUILD_DIR: "build" 
       OPENCV_FOR_THREADS_NUM: 8
