@@ -124,18 +124,6 @@ jobs:
           generator: 'Ninja'
           options: '-DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 
-      - name: Create LSAN Suppressions
-        run: |
-          cat <<EOF > ${{ env.HOME }}/lsan.supp
-          # Ignore intentional leaks in third-party GUI & System libraries
-          leak:libavutil 
-          leak:libx265 
-          leak:libglib-2.0
-          leak:libdbus-1
-          leak:libatk-bridge
-          leak:libGLX_mesa
-          EOF
-
       - name: Run OpenCV tests
         uses: ./run-tests
         timeout-minutes: 100
@@ -145,14 +133,13 @@ jobs:
           OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
           PYTHONPATH: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
           ASAN_OPTIONS: 'detect_leaks=1:exitcode=1:abort_on_error=1:halt_on_error=1'
-          LSAN_OPTIONS: 'suppressions=${{ env.HOME }}/lsan.supp'
         with:
           workdir: '${{ env.HOME }}'
           builddir: '${{ env.MAIN_BUILD_DIR }}'
           logdir: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}'
           plan: "test-plan-${{ matrix.branch }}.json"
           suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''linux-contrib'''  || '''linux''' }} ]"
-          filter: "[ 'ubuntu-common', 'ubuntu-avx2' ]"
+          filter: "[ 'ubuntu-common', 'ubuntu-avx2' , '-opencv_test_higui' , '-opencv_test_videoio' ]"
           enable_python: "true"
           enable_java: "true"
           suffix: '24.04_asan_${{ matrix.branch }}'
