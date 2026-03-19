@@ -42,7 +42,7 @@ jobs:
             ["Proper branch targeting"]="PR is proposed to the proper branch"
             ["Bug report reference"]="reference to the original bug report"
             ["Test coverage declaration"]="accuracy test, performance test"
-            ["Documentation and sample code"]="well documented and sample code"
+            ["Documentation and sample code"]="sample code can be built with the project CMake"
           )
 
           ALL_ITEMS_PRESENT=true
