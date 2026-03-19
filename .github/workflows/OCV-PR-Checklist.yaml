@@ -69,3 +69,60 @@ jobs:
 
           echo "PR Readiness Checklist validation passed. All items are checked or marked as not applicable."
           exit 0
+
+  check-companion-prs:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check opencv_extra and opencv_contrib companion PRs
+        shell: bash
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          REPOS=("opencv_extra" "opencv_contrib")
+          FAILED=false
+
+          for REPO in "${REPOS[@]}"; do
+            echo "Checking ${PR_AUTHOR}/${REPO} for branch '${HEAD_BRANCH}'..."
+
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${PR_AUTHOR}/${REPO}/branches/${HEAD_BRANCH}")
+
+            echo "GitHub API response for ${PR_AUTHOR}/${REPO}/branches/${HEAD_BRANCH}: HTTP ${HTTP_STATUS}"
+
+            if [ "$HTTP_STATUS" = "401" ] || [ "$HTTP_STATUS" = "403" ]; then
+              echo "::error title=GitHub API Auth Error::GitHub API returned HTTP ${HTTP_STATUS}. Ensure GITHUB_TOKEN is set."
+              exit 1
+            fi
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "Branch '${HEAD_BRANCH}' found in ${PR_AUTHOR}/${REPO}. Checking for open PR in opencv/${REPO}..."
+
+              PR_COUNT=$(curl -s \
+                -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/opencv/${REPO}/pulls?state=open&head=${PR_AUTHOR}:${HEAD_BRANCH}" \
+                | grep -c '"number"' || true)
+
+              if [ "$PR_COUNT" -eq 0 ]; then
+                echo "::error title=Missing Companion PR::Branch '${HEAD_BRANCH}' exists in ${PR_AUTHOR}/${REPO} but no open PR was found in opencv/${REPO}. Please open a PR or the branch will not be merged."
+                FAILED=true
+              else
+                echo "Companion PR found in opencv/${REPO}."
+              fi
+            else
+              echo "Branch '${HEAD_BRANCH}' not found in ${PR_AUTHOR}/${REPO}. No companion PR required."
+            fi
+          done
+
+          if [ "$FAILED" = true ]; then
+            exit 1
+          fi
+
+          echo "Companion PR check passed."
+          exit 0
