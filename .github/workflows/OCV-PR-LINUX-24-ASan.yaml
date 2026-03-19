@@ -137,9 +137,9 @@ jobs:
           workdir: '${{ env.HOME }}'
           builddir: '${{ env.MAIN_BUILD_DIR }}'
           logdir: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}'
-          plan: "test-plan-${{ matrix.branch }}.json"
+          plan: "test-plan-asan-${{ matrix.branch }}.json"
           suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''linux-contrib'''  || '''linux''' }} ]"
-          filter: "[ 'ubuntu-common', 'ubuntu-avx2' , '-opencv_test_highgui' , '-opencv_test_videoio' ]"
+          filter: "[ 'ubuntu-common', 'ubuntu-avx2' ]"
           enable_python: "true"
           enable_java: "true"
           suffix: '24.04_asan_${{ matrix.branch }}'
