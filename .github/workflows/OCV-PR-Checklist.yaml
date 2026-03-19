@@ -1,0 +1,71 @@
+name: OCV PR Checklist
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: OCV-PR-Checklist-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-pr-checklist:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Validate PR Readiness Checklist
+        shell: bash
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$PR_BODY" ]; then
+            echo "::error title=Empty PR Description::Pull request description is empty. Please fill in the PR template before submitting."
+            exit 1
+          fi
+
+          CLEAN_BODY=$(printf "%s" "$PR_BODY" | tr -d '\r')
+          CLEAN_BODY=$(printf "%s" "$CLEAN_BODY" | awk '/^```/{f=!f; next} !f')
+          CLEAN_BODY=$(printf "%s" "$CLEAN_BODY" | sed 's/`[^`]*`//g')
+          CLEAN_BODY=$(printf "%s" "$CLEAN_BODY" | sed 's/~~[^~]*~~//g')
+
+          if ! printf "%s" "$CLEAN_BODY" | grep -qiE "^###[[:space:]]+Pull Request Readiness Checklist"; then
+            echo "::error title=Missing Checklist Section::Pull Request Readiness Checklist section not found. Please use the PR template: https://github.com/opencv/opencv/blob/4.x/.github/PULL_REQUEST_TEMPLATE.md"
+            exit 1
+          fi
+
+          CHECKLIST_SECTION=$(printf "%s" "$CLEAN_BODY" | \
+            awk '/^###[[:space:]]+Pull Request Readiness Checklist/{found=1; next} found{print}')
+
+          declare -A REQUIRED_ITEMS=(
+            ["Apache 2 License agreement"]="I agree to contribute to the project under Apache 2 License"
+            ["GPL license incompatibility check"]="not based on a code under GPL"
+            ["Proper branch targeting"]="PR is proposed to the proper branch"
+            ["Bug report reference"]="reference to the original bug report"
+            ["Test coverage declaration"]="accuracy test, performance test"
+            ["Documentation and sample code"]="well documented and sample code"
+          )
+
+          ALL_ITEMS_PRESENT=true
+          for label in "${!REQUIRED_ITEMS[@]}"; do
+            pattern="${REQUIRED_ITEMS[$label]}"
+            if ! printf "%s" "$CHECKLIST_SECTION" | grep -qi "$pattern"; then
+              echo "::error title=Missing Checklist Item::Required item not found — '$label'. The PR template may have been modified or deleted."
+              ALL_ITEMS_PRESENT=false
+            fi
+          done
+
+          if [ "$ALL_ITEMS_PRESENT" = false ]; then
+            echo "::error title=Incomplete Template::One or more required checklist items are missing. Restore the PR template: https://github.com/opencv/opencv/blob/4.x/.github/PULL_REQUEST_TEMPLATE.md"
+            exit 1
+          fi
+
+          if printf "%s" "$CHECKLIST_SECTION" | grep -Eq '^\s*-\s*\[ \]'; then
+            echo "::error title=Unchecked Items Detected::All checklist items must be checked or marked as not applicable using strike-through (~~item~~) before merging."
+            printf "%s" "$CHECKLIST_SECTION" | grep -E '^\s*-\s*\[ \]' | while read -r line; do
+              echo "::error title=Unchecked Item::$line"
+            done
+            exit 1
+          fi
+
+          echo "PR Readiness Checklist validation passed. All items are checked or marked as not applicable."
+          exit 0
