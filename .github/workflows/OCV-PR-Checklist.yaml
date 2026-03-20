@@ -68,11 +68,7 @@ jobs:
           fi
 
           echo "PR Readiness Checklist validation passed. All items are checked or marked as not applicable."
-          exit 0
 
-  check-companion-prs:
-    runs-on: ubuntu-24.04
-    steps:
       - name: Check opencv_extra and opencv_contrib companion PRs
         shell: bash
         env:
@@ -125,4 +121,3 @@ jobs:
           fi
 
           echo "Companion PR check passed."
-          exit 0
