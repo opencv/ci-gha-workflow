@@ -15,7 +15,6 @@
             "opencv_test_objdetect",
             "opencv_test_photo",
             "opencv_test_stitching",
-            "opencv_test_video",
             "opencv_perf_calib3d",
             "opencv_perf_core",
             "opencv_perf_dnn",
@@ -25,9 +24,7 @@
             "opencv_perf_imgproc",
             "opencv_perf_objdetect",
             "opencv_perf_photo",
-            "opencv_perf_stitching",
-            "opencv_perf_video",
-            "opencv_perf_videoio"
+            "opencv_perf_stitching"
         ],
 
         "linux-contrib": [

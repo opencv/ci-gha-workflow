@@ -16,7 +16,6 @@
             "opencv_test_photo",
             "opencv_test_stereo",
             "opencv_test_stitching",
-            "opencv_test_video",
             "opencv_perf_3d",
             "opencv_perf_calib",
             "opencv_perf_core",
@@ -27,9 +26,7 @@
             "opencv_perf_objdetect",
             "opencv_perf_photo",
             "opencv_perf_stereo",
-            "opencv_perf_stitching",
-            "opencv_perf_video",
-            "opencv_perf_videoio"
+            "opencv_perf_stitching"
         ],
 
         "linux-contrib": [
