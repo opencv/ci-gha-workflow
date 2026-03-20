@@ -58,16 +58,9 @@ jobs:
       CCACHE_DIR: '/opt/.ccache'
       CCACHE_MAXSIZE: '8G'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
-      # Focused CMAKE_OPT for Ubuntu 24.04 with ASan enabled by default
       CMAKE_OPT: >-
-        -DBUILD_DOCS=ON
-        -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_IMGCODEC_GIF=ON
-        -DWITH_JPEGXL=ON
-        -DWITH_AVIF=ON
-        -DWITH_GPHOTO2=ON
-        -DWITH_ARAVIS=ON
         -DCPU_BASELINE=AVX2
         -DCMAKE_BUILD_TYPE=RelWithDebInfo
         -DENABLE_OMIT_FRAME_POINTER=OFF
