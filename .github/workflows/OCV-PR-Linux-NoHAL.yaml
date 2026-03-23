@@ -46,24 +46,17 @@ jobs:
       - branch_eval
     strategy:
       fail-fast: false
-      max-parallel: 3
       matrix:
-        version:
-          - '24.04'
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
-        include:
-          - version: '24.04'
-            image: '24.04:20251127'
-            avx2: true
     defaults:
       run:
         shell: bash
     container:
-      image: 'quay.io/opencv-ci/opencv-ubuntu-${{ matrix.image }}'
+      image: 'quay.io/opencv-ci/opencv-ubuntu-24.04:20251127'
       volumes:
         - /home/opencv-cn/git_cache:/opt/git_cache
-        - /home/opencv-cn/ci_cache/opencv/${{ matrix.version }}:/opt/.ccache
-        - /home/opencv-cn/binaries_cache/${{ matrix.version }}:/opt/binaries_cache
+        - /home/opencv-cn/ci_cache/opencv/24.04:/opt/.ccache
+        - /home/opencv-cn/binaries_cache/24.04:/opt/binaries_cache
         - /home/opencv-cn/dnn-models:/opt/dnn-models
     env:
       ANT_HOME: '/usr/share/ant'
@@ -72,19 +65,16 @@ jobs:
       CCACHE_MAXSIZE: '8G'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
       CMAKE_OPT: >-
-        -DBUILD_DOCS=ON
-        -DBUILD_EXAMPLES=ON
         -DCPU_BASELINE=AVX2
         -DBUILD_TESTS=ON
         -DBUILD_PERF_TESTS=ON
-        -DBUILD_opencv_apps=ON
         -DWITH_IPP=OFF
         -DWITH_HAL=OFF
         -DOPENCV_FORCE_3RDPARTY_BUILD=ON
         -DWITH_OPENEXR=OFF
         -DWITH_GSTREAMER=OFF
-      HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
-      MAIN_BUILD_DIR: "build" 
+      HOME: '/home/ubuntu'
+      MAIN_BUILD_DIR: "build"
       OPENCV_FOR_THREADS_NUM: 8
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
@@ -137,10 +127,10 @@ jobs:
         logdir: '${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}'
         plan: "test-plan-${{ matrix.branch }}.json"
         suite: "[ 'linux' ]"
-        filter: "[ 'ubuntu-common', ${{ matrix.avx2 && '''ubuntu-avx2''' }} ]"
+        filter: "[ 'ubuntu-common', 'ubuntu-avx2' ]"
         enable_python: "true"
         enable_java: "true"
-        suffix: '${{ matrix.version }}_${{ matrix.branch }}'
+        suffix: '24.04_${{ matrix.branch }}'
 
     - if: ${{ always() && env.WARNINGS == '1' }}
       name: Warnings check
