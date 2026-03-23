@@ -35,7 +35,6 @@
             "opencv_test_dnn_superres",
             "opencv_test_face",
             "opencv_test_fuzzy",
-            "opencv_test_gapi",
             "opencv_test_hdf",
             "opencv_test_img_hash",
             "opencv_test_intensity_transform",

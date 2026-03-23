@@ -8,7 +8,6 @@
             "opencv_test_dnn",
             "opencv_test_features2d",
             "opencv_test_flann",
-            "opencv_test_gapi",
             "opencv_test_imgcodecs",
             "opencv_test_imgproc",
             "opencv_test_ml",
