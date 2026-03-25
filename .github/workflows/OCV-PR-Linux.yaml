@@ -61,7 +61,7 @@ jobs:
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         include:
           - version: '24.04'
-            image: '24.04:20251127'
+            image: 'ubuntu-24.04:20251127'
             jpegxl: true
             avif: true
             avx2: true
@@ -74,14 +74,14 @@ jobs:
           #   jpegxl: true
           #   avif: true
           - version: '22.04'
-            image: '22.04:20251015'
+            image: 'ubuntu-22.04:20251015'
             avif: true
             plugins: true
           - version: '20.04'
-            image: '20.04:20251015'
+            image: 'ubuntu-20.04:20251015'
             limited_api: true
-          - version: '24.04_musl'
-            image: 'musl-24.04:20260312'
+          - version: '24.04'
+            image: 'musl-1-2:20260325'
             jpegxl: true
             avif: true
             avx2: true
@@ -89,7 +89,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: 'quay.io/opencv-ci/opencv-ubuntu-${{ matrix.image }}'
+      image: 'quay.io/opencv-ci/opencv-${{ matrix.image }}'
       volumes:
         # NOTE: RU config
         # - /mnt/cache/git_cache:/opt/git_cache
