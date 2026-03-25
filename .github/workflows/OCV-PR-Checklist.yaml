@@ -121,3 +121,29 @@ jobs:
           fi
 
           echo "Companion PR check passed."
+
+      - name: Check PR size
+        if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          DIFF_SIZE=$(curl -s \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.diff" \
+            "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}" \
+            | wc -c)
+
+          echo "PR diff size: ${DIFF_SIZE} bytes"
+
+          LIMIT=1048576
+          if [ "${DIFF_SIZE}" -gt "${LIMIT}" ]; then
+            echo "::error title=PR Too Large::PR diff size ${DIFF_SIZE} bytes exceeds the limit of ${LIMIT} bytes (1 MiB). Consider splitting the PR into smaller parts."
+            exit 1
+          fi
+
+          echo "PR size check passed."
