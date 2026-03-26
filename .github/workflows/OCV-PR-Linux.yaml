@@ -81,7 +81,7 @@ jobs:
             image: 'ubuntu-20.04:20251015'
             limited_api: true
           - version: '24.04_musl'
-            image: 'musl-1-2:20260325'
+            image: 'musl-1-2:20260326'
             jpegxl: true
             avif: true
             avx2: true
