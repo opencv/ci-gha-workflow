@@ -55,11 +55,6 @@ jobs:
         include:
           - version: '24.04'
             image: '24.04:20251127'
-            jpegxl: true
-            avif: true
-            avx2: true
-            gphoto2: true
-            aravis: true
     defaults:
       run:
         shell: bash
@@ -82,14 +77,6 @@ jobs:
         -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_IMGCODEC_GIF=ON
         -DWITH_ONNXRUNTIME=ON
-        -DCMAKE_CXX_FLAGS_RELEASE="-Wno-suggest-override -Wno-sign-promo -Wno-array-bounds"
-        ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
-        ${{ matrix.avif && '-DWITH_AVIF=ON' }}
-        ${{ matrix.gphoto2 && '-DWITH_GPHOTO2=ON' }}
-        ${{ matrix.aravis && '-DWITH_ARAVIS=ON' }}
-        ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
-        ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
-        ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
         ${{ matrix.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
       HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
       MAIN_BUILD_DIR: "build"
