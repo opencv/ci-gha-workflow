@@ -44,8 +44,8 @@ jobs:
     # runs-on: opencv-ru-lin-riscv
     runs-on: opencv-cn-lin-x86-64
     name: >-
-       Ubuntu (${{ matrix.version }},
-       ${{ matrix.branch }}${{ contains(matrix.version, 'musl') && ', musl' || '' }})
+      Ubuntu (${{ matrix.version }},
+      ${{ matrix.branch }}${{ matrix.musl && ', musl' || '' }})
     needs:
       - branch_eval
     strategy:
@@ -83,11 +83,12 @@ jobs:
           - version: '20.04'
             image: 'ubuntu-20.04:20251015'
             limited_api: true
-          - version: '24.04_musl'
+          - version: '24.04'
             image: 'musl-1-2:20260407'
             jpegxl: true
             avif: true
             avx2: true
+            musl: true
     defaults:
       run:
         shell: bash
