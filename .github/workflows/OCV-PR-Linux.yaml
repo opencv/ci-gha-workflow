@@ -70,6 +70,7 @@ jobs:
             avx2: true
             gphoto2: true
             aravis: true
+            cache_suffix: '24.04'
           # TODO: enable later
           # - version: '24.04_asan'
           #   image: '24.04:20250505'
@@ -80,11 +81,14 @@ jobs:
             image: 'ubuntu-22.04:20251015'
             avif: true
             plugins: true
+            cache_suffix: '22.04'
           - version: '20.04'
             image: 'ubuntu-20.04:20251015'
             limited_api: true
+            cache_suffix: '20.04'
           - version: '24.04'
             image: 'musl-1-2:20260407'
+            cache_suffix: '24.04_musl'
             jpegxl: true
             avif: true
             avx2: true
@@ -102,8 +106,8 @@ jobs:
         # - vol_dnn_models:/opt/dnn-models
         # NOTE: CN config
         - /home/opencv-cn/git_cache:/opt/git_cache
-        - /home/opencv-cn/ci_cache/opencv/${{ matrix.version }}:/opt/.ccache
-        - /home/opencv-cn/binaries_cache/${{ matrix.version }}:/opt/binaries_cache
+        - /home/opencv-cn/ci_cache/opencv/${{ matrix.cache_suffix }}:/opt/.ccache
+        - /home/opencv-cn/binaries_cache/${{ matrix.cache_suffix }}:/opt/binaries_cache
         - /home/opencv-cn/dnn-models:/opt/dnn-models
       # NOTE: RU config
       # options: '--user root:root'
