@@ -45,7 +45,7 @@ jobs:
     runs-on: opencv-cn-lin-x86-64
     name: >-
       Ubuntu (${{ matrix.version }},
-      ${{ matrix.branch }}${{ matrix.musl && ', musl' || '' }})
+      ${{ matrix.branch }}${{ matrix.libc == 'musl' && ', musl' || '' }})
     needs:
       - branch_eval
     strategy:
@@ -64,7 +64,9 @@ jobs:
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         include:
           - version: '24.04'
-            image: 'ubuntu-24.04:20251127'
+            ibc: 'glibc'
+            image: '24.04:20251127'
+            cache_key: '24.04'
             jpegxl: true
             avif: true
             avx2: true
@@ -78,17 +80,23 @@ jobs:
           #   jpegxl: true
           #   avif: true
           - version: '22.04'
-            image: 'ubuntu-22.04:20251015'
+            libc: 'glibc'
+            image: '22.04:20251015'
+            cache_key: '22.04'
             avif: true
             plugins: true
             cache_suffix: '22.04'
           - version: '20.04'
-            image: 'ubuntu-20.04:20251015'
+            libc: 'glibc'
+            image: '20.04:20251015'
+            cache_key: '20.04'
             limited_api: true
             cache_suffix: '20.04'
           - version: '24.04'
-            image: 'musl-1-2:20260407'
-            cache_suffix: '24.04_musl'
+            libc: 'musl'
+            image: 'musl-1-2:20260408'
+            cache_key: '24.04_musl'
+            container_prefix: 'opencv-'
             jpegxl: true
             avif: true
             avx2: true
@@ -97,7 +105,8 @@ jobs:
       run:
         shell: bash
     container:
-      image: 'quay.io/opencv-ci/opencv-${{ matrix.image }}'
+      image: >-
+          quay.io/opencv-ci/${{ matrix.container_prefix || 'opencv-ubuntu-' }}${{ matrix.image }}
       volumes:
         # NOTE: RU config
         # - /mnt/cache/git_cache:/opt/git_cache
@@ -106,8 +115,8 @@ jobs:
         # - vol_dnn_models:/opt/dnn-models
         # NOTE: CN config
         - /home/opencv-cn/git_cache:/opt/git_cache
-        - /home/opencv-cn/ci_cache/opencv/${{ matrix.cache_suffix }}:/opt/.ccache
-        - /home/opencv-cn/binaries_cache/${{ matrix.cache_suffix }}:/opt/binaries_cache
+        - /home/opencv-cn/ci_cache/opencv/${{ matrix.cache_key }}:/opt/.ccache
+        - /home/opencv-cn/binaries_cache/${{ matrix.cache_key }}:/opt/binaries_cache
         - /home/opencv-cn/dnn-models:/opt/dnn-models
       # NOTE: RU config
       # options: '--user root:root'
