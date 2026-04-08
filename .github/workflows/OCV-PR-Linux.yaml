@@ -62,6 +62,8 @@ jobs:
           # TODO: enable later
           # - '24.04_asan'
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
+        libc:
+           - 'glibc'
         include:
           - version: '24.04'
             libc: 'glibc'
