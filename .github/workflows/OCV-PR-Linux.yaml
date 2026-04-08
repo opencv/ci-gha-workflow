@@ -64,7 +64,7 @@ jobs:
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         include:
           - version: '24.04'
-            ibc: 'glibc'
+            libc: 'glibc'
             image: '24.04:20251127'
             cache_key: '24.04'
             jpegxl: true
@@ -94,7 +94,7 @@ jobs:
             cache_suffix: '20.04'
           - version: '24.04'
             libc: 'musl'
-            image: 'musl-1-2:20260408'
+            image: 'musl-1-2:20260409'
             cache_key: '24.04_musl'
             container_prefix: 'opencv-'
             jpegxl: true
