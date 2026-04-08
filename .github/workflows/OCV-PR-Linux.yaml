@@ -93,6 +93,7 @@ jobs:
             limited_api: true
             cache_suffix: '20.04'
           - version: '24.04'
+            branch: '4.x'
             libc: 'musl'
             image: 'musl-1-2:20260409'
             cache_key: '24.04_musl'
@@ -100,7 +101,16 @@ jobs:
             jpegxl: true
             avif: true
             avx2: true
-            musl: true
+
+          - version: '24.04'
+            branch: '5.x'
+            libc: 'musl'
+            image: 'musl-1-2:20260409'
+            cache_key: '24.04_musl'
+            container_prefix: 'opencv-'
+            jpegxl: true
+            avif: true
+            avx2: true
     defaults:
       run:
         shell: bash
