@@ -62,7 +62,6 @@ jobs:
       CCACHE_MAXSIZE: '8G'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
       CMAKE_OPT: >-
-        -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_ONNXRUNTIME=ON
       HOME: '/home/ubuntu'
       MAIN_BUILD_DIR: "build"
@@ -111,7 +110,7 @@ jobs:
       env:
         OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
         OPENCV_FORCE_DNN_ENGINE: "4"
-        GTEST_FILTER_STRING: "*ORT*"
+        GTEST_FILTER_STRING: "*:-*conformance*"
       run: |
         cd ${{ env.HOME }}/${{ env.MAIN_BUILD_DIR }}
         xvfb-run -a bin/opencv_test_dnn \
