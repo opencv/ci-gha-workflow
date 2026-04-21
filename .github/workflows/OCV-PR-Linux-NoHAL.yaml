@@ -64,8 +64,9 @@ jobs:
       CCACHE_DIR: '/opt/.ccache'
       CCACHE_MAXSIZE: '8G'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
+      # AVX2 disabled for now
+      # calib accuracy issue: https://github.com/opencv/opencv/issues/28845
       CMAKE_OPT: >-
-        -DCPU_BASELINE=AVX2
         -DBUILD_TESTS=ON
         -DBUILD_PERF_TESTS=ON
         -DWITH_IPP=OFF
