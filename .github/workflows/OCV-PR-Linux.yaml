@@ -48,11 +48,11 @@ jobs:
     strategy:
       # NOTE: Debugging
       # fail-fast: true
-      # max-parallel: 3
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 4
       matrix:
         version:
+          - '26.04'
           - '24.04'
           - '22.04'
           - '20.04'
@@ -60,6 +60,13 @@ jobs:
           # - '24.04_asan'
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         include:
+          - version: '26.04'
+            image: '26.04:20260425'
+            jpegxl: true
+            avif: true
+            avx2: true
+            gphoto2: true
+            aravis: true
           - version: '24.04'
             image: '24.04:20251127'
             jpegxl: true
@@ -117,7 +124,7 @@ jobs:
         ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
         ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
         ${{ matrix.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
-      HOME: ${{ contains(matrix.image, '24.04') && '/home/ubuntu' || '/home/ci' }}
+      HOME: ${{ ( contains(matrix.image, '24.04') || contains(matrix.image, '26.04') ) && '/home/ubuntu' || '/home/ci' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       # NOTE: CN config
       OPENCV_FOR_THREADS_NUM: 8
