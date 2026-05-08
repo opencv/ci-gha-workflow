@@ -1,0 +1,50 @@
+# version: 20260409
+# Image name: quay.io/opencv-ci/alpine-3
+FROM alpine:3.23.4
+
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+RUN apk add --no-cache \
+    build-base \
+    diffutils \
+    cmake \
+    ccache \
+    bash \
+    git \
+    curl \
+    wget \
+    tar \
+    xz \
+    zlib-dev \
+    xz-dev \
+    nasm \
+    yasm \
+    pkgconfig \
+    openssl-dev \
+    libjpeg-turbo-dev \
+    fontconfig-dev \
+    freetype-dev \
+    expat-dev \
+    libpng-dev \
+    tiff-dev \
+    libvpx-dev \
+    libavif-dev \
+    ffmpeg-dev \
+    alsa-lib-dev \
+    musl-dev \
+    ttf-dejavu \
+    linux-headers \
+    py3-requests \
+    perl \
+    ninja
+
+#  user`s UID is 1000 for self-runner
+RUN adduser -D -u 1000 -h /home/ci ci && \
+    mkdir -p /home/ci /io && \
+    chown -R ci:ci /home/ci /io
+
+ENV HOME=/home/ci
+WORKDIR /home/ci
+USER ci
+
+ENV PATH "$HOME/bin:$PATH"
