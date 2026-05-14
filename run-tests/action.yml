@@ -64,7 +64,7 @@ runs:
   - if: ${{ always() }}
     uses: actions/upload-artifact@v4
     with:
-      name: test_logs_${{ inputs.suffix }}
+      name: test_logs_${{ inputs.suffix }}_${{ github.run_id }}_${{ github.job }}
       path: '${{ inputs.logdir }}/out_*.txt'
       compression-level: 9
       retention-days: 14
