@@ -52,7 +52,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: 'quay.io/opencv-ci/opencv-ubuntu-24.04:20251127'
+      image: 'quay.io/opencv-ci/opencv-ubuntu-24.04:20260515'
       volumes:
         - /home/opencv-cn/git_cache:/opt/git_cache
         - /home/opencv-cn/ci_cache/opencv/24.04:/opt/.ccache
