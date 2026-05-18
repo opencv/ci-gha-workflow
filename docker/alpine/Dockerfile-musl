@@ -35,6 +35,8 @@ RUN apk add --no-cache \
     ttf-dejavu \
     linux-headers \
     py3-requests \
+    gtk+3.0-dev \
+    xvfb-run \
     perl \
     ninja
 
