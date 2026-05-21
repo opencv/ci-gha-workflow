@@ -34,7 +34,11 @@ RUN apk add --no-cache \
     musl-dev \
     ttf-dejavu \
     linux-headers \
+    python3-dev \
+    py3-numpy \
     py3-requests \
+    py3-yaml \
+    py3-pillow \
     gtk+3.0-dev \
     xvfb-run \
     perl \
