@@ -53,4 +53,11 @@ ENV HOME=/home/ci
 WORKDIR /home/ci
 USER ci
 
+RUN \
+  mkdir $HOME/opencv $HOME/opencv_contrib $HOME/build && \
+  git config --global --add safe.directory "*" && \
+  git config --global user.email "opencv.ci" && \
+  git config --global user.name "opencv.ci" && \
+  git config --global pull.rebase false
+
 ENV PATH "$HOME/bin:$PATH"
