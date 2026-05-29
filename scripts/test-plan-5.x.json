@@ -3,7 +3,7 @@
         "short": [ "opencv_test_core", "opencv_test_imgproc", "opencv_test_photo" ],
 
         "linux": [
-            "opencv_test_3d",
+            "opencv_test_geometry",
             "opencv_test_calib",
             "opencv_test_core",
             "opencv_test_dnn_classic",
@@ -19,7 +19,7 @@
             "opencv_test_stitching",
             "opencv_test_video",
             "opencv_test_videoio",
-            "opencv_perf_3d",
+            "opencv_perf_geometry",
             "opencv_perf_calib",
             "opencv_perf_core",
             "opencv_perf_dnn",
