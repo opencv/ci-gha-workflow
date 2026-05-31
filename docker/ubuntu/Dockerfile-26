@@ -65,9 +65,6 @@ RUN \
     libarmadillo-dev \
     libeigen3-dev \
     libsuitesparse-dev \
-    liblapacke-dev \
-    libopenblas-dev \
-    libeigen3-dev \
     libglfw3-dev \
     libceres-dev \
     lcov \
