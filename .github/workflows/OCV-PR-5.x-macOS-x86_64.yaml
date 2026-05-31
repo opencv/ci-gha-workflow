@@ -115,7 +115,7 @@ jobs:
     - name: Accuracy:3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_3d --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
+      run: ./bin/opencv_test_geometry --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:calib
       timeout-minutes: 60
@@ -192,7 +192,7 @@ jobs:
     - name: Performance:3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_3d --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
+      run: ./bin/opencv_perf_geometry --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:calib
       timeout-minutes: 60
