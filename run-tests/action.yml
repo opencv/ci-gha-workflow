@@ -19,7 +19,7 @@ inputs:
     default: "default"
   timeout:
     description: "One test timeout (min)"
-    default: "15"
+    default: "20"
   options:
     description: "Options in test plan (gtest)"
     default: "default"
