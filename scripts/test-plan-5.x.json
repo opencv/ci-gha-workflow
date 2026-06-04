@@ -28,6 +28,7 @@
             "opencv_perf_imgproc",
             "opencv_perf_objdetect",
             "opencv_perf_photo",
+            "opencv_perf_ptcloud",
             "opencv_perf_stereo",
             "opencv_perf_stitching",
             "opencv_perf_video",
