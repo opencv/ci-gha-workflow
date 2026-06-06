@@ -62,6 +62,9 @@ jobs:
         run: |
           cd ${{ github.workspace }}/opencv
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+      - name: create 5.0 branch
+        run: |
+          cd ${{ github.workspace }}/opencv
           git checkout -b 5.0
       - name: Build OpenCV iOS Framework
         timeout-minutes: 120
