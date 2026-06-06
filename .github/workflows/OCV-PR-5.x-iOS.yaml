@@ -1,3 +1,13 @@
+# HACK: The pipeline temporary creates 5.0 branch to work around python script failure:
+#  Traceback (most recent call last):
+#   File "opencv/platforms/ios/build_framework.py", line 652, in <module>
+#     b = iOSBuilder(args.opencv, args.contrib, args.dynamic, args.without, args.disable, args.enablenonfree, targets, args.debug, args.debug_info, args.framework_name, args.run_tests, args.hosting_base_path, args.swiftdisabled)
+#   File "opencv/platforms/ios/build_framework.py", line 73, in __init__
+#     current_branch = get_current_branch(self.opencv)
+#   File "/Users/opencv-cn/GHA-OCV-5/_work/ci-gha-workflow/ci-gha-workflow/opencv/platforms/apple/cv_build_utils.py", line 72, in get_current_branch
+#     raise Exception("Failed to get current branch")
+# Exception: Failed to get current branch
+
 name: OCV PR:5.0.0 iOS
 
 on:
@@ -52,6 +62,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}/opencv
           git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+          git checkout -b 5.0
       - name: Build OpenCV iOS Framework
         timeout-minutes: 120
         run: |
