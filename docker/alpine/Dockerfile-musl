@@ -1,6 +1,6 @@
 # version: 20260409
 # Image name: quay.io/opencv-ci/alpine-3
-FROM alpine:3.23.4
+FROM alpine:3.23
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
