@@ -10,6 +10,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
+  workflow_call:
 
 concurrency:
   group: OCV-PR-5.0.0-Android-${{ github.ref }}
@@ -27,13 +28,13 @@ env:
   OPENCV_GRADLE_VERBOSE_OPTIONS: '--offline -i'
 
 jobs:
-  BuildAndTest:
+  BuildAndTestSDK:
     runs-on: opencv-cn-lin-x86-64-android
     defaults:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-androidsdk-34:20240917
+      image: quay.io/opencv-ci/opencv-androidsdk-34:20250516
       volumes:
         - /home/opencv-cn/git_cache:/home/ci/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/ci/.ccache
@@ -91,25 +92,20 @@ jobs:
         run: |
           cd /home/ci/build
           sed -i 's+https\\://services.gradle.org/distributions/gradle-8.11.1-bin.zip+file\\:/opt/gradle/gradle-8.11.1-bin.zip+g' ${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/aar-template/gradle/wrapper/gradle-wrapper.properties
-          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_java_shared_aar.py" --ndk_location="$ANDROID_NDK_HOME" --cmake_location=$(dirname $(dirname $(which cmake))) /home/ci/build/OpenCV-android-sdk
+          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_java_shared_aar.py" --offline --ndk_location="$ANDROID_NDK_HOME" --cmake_location=$(dirname $(dirname $(which cmake))) /home/ci/build/OpenCV-android-sdk
       - name: Build Static AAR
         timeout-minutes: 60
         run: |
           cd /home/ci/build
           sed -i 's+https\\://services.gradle.org/distributions/gradle-8.11.1-bin.zip+file\\:/opt/gradle/gradle-8.11.1-bin.zip+g' ${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/aar-template/gradle/wrapper/gradle-wrapper.properties
-          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_static_aar.py" --ndk_location="$ANDROID_NDK_HOME" --cmake_location=$(dirname $(dirname $(which cmake))) /home/ci/build/OpenCV-android-sdk
+          python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build_static_aar.py" --offline --ndk_location="$ANDROID_NDK_HOME" --cmake_location=$(dirname $(dirname $(which cmake))) /home/ci/build/OpenCV-android-sdk
       - name: Test CMake
         timeout-minutes: 60
         run: cd /home/ci/build && python3 "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_cmake_build.py" --sdk_path "$ANDROID_HOME" --ndk_path "$ANDROID_NDK_HOME" OpenCV-android-sdk/sdk/native/jni
       - name: Test Gradle for Local SDK
         timeout-minutes: 60
         run: cd /home/ci/build && "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle.sh" OpenCV-android-sdk
-      - name: Test Gradle for AAR from Py Script
-        timeout-minutes: 60
-        run: |
-          cd /home/ci/build
-          "${{ env.OPENCV_DOCKER_WORKDIR }}/platforms/android/build-tests/test_gradle_aar.sh" OpenCV-android-sdk /home/ci/build/outputs/maven_repo
-      - name: Test Gradle for AAR from SDK
+      - name: Test Gradle for AAR
         timeout-minutes: 60
         run: |
           cd /home/ci/build
@@ -121,7 +117,6 @@ jobs:
           # revert hacked Gradle URL to the original one
           sed -i 's+file\\:/opt/gradle/gradle-8.11.1-bin.zip+https\\://services.gradle.org/distributions/gradle-8.11.1-bin.zip+g' OpenCV-android-sdk/samples/gradle/wrapper/gradle-wrapper.properties
           zip -r -9 -y OpenCV4Android.zip OpenCV-android-sdk
-          zip -r -9 -y sdk-maven-repo.zip maven_repo
           cd /home/ci/build/outputs
           zip -r -9 -y python-maven-repo.zip maven_repo
       - name: Release Package
@@ -132,5 +127,4 @@ jobs:
           name: OpenCV4AndroidSDK
           path: |
             /home/ci/build/OpenCV4Android.zip
-            /home/ci/build/sdk-maven-repo.zip
             /home/ci/build/outputs/python-maven-repo.zip
