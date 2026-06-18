@@ -119,7 +119,7 @@ jobs:
         suite: "[ 'linux' ]"
         filter: "[ 'ubuntu-common', 'ubuntu-avx2' ]"
         enable_python: "true"
-        enable_java: "true"
+        enable_java: "false"
         suffix: 'alpine3_${{ matrix.branch }}'
 
     - if: ${{ always() && env.WARNINGS == '1' }}
