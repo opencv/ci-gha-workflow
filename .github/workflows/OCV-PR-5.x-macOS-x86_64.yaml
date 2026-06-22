@@ -81,7 +81,7 @@ jobs:
       working-directory: ${{ github.workspace }}/opencv_extra
       
     - name: Extra DNN models update
-      uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@dnn
+      uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@main
       timeout-minutes: 20
       with:
         dnn-models: ${{ env.DNN_MODELS }}
