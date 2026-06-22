@@ -1,4 +1,4 @@
-name: OCV PR:5.x U20 OpenVINO
+name: OCV PR:5.x U24 OpenVINO
 
 on:
   pull_request:
@@ -33,7 +33,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-ubuntu-20.04-openvino:20230724
+      image: quay.io/opencv-ci/opencv-ubuntu-24.04-openvino:20260622
       volumes:
         - /home/opencv-cn/git_cache:/home/openvino/git_cache
         - /home/opencv-cn/ci_cache/opencv:/home/openvino/.ccache
