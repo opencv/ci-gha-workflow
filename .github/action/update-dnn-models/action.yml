@@ -1,0 +1,65 @@
+name: Update DNN models
+description: Update OpenCV extra DNN models cache
+
+inputs:
+  dnn-models:
+    required: true
+  target-branch-name:
+    required: true
+  opencv-extra-path:
+    required: false
+    default: ${{ github.workspace }}/opencv_extra
+  new-dnn-models-path:
+    required: false
+    default: ${{ github.workspace }}/new-dnn-models
+
+runs:
+  using: composite
+  steps:
+    - name: Update DNN models
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        DOWNLOAD_MODELS_FILE='download_models.py'
+        DNN_MODELS='${{ inputs.dnn-models }}'
+        TARGET_BRANCH_NAME='${{ inputs.target-branch-name }}'
+        OPENCV_EXTRA_PATH='${{ inputs.opencv-extra-path }}'
+        NEW_DNN_MODELS_PATH='${{ inputs.new-dnn-models-path }}'
+
+        HASH_FILE="$DNN_MODELS/dnn/latest-hash-${TARGET_BRANCH_NAME}.txt"
+        DOWNLOAD_MODELS_SRC="$OPENCV_EXTRA_PATH/testdata/dnn/$DOWNLOAD_MODELS_FILE"
+
+        LATEST_SAVED_HASH="$(cat "$HASH_FILE" 2>/dev/null || true)"
+        LATEST_HASH="$(sha256sum "$DOWNLOAD_MODELS_SRC" | awk '{print $1}')"
+
+        echo "DNN models path: $DNN_MODELS"
+        echo "OpenCV extra path: $OPENCV_EXTRA_PATH"
+        echo "Hash file: $HASH_FILE"
+        echo "Saved hash: ${LATEST_SAVED_HASH:-<missing>}"
+        echo "Current hash: $LATEST_HASH"
+
+        if [[ -n "$LATEST_SAVED_HASH" && "$LATEST_HASH" == "$LATEST_SAVED_HASH" ]]; then
+          echo "DNN models are up to date"
+          echo "OPENCV_DNN_TEST_DATA_PATH=$DNN_MODELS" >> "$GITHUB_ENV"
+        else
+          echo "Updating DNN models list"
+
+          OPENCV_DNN_TEST_DATA_PATH="$NEW_DNN_MODELS_PATH"
+          echo "OPENCV_DNN_TEST_DATA_PATH=$OPENCV_DNN_TEST_DATA_PATH" >> "$GITHUB_ENV"
+
+          mkdir -p "$OPENCV_DNN_TEST_DATA_PATH/dnn"
+
+          rsync -a \
+            --exclude="$DOWNLOAD_MODELS_FILE" \
+            "$DNN_MODELS/" \
+            "$OPENCV_DNN_TEST_DATA_PATH/"
+
+          cp "$DOWNLOAD_MODELS_SRC" "$OPENCV_DNN_TEST_DATA_PATH/dnn/"
+
+          cd "$OPENCV_DNN_TEST_DATA_PATH/dnn"
+          python3 "$DOWNLOAD_MODELS_FILE"
+
+          echo "$LATEST_HASH" > "latest-hash-${TARGET_BRANCH_NAME}.txt"
+          echo "Saved new hash to latest-hash-${TARGET_BRANCH_NAME}.txt"
+        fi
