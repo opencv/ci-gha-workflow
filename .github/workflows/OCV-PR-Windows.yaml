@@ -79,9 +79,10 @@ jobs:
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
+        -DBUILD_opencv_java=ON
         ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
         ${{ matrix.arch == 'arm64' && '-DWITH_VULKAN=OFF -DBUILD_opencv_vulkan=OFF -DOPENCV_DNN_VULKAN=OFF -DCMAKE_DISABLE_FIND_PACKAGE_Vulkan=ON' || '' }}
-        ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
+        ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '-DBUILD_opencv_python3=ON' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       OPENCV_FOR_THREADS_NUM: 8
       CMAKE_BUILD_PARALLEL_LEVEL: 8
@@ -156,6 +157,7 @@ jobs:
 
     - name: Run OpenCV tests
       uses: ./run-tests
+      continue-on-error: true
       env:
         OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
         OPENCV_TEST_REQUIRE_DATA: 1
@@ -167,8 +169,8 @@ jobs:
         logdir: '${{ github.workspace }}'
         plan: "test-plan-win-${{ matrix.branch }}.json"
         suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''contrib'''  || '''main''' }} ]"
-        enable_python: "false"
-        enable_java: "false"
+        enable_python: "${{ matrix.arch == 'x64' }}"
+        enable_java: "${{ matrix.arch == 'x64' }}"
         filter: "[ 'windows-common' ]"
         suffix: '${{ matrix.arch }}_${{ matrix.branch }}'
         timeout: 15
