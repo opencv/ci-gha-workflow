@@ -43,9 +43,6 @@ jobs:
     - name: Brief system information
       timeout-minutes: 60
       run: bash ${{ env.GIT_CACHE_DOCKER }}/print_system_information.sh
-    - name: Define proper HOME path
-      timeout-minutes: 60
-      run: echo "HOME=/home/openvino" >> $GITHUB_ENV
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
