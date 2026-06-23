@@ -319,6 +319,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_xstereo --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy:cvv
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cvv --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Performance:3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}

@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
+  EXTRA_CMAKE_OPTIONS: '-DWITH_QT=ON -DWITH_GTK=OFF -DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON'
   PR_AUTHOR: ${{ github.event.pull_request.user.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -315,6 +315,10 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_xstereo --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
+    - name: Accuracy:cvv
+      timeout-minutes: 60
+      if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
+      run: cd $HOME/build && xvfb-run -a bin/opencv_test_cvv --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Performance:3d
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv-contrib.outcome == 'success' }}
