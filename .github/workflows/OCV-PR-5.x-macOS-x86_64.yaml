@@ -84,7 +84,6 @@ jobs:
       uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@dnn
       timeout-minutes: 60
       with:
-        dnn-models: ${{ env.DNN_MODELS }}
         target-branch-name: ${{ env.TARGET_BRANCH_NAME }}
 
     - name: Configure OpenCV

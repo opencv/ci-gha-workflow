@@ -14,7 +14,6 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}
       run: |
-        DNN_MODELS='${{ inputs.dnn-models }}'
         TARGET_BRANCH_NAME='${{ inputs.target-branch-name }}'
         if [[ -z "$DNN_MODELS" ]]; then
            DNN_MODELS="${{ github.workspace }}/opencv_extra/testdata"
