@@ -15,9 +15,6 @@ runs:
       working-directory: ${{ github.workspace }}
       run: |
         TARGET_BRANCH_NAME='${{ inputs.target-branch-name }}'
-        if [[ -z "$DNN_MODELS" ]]; then
-           DNN_MODELS="${{ github.workspace }}/opencv_extra/testdata"
-        fi
         LATEST_SAVED_HASH=$(cat $DNN_MODELS/dnn/latest-hash-${TARGET_BRANCH_NAME}.txt)
         LATEST_HASH=$(sha256sum opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE | awk '{print $1}')
 
