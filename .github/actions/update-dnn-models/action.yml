@@ -1,0 +1,49 @@
+name: Update DNN models
+description: Update OpenCV extra DNN models cache
+
+inputs:
+  dnn-models:
+    required: false
+    default: ""
+  target-branch-name:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Extra DNN models update
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        DOWNLOAD_MODELS_FILE='download_models.py'
+        TARGET_BRANCH_NAME='${{ inputs.target-branch-name }}'
+
+        INPUT_DNN_MODELS='${{ inputs.dnn-models }}'
+        DNN_MODELS="${INPUT_DNN_MODELS:-${DNN_MODELS:-}}"
+        : "${DNN_MODELS:?DNN_MODELS is not set}"
+
+        if [[ -f "${{ github.workspace }}/opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE" ]]; then
+          OPENCV_EXTRA_DNN="${{ github.workspace }}/opencv_extra/testdata/dnn"
+        elif [[ -f "$HOME/opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE" ]]; then
+          OPENCV_EXTRA_DNN="$HOME/opencv_extra/testdata/dnn"
+        else
+          echo "Cannot find opencv_extra/testdata/dnn/$DOWNLOAD_MODELS_FILE"
+          exit 1
+        fi
+
+        LATEST_SAVED_HASH=$(cat "$DNN_MODELS/dnn/latest-hash-${TARGET_BRANCH_NAME}.txt")
+        LATEST_HASH=$(sha256sum "$OPENCV_EXTRA_DNN/$DOWNLOAD_MODELS_FILE" | awk '{print $1}')
+
+        if [[ "$LATEST_HASH" == "$LATEST_SAVED_HASH" ]]; then
+          echo "DNN models are up to date"
+          echo "OPENCV_DNN_TEST_DATA_PATH=$DNN_MODELS" >> "$GITHUB_ENV"
+        else
+          echo "Updating DNN models list"
+          OPENCV_DNN_TEST_DATA_PATH="${RUNNER_TEMP:-${{ github.workspace }}}/new-dnn-models"
+          echo "OPENCV_DNN_TEST_DATA_PATH=$OPENCV_DNN_TEST_DATA_PATH" >> "$GITHUB_ENV"
+
+          mkdir -p "$OPENCV_DNN_TEST_DATA_PATH"
+          rsync -a --exclude="$DOWNLOAD_MODELS_FILE" "$DNN_MODELS/" "$OPENCV_DNN_TEST_DATA_PATH/"
+          cp "$OPENCV_EXTRA_DNN/$DOWNLOAD_MODELS_FILE" "$OPENCV_DNN_TEST_DATA_PATH/dnn/"
+          cd "$OPENCV_DNN_TEST_DATA_PATH/dnn" && python3 download_models.py
+        fi
