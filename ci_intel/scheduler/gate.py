@@ -29,6 +29,7 @@ import argparse
 import os
 import sys
 import time
+from datetime import datetime, timezone
 
 from ci_intel.scheduler.score import compute_score
 from ci_intel.store.ndjson_store import NdjsonStore
@@ -91,9 +92,28 @@ def cmd_enter(args, history, queue, now_fn=time.time, sleep_fn=time.sleep):
 
 
 def cmd_release(args, history, queue, **_):
-    """Remove this (run, platform) from the queue, freeing its slot. Always exits 0."""
+    """
+    Free this (run, platform) slot and — when --conclusion is given — record the
+    run's outcome to history. This is the automated, zero-infra update path: every
+    gated platform run appends one fact here at completion, so the store stays
+    fresh with no separate ingest workflow. Always exits 0.
+    """
     queue.release(args.run_id, group=args.platform)
     print(f"[gate] released slot for run {args.run_id} pool={args.platform}")
+
+    if getattr(args, "conclusion", None):
+        fact = {
+            "run_id": args.run_id,
+            "branch": args.branch or "",
+            "platform": args.platform,
+            "conclusion": args.conclusion,
+            "error_signature": None,   # classification is a later enhancement
+            "category": None,
+            "duration_sec": args.duration,
+            "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+        history.append_many([fact])
+        print(f"[gate] recorded outcome: {args.platform} = {args.conclusion}")
     return 0
 
 
@@ -111,9 +131,13 @@ def build_parser():
     enter.add_argument("--poll-interval", type=int, default=DEFAULT_POLL_INTERVAL)
     enter.set_defaults(func=cmd_enter)
 
-    release = sub.add_parser("release", help="free this (run, platform) slot")
+    release = sub.add_parser("release", help="free this (run, platform) slot; optionally record outcome")
     release.add_argument("--run-id", type=int, required=True)
     release.add_argument("--platform", required=True)
+    release.add_argument("--branch", default=None, help="head_branch — identity key for the recorded fact")
+    release.add_argument("--conclusion", default=None,
+                         help="success|failure|cancelled — records a history fact when set")
+    release.add_argument("--duration", type=int, default=None, help="platform duration in seconds (optional)")
     release.set_defaults(func=cmd_release)
 
     return p

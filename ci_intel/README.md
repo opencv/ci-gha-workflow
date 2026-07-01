@@ -64,12 +64,20 @@ priority-gate/action.yml                             # the composite action work
 The runtime path uses only the Python standard library plus `git` — no external
 packages, no `pip install`.
 
-## Seed
+## Seed + automated updates
 
 `seed/runs.ndjson` is a committed 90-day, per-platform baseline generated from opencv's
-`PR:5.x` run history. The seed-generation and live-ingest tooling ships in the separate
-data-pipeline PR; this PR contains only what the CI executes at runtime, plus the seed
-data itself.
+`PR:5.x` run history, so scoring works on day one.
+
+The store then **keeps itself fresh automatically** — no separate ingest workflow. Every
+gated platform run ends in its `release-priority-slot` job, which (besides freeing the
+slot) records one fact `{run_id, branch, platform, conclusion, created_at}` to the
+history via `gate release --conclusion`. So `failed_on_prev_run`, `branch_stability`, and
+`flake` inputs stay current on their own; the seed simply ages out of the 90-day window.
+
+Deferred to a later data-pipeline PR (not required for this to work): failure
+*classification* (error signatures / categories, which sharpen the flake factor) and
+precise per-platform durations, plus the offline seed-generation tooling.
 
 ## Activation (maintainer)
 

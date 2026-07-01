@@ -199,4 +199,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.CI_INTEL_PAT || github.token }}
           CI_INTEL_REPO: opencv/ci-gha-workflow
-        run: python3 -m ci_intel.scheduler.gate release --run-id "${{ github.run_id }}" --platform "Ubuntu2004-x64-CUDA"
+        run: |
+          concl=success
+          for r in "${{ needs.BuildAndTest.result }}"; do
+            case "$r" in
+              failure) concl=failure ;;
+              cancelled) [ "$concl" = failure ] || concl=cancelled ;;
+            esac
+          done
+          python3 -m ci_intel.scheduler.gate release \
+            --run-id "${{ github.run_id }}" --platform "Ubuntu2004-x64-CUDA" \
+            --branch "${{ github.head_ref }}" --conclusion "$concl"
