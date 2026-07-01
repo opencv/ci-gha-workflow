@@ -25,6 +25,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "Linux-Apline"
+          max-concurrent: "1"   # set to this pool's runner count
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_INTEL_PAT || github.token }}
+
 
   branch_eval:
     runs-on: ubuntu-24.04
@@ -44,6 +60,7 @@ jobs:
     runs-on: opencv-cn-lin-x86-64
     needs:
       - branch_eval
+      - priority-gate
     strategy:
       fail-fast: false
       matrix:
@@ -127,3 +144,19 @@ jobs:
       run: |
         echo "::error Warnings have been found!"
         exit 1
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [Alpine]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_INTEL_PAT || github.token }}
+          CI_INTEL_REPO: opencv/ci-gha-workflow
+        run: python3 -m ci_intel.scheduler.gate release --run-id "${{ github.run_id }}" --platform "Linux-Apline"

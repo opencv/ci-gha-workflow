@@ -1,0 +1,47 @@
+name: priority-gate
+description: "Hold this platform's run until the priority scheduler releases it (score-ordered, per-pool, deadlock-safe, fail-open)."
+
+# Used as the FIRST job of a gated reusable workflow; the heavy jobs `needs:` it.
+# It runs on a cheap ubuntu runner and blocks there until it is this run's turn
+# in its platform pool, so the scarce self-hosted runner is never held while waiting.
+#
+# IMPORTANT: the calling job must first checkout opencv/ci-gha-workflow (so ci_intel/
+# is present), because when opencv/opencv calls these as reusable workflows the default
+# checkout is opencv/opencv. See the gated workflows for the exact pattern.
+
+inputs:
+  platform:
+    description: "opencv platform name — the pool AND the scoring key (e.g. 'Windows', 'macOS-ARM64')"
+    required: true
+  max-concurrent:
+    description: "How many runs may be active at once in this pool (set to the pool's runner count)"
+    default: "1"
+  store-repo:
+    description: "Repo whose ci-intel-data branch holds the queue + history (default: this repo)"
+    default: ""
+  token:
+    description: "Token with contents:write on the store repo (default: GITHUB_TOKEN)"
+    default: ""
+  timeout:
+    description: "Seconds to wait before failing open and releasing anyway"
+    default: "1800"
+  poll-interval:
+    description: "Seconds between queue checks"
+    default: "30"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Wait for priority release
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token != '' && inputs.token || github.token }}
+        CI_INTEL_REPO: ${{ inputs.store-repo != '' && inputs.store-repo || github.repository }}
+      run: |
+        python3 -m ci_intel.scheduler.gate enter \
+          --run-id "${{ github.run_id }}" \
+          --platform "${{ inputs.platform }}" \
+          --branch "${{ github.head_ref }}" \
+          --max-concurrent "${{ inputs.max-concurrent }}" \
+          --timeout "${{ inputs.timeout }}" \
+          --poll-interval "${{ inputs.poll-interval }}"

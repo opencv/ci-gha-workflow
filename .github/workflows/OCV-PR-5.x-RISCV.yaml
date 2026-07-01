@@ -30,7 +30,24 @@ env:
   GIT_COMMITTER_EMAIL: 'noemail'
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "Linux-RISC-V-Clang"
+          max-concurrent: "1"   # set to this pool's runner count
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_INTEL_PAT || github.token }}
+
   BuildAndTest:
+    needs: priority-gate
     runs-on: opencv-ru-lin-riscv
     defaults:
       run:
@@ -146,6 +163,7 @@ jobs:
           --gtest_filter=*
 
   BuildContrib:
+    needs: priority-gate
     runs-on: opencv-ru-lin-riscv
     defaults:
       run:
@@ -230,3 +248,19 @@ jobs:
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [BuildAndTest, BuildContrib]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_INTEL_PAT || github.token }}
+          CI_INTEL_REPO: opencv/ci-gha-workflow
+        run: python3 -m ci_intel.scheduler.gate release --run-id "${{ github.run_id }}" --platform "Linux-RISC-V-Clang"
