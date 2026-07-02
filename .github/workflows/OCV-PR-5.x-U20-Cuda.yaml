@@ -42,7 +42,8 @@ jobs:
         uses: ./priority-gate
         with:
           platform: "Ubuntu2004-x64-CUDA"
-          max-concurrent: "1"   # set to this pool's runner count
+          pool: "opencv-linux-cuda"
+          max-concurrent: "3"   # opencv-linux-cuda: 3 GPU runners / 1 job (subset of lin-x86-64)
           store-repo: opencv/ci-gha-workflow
           token: ${{ secrets.CI_INTEL_PAT || github.token }}
 
@@ -208,5 +209,5 @@ jobs:
             esac
           done
           python3 -m ci_intel.scheduler.gate release \
-            --run-id "${{ github.run_id }}" --platform "Ubuntu2004-x64-CUDA" \
+            --run-id "${{ github.run_id }}" --platform "Ubuntu2004-x64-CUDA" --pool "opencv-linux-cuda" \
             --branch "${{ github.head_ref }}" --conclusion "$concl"

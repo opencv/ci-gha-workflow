@@ -37,7 +37,8 @@ jobs:
         uses: ./priority-gate
         with:
           platform: "docs"
-          max-concurrent: "20"   # set to this pool's runner count
+          pool: "docs"
+          max-concurrent: "20"   # docs: GitHub-hosted ubuntu-22.04 — no scarcity
           store-repo: opencv/ci-gha-workflow
           token: ${{ secrets.CI_INTEL_PAT || github.token }}
 
@@ -230,5 +231,5 @@ jobs:
             esac
           done
           python3 -m ci_intel.scheduler.gate release \
-            --run-id "${{ github.run_id }}" --platform "docs" \
+            --run-id "${{ github.run_id }}" --platform "docs" --pool "docs" \
             --branch "${{ github.head_ref }}" --conclusion "$concl"

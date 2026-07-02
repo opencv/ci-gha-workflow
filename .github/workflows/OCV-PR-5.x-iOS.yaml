@@ -34,7 +34,8 @@ jobs:
         uses: ./priority-gate
         with:
           platform: "iOS"
-          max-concurrent: "1"   # set to this pool's runner count
+          pool: "opencv-cn-mac-x86-64"
+          max-concurrent: "1"   # opencv-cn-mac-x86-64: 2 runners, shared with macOS-x64
           store-repo: opencv/ci-gha-workflow
           token: ${{ secrets.CI_INTEL_PAT || github.token }}
 
@@ -107,5 +108,5 @@ jobs:
             esac
           done
           python3 -m ci_intel.scheduler.gate release \
-            --run-id "${{ github.run_id }}" --platform "iOS" \
+            --run-id "${{ github.run_id }}" --platform "iOS" --pool "opencv-cn-mac-x86-64" \
             --branch "${{ github.head_ref }}" --conclusion "$concl"

@@ -37,7 +37,8 @@ jobs:
         uses: ./priority-gate
         with:
           platform: "Linux-no-HAL"
-          max-concurrent: "1"   # set to this pool's runner count
+          pool: "opencv-cn-lin-x86-64"
+          max-concurrent: "4"   # opencv-cn-lin-x86-64: 4 runners / 1 job
           store-repo: opencv/ci-gha-workflow
           token: ${{ secrets.CI_INTEL_PAT || github.token }}
 
@@ -178,5 +179,5 @@ jobs:
             esac
           done
           python3 -m ci_intel.scheduler.gate release \
-            --run-id "${{ github.run_id }}" --platform "Linux-no-HAL" \
+            --run-id "${{ github.run_id }}" --platform "Linux-no-HAL" --pool "opencv-cn-lin-x86-64" \
             --branch "${{ github.head_ref }}" --conclusion "$concl"

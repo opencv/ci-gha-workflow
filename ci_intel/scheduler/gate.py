@@ -61,32 +61,36 @@ def _stores(now_fn=time.time):
 
 def cmd_enter(args, history, queue, now_fn=time.time, sleep_fn=time.sleep):
     """Score this run, enroll it, and block until released. Always exits 0."""
-    # The platform is BOTH the queue partition (pool) and the scoring key.
+    # platform = scoring key (per-platform history: fail rate, duration, flake).
+    # pool     = queue partition = the RUNNER LABEL, so platforms that share the
+    #            same self-hosted runners contend in ONE queue (correct capacity).
+    #            Defaults to platform when --pool is omitted.
     platform = args.platform
+    pool = getattr(args, "pool", None) or platform
     branch = args.branch or ""
     job = {"branch": branch, "platform": platform}
     score = compute_score(job, history, DEFAULT_WEIGHTS)
-    print(f"[gate] run {args.run_id} platform={platform!r} branch={branch!r} score={score:.3f}")
+    print(f"[gate] run {args.run_id} platform={platform!r} pool={pool!r} branch={branch!r} score={score:.3f}")
 
-    queue.enter(args.run_id, platform, None, score, now_fn(), group=platform)
+    queue.enter(args.run_id, platform, None, score, now_fn(), group=pool)
 
     start = now_fn()
     while True:
-        if queue.try_claim(args.run_id, args.max_concurrent, STALE_TTL, now_fn(), group=platform):
+        if queue.try_claim(args.run_id, args.max_concurrent, STALE_TTL, now_fn(), group=pool):
             waited = int(now_fn() - start)
-            print(f"[gate] RELEASED run {args.run_id} pool={platform} after {waited}s (score={score:.3f})")
+            print(f"[gate] RELEASED run {args.run_id} pool={pool} after {waited}s (score={score:.3f})")
             return 0
 
         elapsed = now_fn() - start
         if elapsed >= args.timeout:
-            print(f"[gate] TIMEOUT after {int(elapsed)}s — failing open, releasing run {args.run_id} pool={platform}")
-            queue.force_claim(args.run_id, now_fn(), group=platform)
+            print(f"[gate] TIMEOUT after {int(elapsed)}s — failing open, releasing run {args.run_id} pool={pool}")
+            queue.force_claim(args.run_id, now_fn(), group=pool)
             return 0
 
         waiting = [e for e in queue.snapshot()
-                   if e["state"] == "waiting" and e.get("group") == platform]
+                   if e["state"] == "waiting" and e.get("group") == pool]
         ahead = sum(1 for e in waiting if (-e["score"], e["run_id"]) < (-score, args.run_id))
-        print(f"[gate] run {args.run_id} waiting in pool {platform} — "
+        print(f"[gate] run {args.run_id} waiting in pool {pool} — "
               f"{ahead} higher-priority run(s) ahead; re-check in {args.poll_interval}s")
         sleep_fn(args.poll_interval)
 
@@ -98,8 +102,9 @@ def cmd_release(args, history, queue, **_):
     gated platform run appends one fact here at completion, so the store stays
     fresh with no separate ingest workflow. Always exits 0.
     """
-    queue.release(args.run_id, group=args.platform)
-    print(f"[gate] released slot for run {args.run_id} pool={args.platform}")
+    pool = getattr(args, "pool", None) or args.platform
+    queue.release(args.run_id, group=pool)
+    print(f"[gate] released slot for run {args.run_id} pool={pool}")
 
     if getattr(args, "conclusion", None):
         fact = {
@@ -124,7 +129,10 @@ def build_parser():
     enter = sub.add_parser("enter", help="enroll and wait for release")
     enter.add_argument("--run-id", type=int, required=True)
     enter.add_argument("--platform", required=True,
-                       help="opencv platform name (e.g. 'Windows', 'macOS-ARM64') — pool + scoring key")
+                       help="opencv platform name (e.g. 'Windows', 'macOS-ARM64') — the scoring key")
+    enter.add_argument("--pool", default=None,
+                       help="runner-label queue partition (e.g. 'opencv-cn-lin-x86-64'). "
+                            "Platforms sharing runners share a pool. Defaults to --platform.")
     enter.add_argument("--branch", default=None, help="head_branch (PR source branch) — identity key")
     enter.add_argument("--max-concurrent", type=int, default=DEFAULT_MAX_CONCURRENT)
     enter.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
@@ -134,6 +142,7 @@ def build_parser():
     release = sub.add_parser("release", help="free this (run, platform) slot; optionally record outcome")
     release.add_argument("--run-id", type=int, required=True)
     release.add_argument("--platform", required=True)
+    release.add_argument("--pool", default=None, help="runner-label queue partition (defaults to --platform)")
     release.add_argument("--branch", default=None, help="head_branch — identity key for the recorded fact")
     release.add_argument("--conclusion", default=None,
                          help="success|failure|cancelled — records a history fact when set")

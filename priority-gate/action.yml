@@ -11,10 +11,13 @@ description: "Hold this platform's run until the priority scheduler releases it 
 
 inputs:
   platform:
-    description: "opencv platform name — the pool AND the scoring key (e.g. 'Windows', 'macOS-ARM64')"
+    description: "opencv platform name — the scoring key (e.g. 'Windows', 'macOS-ARM64')"
     required: true
+  pool:
+    description: "runner-label queue partition (e.g. 'opencv-cn-lin-x86-64'). Platforms sharing runners MUST share the same pool + max-concurrent. Defaults to platform."
+    default: ""
   max-concurrent:
-    description: "How many runs may be active at once in this pool (set to the pool's runner count)"
+    description: "Max runs active at once in this pool = floor(pool runners / jobs-per-run)"
     default: "1"
   store-repo:
     description: "Repo whose ci-intel-data branch holds the queue + history (default: this repo)"
@@ -41,6 +44,7 @@ runs:
         python3 -m ci_intel.scheduler.gate enter \
           --run-id "${{ github.run_id }}" \
           --platform "${{ inputs.platform }}" \
+          --pool "${{ inputs.pool }}" \
           --branch "${{ github.head_ref }}" \
           --max-concurrent "${{ inputs.max-concurrent }}" \
           --timeout "${{ inputs.timeout }}" \

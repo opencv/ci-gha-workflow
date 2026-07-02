@@ -39,7 +39,8 @@ jobs:
         uses: ./priority-gate
         with:
           platform: "Android"
-          max-concurrent: "1"   # set to this pool's runner count
+          pool: "opencv-cn-lin-x86-64-android"
+          max-concurrent: "1"   # opencv-cn-lin-x86-64-android: 1 runner
           store-repo: opencv/ci-gha-workflow
           token: ${{ secrets.CI_INTEL_PAT || github.token }}
 
@@ -168,5 +169,5 @@ jobs:
             esac
           done
           python3 -m ci_intel.scheduler.gate release \
-            --run-id "${{ github.run_id }}" --platform "Android" \
+            --run-id "${{ github.run_id }}" --platform "Android" --pool "opencv-cn-lin-x86-64-android" \
             --branch "${{ github.head_ref }}" --conclusion "$concl"
