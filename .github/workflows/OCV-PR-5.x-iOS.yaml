@@ -22,7 +22,25 @@ env:
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "iOS"
+          pool: "opencv-cn-mac-x86-64"
+          max-concurrent: "1"   # opencv-cn-mac-x86-64: 2 runners, shared with macOS-x64
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+
   Build:
+    needs: priority-gate
     runs-on: opencv-cn-mac-x86-64
     steps:
       - name: Setup environment
@@ -66,3 +84,31 @@ jobs:
         with:
           name: OpenCViOSFramework
           path: ${{ github.workspace }}/ios/opencv-5.x-ios-framework.zip
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [Build]
+    if: ${{ always() }}
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          INPUT_TOKEN: ${{ secrets.CI_PRIORITY_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
+          CI_PRIORITY_REPO: opencv/ci-gha-workflow
+        run: |
+          export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
+          concl=success
+          for r in "${{ needs.Build.result }}"; do
+            case "$r" in
+              failure) concl=failure ;;
+              cancelled) [ "$concl" = failure ] || concl=cancelled ;;
+            esac
+          done
+          python3 -m ci_priority.scheduler.gate release \
+            --run-id "${{ github.run_id }}" --platform "iOS" --pool "opencv-cn-mac-x86-64" \
+            --branch "${{ github.head_ref }}" --conclusion "$concl"

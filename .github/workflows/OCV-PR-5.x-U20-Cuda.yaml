@@ -30,7 +30,25 @@ env:
   GTEST_FILTER_STRING: '-Test_Model.TextRecognition/0:Test_Model.TextRecognition/1:Test_Model.TextRecognitionWithCTCPrefixBeamSearch/0:Test_Model.TextRecognitionWithCTCPrefixBeamSearch/1:Test_ONNX_layers.LSTM_Activations/0:Test_ONNX_nets.Resnet34_kinetics/1:Test_TensorFlow_layers.Convolution3D/1:Test_TensorFlow_layers.concat_3d/1'
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "Ubuntu2004-x64-CUDA"
+          pool: "opencv-linux-cuda"
+          max-concurrent: "3"   # opencv-linux-cuda: 3 GPU runners / 1 job (subset of lin-x86-64)
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+
   BuildAndTest:
+    needs: priority-gate
     runs-on: opencv-linux-cuda
     defaults:
       run:
@@ -167,3 +185,31 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/python/test/test_cuda.py --repo ${{ env.OPENCV_DOCKER_WORKDIR }} -v
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [BuildAndTest]
+    if: ${{ always() }}
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          INPUT_TOKEN: ${{ secrets.CI_PRIORITY_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
+          CI_PRIORITY_REPO: opencv/ci-gha-workflow
+        run: |
+          export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
+          concl=success
+          for r in "${{ needs.BuildAndTest.result }}"; do
+            case "$r" in
+              failure) concl=failure ;;
+              cancelled) [ "$concl" = failure ] || concl=cancelled ;;
+            esac
+          done
+          python3 -m ci_priority.scheduler.gate release \
+            --run-id "${{ github.run_id }}" --platform "Ubuntu2004-x64-CUDA" --pool "opencv-linux-cuda" \
+            --branch "${{ github.head_ref }}" --conclusion "$concl"

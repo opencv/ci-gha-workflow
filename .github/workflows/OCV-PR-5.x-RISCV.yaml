@@ -30,7 +30,25 @@ env:
   GIT_COMMITTER_EMAIL: 'noemail'
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "Linux-RISC-V-Clang"
+          pool: "opencv-ru-lin-riscv"
+          max-concurrent: "1"   # opencv-ru-lin-riscv: 3 runners / 2 jobs
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+
   BuildAndTest:
+    needs: priority-gate
     runs-on: opencv-ru-lin-riscv
     defaults:
       run:
@@ -146,6 +164,7 @@ jobs:
           --gtest_filter=*
 
   BuildContrib:
+    needs: priority-gate
     runs-on: opencv-ru-lin-riscv
     defaults:
       run:
@@ -230,3 +249,31 @@ jobs:
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [BuildAndTest, BuildContrib]
+    if: ${{ always() }}
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          INPUT_TOKEN: ${{ secrets.CI_PRIORITY_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
+          CI_PRIORITY_REPO: opencv/ci-gha-workflow
+        run: |
+          export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
+          concl=success
+          for r in "${{ needs.BuildAndTest.result }}" "${{ needs.BuildContrib.result }}"; do
+            case "$r" in
+              failure) concl=failure ;;
+              cancelled) [ "$concl" = failure ] || concl=cancelled ;;
+            esac
+          done
+          python3 -m ci_priority.scheduler.gate release \
+            --run-id "${{ github.run_id }}" --platform "Linux-RISC-V-Clang" --pool "opencv-ru-lin-riscv" \
+            --branch "${{ github.head_ref }}" --conclusion "$concl"

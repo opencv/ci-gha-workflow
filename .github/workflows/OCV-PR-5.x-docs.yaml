@@ -25,7 +25,25 @@ env:
   JAVA_DOC: /home/ci/opencv-build/doc/doxygen/html/javadoc
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "docs"
+          pool: "docs"
+          max-concurrent: "20"   # docs: GitHub-hosted ubuntu-22.04 — no scarcity
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+
   BuildAndTest:
+    needs: priority-gate
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -189,3 +207,31 @@ jobs:
       run: |
         cd $HOME/build
         cmake --build . --config release --target check_flake8 -- -j$(nproc)
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [BuildAndTest]
+    if: ${{ always() }}
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          INPUT_TOKEN: ${{ secrets.CI_PRIORITY_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
+          CI_PRIORITY_REPO: opencv/ci-gha-workflow
+        run: |
+          export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
+          concl=success
+          for r in "${{ needs.BuildAndTest.result }}"; do
+            case "$r" in
+              failure) concl=failure ;;
+              cancelled) [ "$concl" = failure ] || concl=cancelled ;;
+            esac
+          done
+          python3 -m ci_priority.scheduler.gate release \
+            --run-id "${{ github.run_id }}" --platform "docs" --pool "docs" \
+            --branch "${{ github.head_ref }}" --conclusion "$concl"

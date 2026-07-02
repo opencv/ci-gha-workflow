@@ -26,7 +26,25 @@ env:
   GTEST_FILTER_STRING: '-GOTURN.memory_usage:DaSiamRPN.memory_usage:videoio/videocapture_acceleration.read/yuv420p_libx265_mp4_FFMPEG_*'
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "macOS-ARM64"
+          pool: "opencv-cn-mac-arm64"
+          max-concurrent: "1"   # opencv-cn-mac-arm64: 3 runners / 2 jobs
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+
   BuildAndTest:
+    needs: priority-gate
     runs-on: opencv-cn-mac-arm64
     defaults:
       run:
@@ -283,6 +301,7 @@ jobs:
         path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
+    needs: priority-gate
     runs-on: opencv-cn-mac-arm64
     defaults:
       run:
@@ -345,3 +364,31 @@ jobs:
       timeout-minutes: 60
       run: python3 $GIT_CACHE/warnings-handling.py
       working-directory: ${{ github.workspace }}/build
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [BuildAndTest, BuildContrib]
+    if: ${{ always() }}
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          INPUT_TOKEN: ${{ secrets.CI_PRIORITY_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
+          CI_PRIORITY_REPO: opencv/ci-gha-workflow
+        run: |
+          export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
+          concl=success
+          for r in "${{ needs.BuildAndTest.result }}" "${{ needs.BuildContrib.result }}"; do
+            case "$r" in
+              failure) concl=failure ;;
+              cancelled) [ "$concl" = failure ] || concl=cancelled ;;
+            esac
+          done
+          python3 -m ci_priority.scheduler.gate release \
+            --run-id "${{ github.run_id }}" --platform "macOS-ARM64" --pool "opencv-cn-mac-arm64" \
+            --branch "${{ github.head_ref }}" --conclusion "$concl"

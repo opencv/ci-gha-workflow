@@ -25,6 +25,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "Linux"
+          pool: "opencv-cn-lin-x86-64"
+          max-concurrent: "4"   # opencv-cn-lin-x86-64: 4 runners / 1 job
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+
 
   branch_eval:
     runs-on: ubuntu-24.04
@@ -45,6 +62,7 @@ jobs:
     runs-on: opencv-cn-lin-x86-64
     needs:
       - branch_eval
+      - priority-gate
     strategy:
       # NOTE: Debugging
       # fail-fast: true
@@ -207,3 +225,31 @@ jobs:
       run: |
         echo "::error Warnings have been found!"
         exit 1
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [Ubuntu]
+    if: ${{ always() }}
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          INPUT_TOKEN: ${{ secrets.CI_PRIORITY_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
+          CI_PRIORITY_REPO: opencv/ci-gha-workflow
+        run: |
+          export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
+          concl=success
+          for r in "${{ needs.Ubuntu.result }}"; do
+            case "$r" in
+              failure) concl=failure ;;
+              cancelled) [ "$concl" = failure ] || concl=cancelled ;;
+            esac
+          done
+          python3 -m ci_priority.scheduler.gate release \
+            --run-id "${{ github.run_id }}" --platform "Linux" --pool "opencv-cn-lin-x86-64" \
+            --branch "${{ github.head_ref }}" --conclusion "$concl"

@@ -27,7 +27,25 @@ env:
   OPENCV_GRADLE_VERBOSE_OPTIONS: '--offline -i'
 
 jobs:
+  # --- priority gate: hold this platform's run until the scheduler releases it ---
+  priority-gate:
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Wait for priority release
+        uses: ./priority-gate
+        with:
+          platform: "Android"
+          pool: "opencv-cn-lin-x86-64-android"
+          max-concurrent: "1"   # opencv-cn-lin-x86-64-android: 1 runner
+          store-repo: opencv/ci-gha-workflow
+          token: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+
   BuildAndTestSDK:
+    needs: priority-gate
     runs-on: opencv-cn-lin-x86-64-android
     defaults:
       run:
@@ -127,3 +145,31 @@ jobs:
           path: |
             /home/ci/build/OpenCV4Android.zip
             /home/ci/build/outputs/python-maven-repo.zip
+
+  # --- release this platform's priority slot for the next waiting run ---
+  release-priority-slot:
+    needs: [BuildAndTestSDK]
+    if: ${{ always() }}
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: opencv/ci-gha-workflow
+          ref: main
+      - name: Release priority slot
+        env:
+          INPUT_TOKEN: ${{ secrets.CI_PRIORITY_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
+          CI_PRIORITY_REPO: opencv/ci-gha-workflow
+        run: |
+          export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
+          concl=success
+          for r in "${{ needs.BuildAndTestSDK.result }}"; do
+            case "$r" in
+              failure) concl=failure ;;
+              cancelled) [ "$concl" = failure ] || concl=cancelled ;;
+            esac
+          done
+          python3 -m ci_priority.scheduler.gate release \
+            --run-id "${{ github.run_id }}" --platform "Android" --pool "opencv-cn-lin-x86-64-android" \
+            --branch "${{ github.head_ref }}" --conclusion "$concl"
