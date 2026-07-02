@@ -17,12 +17,12 @@ fails open (releases anyway), so a stuck queue can never block CI indefinitely.
 Two subcommands, both driven entirely by env + flags so the composite action
 can call them with no glue code:
 
-    python -m ci_intel.scheduler.gate enter   --run-id 123 --workflow "OCV PR:5.x ARM64" --pr 42
-    python -m ci_intel.scheduler.gate release --run-id 123
+    python -m ci_priority.scheduler.gate enter   --run-id 123 --workflow "OCV PR:5.x ARM64" --pr 42
+    python -m ci_priority.scheduler.gate release --run-id 123
 
 Env vars:
     GITHUB_TOKEN          token with contents:write on the store repo
-    CI_INTEL_REPO         repo whose ci-intel-data branch holds queue + history
+    CI_PRIORITY_REPO         repo whose ci-priority-data branch holds queue + history
                           (defaults to GITHUB_REPOSITORY, set by Actions)
 """
 import argparse
@@ -31,9 +31,9 @@ import sys
 import time
 from datetime import datetime, timezone
 
-from ci_intel.scheduler.score import compute_score
-from ci_intel.store.ndjson_store import NdjsonStore
-from ci_intel.scheduler.queue_store import QueueStore
+from ci_priority.scheduler.score import compute_score
+from ci_priority.store.ndjson_store import NdjsonStore
+from ci_priority.scheduler.queue_store import QueueStore
 
 # Defaults — overridable per workflow via the composite action inputs.
 DEFAULT_MAX_CONCURRENT = 1     # active runs allowed at once (model the runner pool)
@@ -51,11 +51,11 @@ DEFAULT_WEIGHTS = {
 
 def _stores(now_fn=time.time):
     token = os.environ.get("GITHUB_TOKEN")
-    repo = os.environ.get("CI_INTEL_REPO") or os.environ.get("GITHUB_REPOSITORY")
+    repo = os.environ.get("CI_PRIORITY_REPO") or os.environ.get("GITHUB_REPOSITORY")
     if not token or not repo:
         # Raise (not exit) so main() can fail OPEN — a misconfigured gate must
         # never block the build.
-        raise RuntimeError("GITHUB_TOKEN and CI_INTEL_REPO (or GITHUB_REPOSITORY) must be set")
+        raise RuntimeError("GITHUB_TOKEN and CI_PRIORITY_REPO (or GITHUB_REPOSITORY) must be set")
     return NdjsonStore(repo, token), QueueStore(repo, token)
 
 

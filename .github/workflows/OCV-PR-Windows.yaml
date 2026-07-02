@@ -40,7 +40,7 @@ jobs:
           pool: "opencv-cn-win"
           max-concurrent: "1"   # opencv-cn-win: 3 runners / 2 jobs (x64+x86)
           store-repo: opencv/ci-gha-workflow
-          token: ${{ secrets.CI_INTEL_PAT || github.token }}
+          token: ${{ secrets.CI_PRIORITY_PAT || github.token }}
 
 
   branch_eval:
@@ -209,8 +209,8 @@ jobs:
           ref: main
       - name: Release priority slot
         env:
-          GITHUB_TOKEN: ${{ secrets.CI_INTEL_PAT || github.token }}
-          CI_INTEL_REPO: opencv/ci-gha-workflow
+          GITHUB_TOKEN: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+          CI_PRIORITY_REPO: opencv/ci-gha-workflow
         run: |
           concl=success
           for r in "${{ needs.Windows.result }}"; do
@@ -219,6 +219,6 @@ jobs:
               cancelled) [ "$concl" = failure ] || concl=cancelled ;;
             esac
           done
-          python3 -m ci_intel.scheduler.gate release \
+          python3 -m ci_priority.scheduler.gate release \
             --run-id "${{ github.run_id }}" --platform "Windows" --pool "opencv-cn-win" \
             --branch "${{ github.head_ref }}" --conclusion "$concl"

@@ -1,5 +1,5 @@
 """
-NDJSON-based persistent store backed by a dedicated git branch (ci-intel-data).
+NDJSON-based persistent store backed by a dedicated git branch (ci-priority-data).
 
 Each CI fact is one JSON line appended to data/runs.ndjson on that branch.
 Concurrent writes are handled with a push-retry loop: clone → append → push;
@@ -19,17 +19,17 @@ import tempfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-DATA_BRANCH = "ci-intel-data"
+DATA_BRANCH = "ci-priority-data"
 DATA_FILE = "data/runs.ndjson"
-# Committed dataset shipped in the repo (ci_intel/seed/runs.ndjson). Read as the
+# Committed dataset shipped in the repo (ci_priority/seed/runs.ndjson). Read as the
 # day-one baseline so a freshly-merged repo scores before any live ingest runs.
 SEED_FILE = Path(__file__).resolve().parent.parent / "seed" / "runs.ndjson"
 MAX_RETRIES = 5
 GIT_ENV_BASE = {
-    "GIT_AUTHOR_NAME": "ci-intel",
-    "GIT_AUTHOR_EMAIL": "ci-intel@noreply.github.com",
-    "GIT_COMMITTER_NAME": "ci-intel",
-    "GIT_COMMITTER_EMAIL": "ci-intel@noreply.github.com",
+    "GIT_AUTHOR_NAME": "ci-priority",
+    "GIT_AUTHOR_EMAIL": "ci-priority@noreply.github.com",
+    "GIT_COMMITTER_NAME": "ci-priority",
+    "GIT_COMMITTER_EMAIL": "ci-priority@noreply.github.com",
     "GIT_TERMINAL_PROMPT": "0",
 }
 
@@ -120,7 +120,7 @@ class NdjsonStore:
         raise RuntimeError(f"append_many: push failed after {MAX_RETRIES} attempts")
 
     def _init_branch(self, first_line, run_id):
-        """Bootstrap the ci-intel-data orphan branch with the first data line."""
+        """Bootstrap the ci-priority-data orphan branch with the first data line."""
         with tempfile.TemporaryDirectory() as d:
             self._git("init", "-b", DATA_BRANCH, cwd=d)
             self._git("remote", "add", "origin", self._remote, cwd=d)
@@ -128,7 +128,7 @@ class NdjsonStore:
             data_path.parent.mkdir(parents=True, exist_ok=True)
             data_path.write_text(first_line, encoding="utf-8")
             self._git("add", DATA_FILE, cwd=d)
-            self._git("commit", "-m", f"init: ci-intel data store (run {run_id})", cwd=d)
+            self._git("commit", "-m", f"init: ci-priority data store (run {run_id})", cwd=d)
             r = self._git("push", "origin", DATA_BRANCH, cwd=d)
             if r.returncode != 0:
                 raise RuntimeError(f"init_branch: push failed: {r.stderr}")
@@ -141,7 +141,7 @@ class NdjsonStore:
     def _load_all_runs(self):
         """
         Return all run facts: the committed seed dataset as a baseline, overlaid
-        with live data from the ci-intel-data branch (a live row supersedes a
+        with live data from the ci-priority-data branch (a live row supersedes a
         seed row with the same run_id).
 
         The seed lets a freshly-merged repo score on day one, before any live
@@ -173,7 +173,7 @@ class NdjsonStore:
         return self._cache
 
     def _load_seed(self):
-        """Load the committed baseline seed (ci_intel/seed/runs.ndjson), if present."""
+        """Load the committed baseline seed (ci_priority/seed/runs.ndjson), if present."""
         if not self._use_seed or not SEED_FILE.exists():
             return []
         runs = []

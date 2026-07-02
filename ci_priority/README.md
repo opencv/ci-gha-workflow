@@ -1,4 +1,4 @@
-# ci_intel — score-driven CI priority dispatch
+# ci_priority — score-driven CI priority dispatch
 
 Orders opencv 5.x PR builds so that, when self-hosted runner pools are contended,
 the most valuable runs go **first** — instead of plain FIFO. Additive and
@@ -15,7 +15,7 @@ self-hosted jobs `needs:` it:
 ```
 PR run ──▶ priority-gate (ubuntu-latest, cheap)
               1. score this (branch, platform) from history
-              2. enrol in a per-pool queue on the ci-intel-data branch
+              2. enrol in a per-pool queue on the ci-priority-data branch
               3. block until: running_in_pool < max-concurrent
                               AND this run is the top-scored waiter
               4. release  (fail-open after a timeout — never blocks a build)
@@ -42,7 +42,7 @@ triggers the priority boost.
 
 ## Storage — zero infrastructure
 
-History and the live queue live as plain files on a dedicated **`ci-intel-data`**
+History and the live queue live as plain files on a dedicated **`ci-priority-data`**
 git branch (`data/runs.ndjson`, `data/queue.json`), updated with a clone→append→push
 retry loop. No database, no external service. The queue is partitioned by pool and
 keyed on `(run_id, platform)` — all platforms of one PR share a `run_id`.
@@ -54,7 +54,7 @@ window on its own.
 ## Layout
 
 ```
-ci_intel/
+ci_priority/
   scheduler/   score.py, gate.py, queue_store.py   # scoring + the gate
   store/       ndjson_store.py                      # git-branch NDJSON store (+ seed)
   seed/        runs.ndjson                           # committed 90-day baseline
@@ -83,7 +83,7 @@ precise per-platform durations, plus the offline seed-generation tooling.
 
 Merging this changes **nothing** on its own — the gate fails open until:
 
-1. A `CI_INTEL_PAT` secret (contents:write on `opencv/ci-gha-workflow`) is added to
+1. A `CI_PRIORITY_PAT` secret (contents:write on `opencv/ci-gha-workflow`) is added to
    `opencv/opencv` and passed to the reusable workflows via `secrets: inherit` in
    `PR-5.x.yaml`.
 2. **`max-concurrent`** in each gated workflow is set to that pool's runner capacity

@@ -5,7 +5,7 @@ description: "Hold this platform's run until the priority scheduler releases it 
 # It runs on a cheap ubuntu runner and blocks there until it is this run's turn
 # in its platform pool, so the scarce self-hosted runner is never held while waiting.
 #
-# IMPORTANT: the calling job must first checkout opencv/ci-gha-workflow (so ci_intel/
+# IMPORTANT: the calling job must first checkout opencv/ci-gha-workflow (so ci_priority/
 # is present), because when opencv/opencv calls these as reusable workflows the default
 # checkout is opencv/opencv. See the gated workflows for the exact pattern.
 
@@ -20,7 +20,7 @@ inputs:
     description: "Max runs active at once in this pool = floor(pool runners / jobs-per-run)"
     default: "1"
   store-repo:
-    description: "Repo whose ci-intel-data branch holds the queue + history (default: this repo)"
+    description: "Repo whose ci-priority-data branch holds the queue + history (default: this repo)"
     default: ""
   token:
     description: "Token with contents:write on the store repo (default: GITHUB_TOKEN)"
@@ -39,9 +39,9 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token != '' && inputs.token || github.token }}
-        CI_INTEL_REPO: ${{ inputs.store-repo != '' && inputs.store-repo || github.repository }}
+        CI_PRIORITY_REPO: ${{ inputs.store-repo != '' && inputs.store-repo || github.repository }}
       run: |
-        python3 -m ci_intel.scheduler.gate enter \
+        python3 -m ci_priority.scheduler.gate enter \
           --run-id "${{ github.run_id }}" \
           --platform "${{ inputs.platform }}" \
           --pool "${{ inputs.pool }}" \

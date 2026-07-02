@@ -1,5 +1,5 @@
 """
-Shared priority queue, stored as a single JSON file on the ci-intel-data branch.
+Shared priority queue, stored as a single JSON file on the ci-priority-data branch.
 
 This is the coordination point for the priority gate: every gated workflow run
 registers one entry here, and the gate releases runs highest-score-first as
@@ -29,14 +29,14 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-DATA_BRANCH = "ci-intel-data"
+DATA_BRANCH = "ci-priority-data"
 QUEUE_FILE = "data/queue.json"
 MAX_RETRIES = 8
 GIT_ENV_BASE = {
-    "GIT_AUTHOR_NAME": "ci-intel",
-    "GIT_AUTHOR_EMAIL": "ci-intel@noreply.github.com",
-    "GIT_COMMITTER_NAME": "ci-intel",
-    "GIT_COMMITTER_EMAIL": "ci-intel@noreply.github.com",
+    "GIT_AUTHOR_NAME": "ci-priority",
+    "GIT_AUTHOR_EMAIL": "ci-priority@noreply.github.com",
+    "GIT_COMMITTER_NAME": "ci-priority",
+    "GIT_COMMITTER_EMAIL": "ci-priority@noreply.github.com",
     "GIT_TERMINAL_PROMPT": "0",
 }
 
