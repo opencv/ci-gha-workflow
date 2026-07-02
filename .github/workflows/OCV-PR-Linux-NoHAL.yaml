@@ -27,7 +27,7 @@ concurrency:
 jobs:
   # --- priority gate: hold this platform's run until the scheduler releases it ---
   priority-gate:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -160,7 +160,7 @@ jobs:
   release-priority-slot:
     needs: [Ubuntu]
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -168,9 +168,11 @@ jobs:
           ref: main
       - name: Release priority slot
         env:
-          GITHUB_TOKEN: ${{ secrets.CI_PRIORITY_PAT || github.token }}
+          INPUT_TOKEN: ${{ secrets.CI_PRIORITY_PAT }}
+          FALLBACK_TOKEN: ${{ github.token }}
           CI_PRIORITY_REPO: opencv/ci-gha-workflow
         run: |
+          export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
           concl=success
           for r in "${{ needs.Ubuntu.result }}"; do
             case "$r" in

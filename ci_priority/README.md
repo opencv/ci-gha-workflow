@@ -79,14 +79,26 @@ Deferred to a later data-pipeline PR (not required for this to work): failure
 *classification* (error signatures / categories, which sharpen the flake factor) and
 precise per-platform durations, plus the offline seed-generation tooling.
 
-## Activation (maintainer)
+## Activation (maintainer) — no code change, no new hardware
 
-Merging this changes **nothing** on its own — the gate fails open until:
+Merging this changes **nothing** on its own (the gate fails open). It is activated purely
+by configuration:
 
-1. A `CI_PRIORITY_PAT` secret (contents:write on `opencv/ci-gha-workflow`) is added to
-   `opencv/opencv` and passed to the reusable workflows via `secrets: inherit` in
-   `PR-5.x.yaml`.
-2. **`max-concurrent`** in each gated workflow is set to that pool's runner capacity
-   (÷ heavy jobs per run). It defaults to `1` (safe, but serialising) — set it to real
-   capacity so no runner is left idle; the gate then only reorders the *overflow* beyond
-   capacity, with zero throughput loss.
+1. **Point the gate at a self-hosted runner** — set a repo/org **variable**
+   `PRIORITY_GATE_RUNNER` to a runner label. The gate/release jobs use
+   `runs-on: ${{ vars.PRIORITY_GATE_RUNNER || 'ubuntu-latest' }}`. Variables (unlike
+   secrets) are available to fork PRs, so this works for the fork PRs that dominate opencv.
+   Use a **light** runner (or an existing utility machine) — not a heavy build pool.
+   Unset → stays on `ubuntu-latest` → inert/safe.
+2. **Give that runner a write credential** — set `CI_PRIORITY_TOKEN` (a token with
+   `contents:write` on the store repo) in the **runner's environment**. Fork PRs can't
+   receive GitHub secrets, but they *can* read a runner-local env var. The gate uses it
+   automatically (precedence: input → `CI_PRIORITY_TOKEN` → default token). Without it the
+   gate fails open.
+3. **`max-concurrent`** per pool is already set to `floor(pool runners ÷ jobs-per-run)`
+   from the runner inventory; confirm the counts. Too low idles runners; too high weakens
+   ordering.
+
+(Alternative for trusted/non-fork runs only: a `CI_PRIORITY_PAT` secret + `secrets: inherit`
+in `opencv/opencv`'s `PR-5.x.yaml`. This does **not** cover fork PRs — GitHub withholds
+secrets there — hence the runner-variable + runner-env-token model above.)

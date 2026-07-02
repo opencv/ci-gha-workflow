@@ -38,9 +38,13 @@ runs:
     - name: Wait for priority release
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.token != '' && inputs.token || github.token }}
+        INPUT_TOKEN: ${{ inputs.token }}
+        FALLBACK_TOKEN: ${{ github.token }}
         CI_PRIORITY_REPO: ${{ inputs.store-repo != '' && inputs.store-repo || github.repository }}
       run: |
+        # Token precedence: explicit input -> runner-local CI_PRIORITY_TOKEN (works on
+        # fork PRs when set on a self-hosted runner) -> default token (read-only on forks).
+        export GITHUB_TOKEN="${INPUT_TOKEN:-${CI_PRIORITY_TOKEN:-$FALLBACK_TOKEN}}"
         python3 -m ci_priority.scheduler.gate enter \
           --run-id "${{ github.run_id }}" \
           --platform "${{ inputs.platform }}" \
