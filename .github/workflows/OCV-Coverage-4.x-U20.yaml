@@ -68,7 +68,7 @@ jobs:
       run: git clone --single-branch --branch ${{ env.TARGET_BRANCH_NAME }} --reference ${{ env.GIT_CACHE_DOCKER }}/opencv_extra.git https://github.com/opencv/opencv_extra.git /home/ci/opencv_extra
 
     - name: Extra DNN models update
-      uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@dnn
+      uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@main
       timeout-minutes: 60
       with:
         target-branch-name: ${{ env.TARGET_BRANCH_NAME }}

@@ -109,7 +109,7 @@ jobs:
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_extra does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
     - name: Extra DNN models update
-      uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@dnn
+      uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@main
       timeout-minutes: 60
       with:
         target-branch-name: ${{ env.TARGET_BRANCH_NAME }}

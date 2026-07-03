@@ -111,7 +111,7 @@ jobs:
         fi
 
     - name: Extra DNN models update
-      uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@dnn
+      uses: opencv/ci-gha-workflow/.github/actions/update-dnn-models@main
       timeout-minutes: 60
       with:
         target-branch-name: ${{ env.TARGET_BRANCH_NAME }}
