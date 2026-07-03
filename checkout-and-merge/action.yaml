@@ -9,7 +9,7 @@ inputs:
     description: "Target PR branch in OpenCV repository (4.x, 5.x)"
     default: "4.x"
   author:
-    description: "PR author"
+    description: "PR source repository owner"
   source_branch:
     description: "Source PR branch"
   gitcache:
