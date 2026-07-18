@@ -29,7 +29,7 @@ jobs:
       run: cd ${{ github.workspace }} && rm -rf *
     - name: Clone opencv
       timeout-minutes: 60
-      run: cd ${{ github.workspace }} && git clone --branch ${{ env.BRANCH_NAME }} --reference %GIT_CACHE%\opencv.git git@github.com:opencv/opencv.git
+      run: cd ${{ github.workspace }} && git clone --branch ${{ env.BRANCH_NAME }} git@github.com:opencv/opencv.git
     - name: Cmake OpenCV
       timeout-minutes: 60
       env:
