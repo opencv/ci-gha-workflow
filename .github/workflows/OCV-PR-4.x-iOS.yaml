@@ -59,7 +59,7 @@ jobs:
       - name: Build OpenCV iOS Framework
         timeout-minutes: 120
         run: |
-          cd ${{ github.workspace }} && python3 opencv/platforms/ios/build_framework.py ios
+          cd ${{ github.workspace }} && python3 opencv/platforms/ios/build_framework.py --iphonesimulator_archs=x86_64 ios
       - name: Create Artifact
         timeout-minutes: 10
         run: cd ${{ github.workspace }}/ios && zip -r -9 -y opencv-4.14.0-ios-framework.zip opencv2.framework
