@@ -129,6 +129,11 @@ jobs:
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
+    - name: Remove MinGW from PATH (ARM64 MSVC build)
+      if: ${{ matrix.arch == 'arm64' }}
+      shell: bash
+      run: echo "PATH=$(echo "$PATH" | tr ':' '\n' | grep -v -i '/mingw' | paste -sd ':')" >> "$GITHUB_ENV"
+
     - if: ${{ github.event.repository.name != 'opencv_contrib' }}
       name: Configure and build OpenCV
       uses: ./configure-and-build
