@@ -16,10 +16,6 @@ runs:
   using: "composite"
   steps:
 
-    - if: ${{ runner.os == 'Windows' && contains(inputs.options, 'ARM64') }}
-      shell: bash
-      run: echo "PATH=$(echo "$PATH" | tr ':' '\n' | grep -v -i '/mingw' | paste -sd ':')" >> "$GITHUB_ENV"
-
     - working-directory: ${{ inputs.workdir }}
       shell: bash
       run: |
