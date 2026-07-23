@@ -66,18 +66,19 @@ jobs:
         shell: bash
     env:
       # TEMP (diagnostic, REVERT before merge): switch the parallel backend from
-      # ms-concurrency (PPL) to OpenMP on arm64, to test whether the PPL backend is
-      # the cause of the multithreading failures. Carotene is back to default (ON),
-      # so the ONLY change vs baseline is the threading backend.
-      # VERIFY the banner shows "Parallel framework: openmp" — MSVC/ARM64 OpenMP support
-      # is not guaranteed; if it falls back to ms-concurrency, the result is void.
+      # ms-concurrency (PPL) to TBB on arm64, to test whether swapping the backend
+      # avoids the PPL multithreading race (alternative to the OpenMP swap).
+      # BUILD_TBB=ON builds TBB from source (not pre-installed on the runner).
+      # Carotene is back to default (ON), so the ONLY change vs baseline is the backend.
+      # VERIFY the banner shows "Parallel framework: tbb" — if BUILD_TBB fails on
+      # MSVC/ARM64 and it falls back to ms-concurrency, the result is void.
       CMAKE_OPT: >-
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
         ${{ matrix.arch == 'arm64' && '-DWITH_OPENMP=ON' || '' }}
         -DCMAKE_BUILD_TYPE=Release
-        ${{ matrix.arch == 'arm64' && '-DWITH_OPENMP=ON' || '' }}
+        ${{ matrix.arch == 'arm64' && '-DWITH_TBB=ON -DBUILD_TBB=ON' || '' }}
         ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
         ${{ matrix.arch == 'arm64' && '-DCPU_BASELINE=NEON -DCPU_DISPATCH=NEON -DCMAKE_SYSTEM_PROCESSOR=arm64 -DOPENCV_WORKAROUND_CMAKE_20989=ON' || '' }}
         ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
@@ -194,7 +195,12 @@ jobs:
         generator: '${{ matrix.vs }}'
         options: '-A ${{ matrix.cmake_arch }} ${{ env.CMAKE_OPT }}'
 
-    - name: Configure and build OpenCV with contrib
+    # TEMP (diagnostic, REVERT before merge): skip the contrib build for faster
+    # experiment iteration. The "Run OpenCV tests" step below uses MAIN_BUILD_DIR
+    # ('build', not 'build-contrib') for a non-opencv_contrib PR, so contrib isn't
+    # exercised by the test run anyway.
+    - if: false
+      name: Configure and build OpenCV with contrib
       uses: ./configure-and-build
       with:
         workdir: '${{ github.workspace }}'
@@ -230,7 +236,7 @@ jobs:
       shell: bash
       run: |
         ./build/bin/Release/opencv_test_core.exe --gtest_filter='FPCRProbe.*' 2>&1 | tee fpcr_probe.log || true
-        echo "==== Parallel framework (MUST say 'openmp' or this experiment is void) ===="
+        echo "==== Parallel framework (MUST say 'tbb' or this experiment is void) ===="
         grep -E "Parallel framework" fpcr_probe.log || true
         echo "==== FPCR summary ===="
         grep -E "FPCR (main|worker)|distinct_worker|MATCH_MAIN" fpcr_probe.log || true
