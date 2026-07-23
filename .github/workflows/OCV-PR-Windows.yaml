@@ -72,6 +72,7 @@ jobs:
         ${{ matrix.arch == 'arm64' && '-DWITH_OPENMP=ON' || '' }}
         -DCMAKE_BUILD_TYPE=Release
         ${{ matrix.arch == 'arm64' && '-DWITH_OPENMP=ON' || '' }}
+        ${{ matrix.arch == 'arm64' && '-DCMAKE_ASM_COMPILER=CMAKE_ASM_COMPILER-NOTFOUND' || '' }}
         ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
         ${{ matrix.arch == 'arm64' && '-DCPU_BASELINE=NEON -DCPU_DISPATCH=NEON -DCMAKE_SYSTEM_PROCESSOR=arm64 -DOPENCV_WORKAROUND_CMAKE_20989=ON' || '' }}
         ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
@@ -129,9 +130,6 @@ jobs:
           --cleanup \
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
-
-    - if: ${{ matrix.arch == 'arm64' }}
-      run: echo "PATH=$(echo "$PATH" | tr ':' '\n' | grep -v -i '/mingw' | paste -sd ':')" >> "$GITHUB_ENV"
 
     - if: ${{ github.event.repository.name != 'opencv_contrib' }}
       name: Configure and build OpenCV
