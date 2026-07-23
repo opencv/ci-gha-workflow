@@ -16,13 +16,14 @@ runs:
   using: "composite"
   steps:
 
+    - if: ${{ runner.os == 'Windows' && contains(inputs.options, 'ARM64') }}
+      shell: bash
+      run: echo "PATH=$(echo "$PATH" | tr ':' '\n' | grep -v -i '/mingw' | paste -sd ':')" >> "$GITHUB_ENV"
+
     - working-directory: ${{ inputs.workdir }}
       shell: bash
       run: |
         echo "::group::Configure"
-        if [ "$RUNNER_OS" == "Windows" ] && printf '%s' "${{ inputs.options }}" | grep -qi 'arm64'; then
-          export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v -i '/mingw' | paste -sd ':')"
-        fi
         rm -rf '${{ inputs.builddir }}'
         mkdir -p '${{ inputs.builddir }}'
         cmake \
