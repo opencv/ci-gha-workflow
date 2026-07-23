@@ -65,20 +65,13 @@ jobs:
       run:
         shell: bash
     env:
-      # TEMP (diagnostic, REVERT before merge): switch the parallel backend from
-      # ms-concurrency (PPL) to TBB on arm64, to test whether swapping the backend
-      # avoids the PPL multithreading race (alternative to the OpenMP swap).
-      # BUILD_TBB=ON builds TBB from source (not pre-installed on the runner).
-      # Carotene is back to default (ON), so the ONLY change vs baseline is the backend.
-      # VERIFY the banner shows "Parallel framework: tbb" — if BUILD_TBB fails on
-      # MSVC/ARM64 and it falls back to ms-concurrency, the result is void.
       CMAKE_OPT: >-
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
         ${{ matrix.arch == 'arm64' && '-DWITH_OPENMP=ON' || '' }}
         -DCMAKE_BUILD_TYPE=Release
-        ${{ matrix.arch == 'arm64' && '-DWITH_TBB=ON -DBUILD_TBB=ON' || '' }}
+        ${{ matrix.arch == 'arm64' && '-DWITH_OPENMP=ON' || '' }}
         ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
         ${{ matrix.arch == 'arm64' && '-DCPU_BASELINE=NEON -DCPU_DISPATCH=NEON -DCMAKE_SYSTEM_PROCESSOR=arm64 -DOPENCV_WORKAROUND_CMAKE_20989=ON' || '' }}
         ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
@@ -137,55 +130,6 @@ jobs:
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
-    - name: Remove MinGW from PATH (ARM64 MSVC build)
-      if: ${{ matrix.arch == 'arm64' }}
-      shell: bash
-      run: echo "PATH=$(echo "$PATH" | tr ':' '\n' | grep -v -i '/mingw' | paste -sd ':')" >> "$GITHUB_ENV"
-
-    # TEMP (diagnostic, REVERT before merge): drop an FPCR probe test into core/test
-    # (auto-globbed into opencv_test_core). It reads the ARM64 FP control register on
-    # the main thread vs inside cv::parallel_for_ workers. If they differ, worker
-    # threads are running with a different FP register state than the main thread.
-    - name: (TEMP) Add FPCR probe test
-      if: ${{ matrix.arch == 'arm64' }}
-      shell: bash
-      working-directory: '${{ github.workspace }}'
-      run: |
-        cat > opencv/modules/core/test/test_fpcr_probe.cpp <<'EOF'
-        #include "test_precomp.hpp"
-        #if defined(_M_ARM64)
-        #include <intrin.h>
-        #endif
-        #include <mutex>
-        #include <set>
-        namespace opencv_test { namespace {
-        TEST(FPCRProbe, main_vs_worker)
-        {
-        #if defined(_M_ARM64)
-        #ifndef ARM64_FPCR
-        #define ARM64_FPCR ARM64_SYSREG(3,3,4,4,0)
-        #endif
-        uint64_t fpcr_main = (uint64_t)_ReadStatusReg(ARM64_FPCR);
-        std::mutex mtx; std::set<uint64_t> worker;
-        cv::setNumThreads(4);
-        cv::parallel_for_(cv::Range(0, 512), [&](const cv::Range& r){
-            volatile double s=0; for(int i=r.start;i<r.end;i++) for(int k=0;k<3000;k++) s+=k*0.5;
-            uint64_t f=(uint64_t)_ReadStatusReg(ARM64_FPCR);
-            std::lock_guard<std::mutex> lk(mtx); worker.insert(f); (void)s;
-        }, 512.0);
-        printf("=== FPCR PROBE ===\n");
-        printf("FPCR main   = 0x%016llx\n",(unsigned long long)fpcr_main);
-        for(uint64_t f: worker) printf("FPCR worker = 0x%016llx\n",(unsigned long long)f);
-        printf("distinct_worker_FPCR=%zu MATCH_MAIN=%s\n",worker.size(),
-               (worker.size()==1 && *worker.begin()==fpcr_main)?"yes":"NO_OR_MULTIPLE");
-        #else
-        printf("FPCRProbe: not ARM64\n");
-        #endif
-        }
-        }}
-        EOF
-        echo "wrote probe:"; ls -l opencv/modules/core/test/test_fpcr_probe.cpp
-
     - if: ${{ github.event.repository.name != 'opencv_contrib' }}
       name: Configure and build OpenCV
       uses: ./configure-and-build
@@ -195,12 +139,7 @@ jobs:
         generator: '${{ matrix.vs }}'
         options: '-A ${{ matrix.cmake_arch }} ${{ env.CMAKE_OPT }}'
 
-    # TEMP (diagnostic, REVERT before merge): skip the contrib build for faster
-    # experiment iteration. The "Run OpenCV tests" step below uses MAIN_BUILD_DIR
-    # ('build', not 'build-contrib') for a non-opencv_contrib PR, so contrib isn't
-    # exercised by the test run anyway.
-    - if: false
-      name: Configure and build OpenCV with contrib
+    - name: Configure and build OpenCV with contrib
       uses: ./configure-and-build
       with:
         workdir: '${{ github.workspace }}'
@@ -227,19 +166,6 @@ jobs:
         filter: "[ 'windows-common' ]"
         suffix: '${{ matrix.arch }}_${{ matrix.branch }}'
         timeout: 15
-
-    # TEMP (diagnostic, REVERT before merge): confirm the ACTIVE parallel backend
-    # (must be openmp for this experiment to be valid) + re-run the FPCR probe.
-    - name: (TEMP) Confirm parallel backend + FPCR probe
-      if: ${{ always() && matrix.arch == 'arm64' }}
-      working-directory: '${{ github.workspace }}'
-      shell: bash
-      run: |
-        ./build/bin/Release/opencv_test_core.exe --gtest_filter='FPCRProbe.*' 2>&1 | tee fpcr_probe.log || true
-        echo "==== Parallel framework (MUST say 'tbb' or this experiment is void) ===="
-        grep -E "Parallel framework" fpcr_probe.log || true
-        echo "==== FPCR summary ===="
-        grep -E "FPCR (main|worker)|distinct_worker|MATCH_MAIN" fpcr_probe.log || true
 
     - if: ${{ always() && env.WARNINGS == '1' }}
       name: Warnings check

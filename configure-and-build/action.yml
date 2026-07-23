@@ -20,6 +20,9 @@ runs:
       shell: bash
       run: |
         echo "::group::Configure"
+        if [ "$RUNNER_OS" == "Windows" ] && [ "$RUNNER_ARCH" == "ARM64" ]; then
+          export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v -i '/mingw' | paste -sd ':')"
+        fi
         rm -rf '${{ inputs.builddir }}'
         mkdir -p '${{ inputs.builddir }}'
         cmake \
