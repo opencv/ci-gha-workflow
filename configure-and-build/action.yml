@@ -20,7 +20,7 @@ runs:
       shell: bash
       run: |
         echo "::group::Configure"
-        if [ "$RUNNER_OS" == "Windows" ] && [ "$RUNNER_ARCH" == "ARM64" ]; then
+        if [ "$RUNNER_OS" == "Windows" ] && printf '%s' "${{ inputs.options }}" | grep -qi 'arm64'; then
           export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v -i '/mingw' | paste -sd ':')"
         fi
         rm -rf '${{ inputs.builddir }}'
