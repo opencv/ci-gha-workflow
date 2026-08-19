@@ -42,7 +42,7 @@ jobs:
 
   Ubuntu:
     # runs-on: opencv-ru-lin-riscv
-    runs-on: opencv-cn-lin-x86-64
+    runs-on: opencv-linux-cuda
     needs:
       - branch_eval
     strategy:
@@ -53,9 +53,9 @@ jobs:
       matrix:
         version:
           - '26.04'
-          - '24.04'
-          - '22.04'
-          - '20.04'
+          # - '24.04'
+          # - '22.04'
+          # - '20.04'
           # TODO: enable later
           # - '24.04_asan'
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
@@ -67,26 +67,26 @@ jobs:
             avx2: true
             gphoto2: true
             aravis: true
-          - version: '24.04'
-            image: '24.04:20260515'
-            jpegxl: true
-            avif: true
-            avx2: true
-            gphoto2: true
-            aravis: true
+          # - version: '24.04'
+          #   image: '24.04:20260515'
+          #   jpegxl: true
+          #   avif: true
+          #   avx2: true
+          #   gphoto2: true
+          #   aravis: true
           # TODO: enable later
           # - version: '24.04_asan'
           #   image: '24.04:20250505'
           #   asan: true
           #   jpegxl: true
           #   avif: true
-          - version: '22.04'
-            image: '22.04:20260515'
-            avif: true
-            plugins: true
-          - version: '20.04'
-            image: '20.04:20260515'
-            limited_api: true
+          # - version: '22.04'
+          #   image: '22.04:20260515'
+          #   avif: true
+          #   plugins: true
+          # - version: '20.04'
+          #   image: '20.04:20260515'
+          #   limited_api: true
     defaults:
       run:
         shell: bash
@@ -129,6 +129,7 @@ jobs:
       # NOTE: CN config
       OPENCV_FOR_THREADS_NUM: 8
       CMAKE_BUILD_PARALLEL_LEVEL: 8
+      OPENBLAS_NUM_THREADS: 8
       # NOTE: RU config
       # OPENCV_FOR_THREADS_NUM: 10
       # CMAKE_BUILD_PARALLEL_LEVEL: 20
