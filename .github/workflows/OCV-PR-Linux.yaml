@@ -6,12 +6,11 @@ on:
       - main
     paths:
       - '.github/workflows/OCV-PR-Linux.yaml'
-      # TODO: are following paths necessary?
-      # - 'checkout-and-merge/*'
-      # - 'configure-and-build/*'
-      # - 'run-tests/*'
-      # - 'scripts/runner.py'
-      # - 'scripts/test-plan.json'
+      - 'checkout-and-merge/*'
+      - 'configure-and-build/*'
+      - 'run-tests/*'
+      - 'scripts/runner.py'
+      - 'scripts/test-plan.json'
   workflow_call:
     inputs:
       workflow_branch:
