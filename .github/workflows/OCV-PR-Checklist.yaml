@@ -1,0 +1,149 @@
+name: OCV PR Checklist
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: OCV-PR-Checklist-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-pr-checklist:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Validate PR Readiness Checklist
+        shell: bash
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$PR_BODY" ]; then
+            echo "::error title=Empty PR Description::Pull request description is empty. Please fill in the PR template before submitting."
+            exit 1
+          fi
+
+          CLEAN_BODY=$(printf "%s" "$PR_BODY" | tr -d '\r')
+          CLEAN_BODY=$(printf "%s" "$CLEAN_BODY" | awk '/^```/{f=!f; next} !f')
+          CLEAN_BODY=$(printf "%s" "$CLEAN_BODY" | sed 's/`[^`]*`//g')
+          CLEAN_BODY=$(printf "%s" "$CLEAN_BODY" | sed 's/~~[^~]*~~//g')
+
+          if ! printf "%s" "$CLEAN_BODY" | grep -qiE "^###[[:space:]]+Pull Request Readiness Checklist"; then
+            echo "::error title=Missing Checklist Section::Pull Request Readiness Checklist section not found. Please use the PR template: https://github.com/opencv/opencv/blob/4.x/.github/PULL_REQUEST_TEMPLATE.md"
+            exit 1
+          fi
+
+          CHECKLIST_SECTION=$(printf "%s" "$CLEAN_BODY" | \
+            awk '/^###[[:space:]]+Pull Request Readiness Checklist/{found=1; next} found{print}')
+
+          declare -A REQUIRED_ITEMS=(
+            ["Apache 2 License agreement"]="I agree to contribute to the project under Apache 2 License"
+            ["GPL license incompatibility check"]="not based on a code under GPL"
+            ["Proper branch targeting"]="PR is proposed to the proper branch"
+            ["Bug report reference"]="reference to the original bug report"
+            ["Test coverage declaration"]="accuracy test, performance test"
+            ["Documentation and sample code"]="sample code can be built with the project CMake"
+          )
+
+          ALL_ITEMS_PRESENT=true
+          for label in "${!REQUIRED_ITEMS[@]}"; do
+            pattern="${REQUIRED_ITEMS[$label]}"
+            if ! printf "%s" "$CHECKLIST_SECTION" | grep -qi "$pattern"; then
+              echo "::error title=Missing Checklist Item::Required item not found — '$label'. The PR template may have been modified or deleted."
+              ALL_ITEMS_PRESENT=false
+            fi
+          done
+
+          if [ "$ALL_ITEMS_PRESENT" = false ]; then
+            echo "::error title=Incomplete Template::One or more required checklist items are missing. Restore the PR template: https://github.com/opencv/opencv/blob/4.x/.github/PULL_REQUEST_TEMPLATE.md"
+            exit 1
+          fi
+
+          if printf "%s" "$CHECKLIST_SECTION" | grep -Eq '^\s*-\s*\[ \]'; then
+            echo "::error title=Unchecked Items Detected::All checklist items must be checked or marked as not applicable using strike-through (~~item~~) before merging."
+            printf "%s" "$CHECKLIST_SECTION" | grep -E '^\s*-\s*\[ \]' | while read -r line; do
+              echo "::error title=Unchecked Item::$line"
+            done
+            exit 1
+          fi
+
+          echo "PR Readiness Checklist validation passed. All items are checked or marked as not applicable."
+
+      - name: Check opencv_extra and opencv_contrib companion PRs
+        shell: bash
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          REPOS=("opencv_extra" "opencv_contrib")
+          FAILED=false
+
+          for REPO in "${REPOS[@]}"; do
+            echo "Checking ${PR_AUTHOR}/${REPO} for branch '${HEAD_BRANCH}'..."
+
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${PR_AUTHOR}/${REPO}/branches/${HEAD_BRANCH}")
+
+            echo "GitHub API response for ${PR_AUTHOR}/${REPO}/branches/${HEAD_BRANCH}: HTTP ${HTTP_STATUS}"
+
+            if [ "$HTTP_STATUS" = "401" ] || [ "$HTTP_STATUS" = "403" ]; then
+              echo "::error title=GitHub API Auth Error::GitHub API returned HTTP ${HTTP_STATUS}. Ensure GITHUB_TOKEN is set."
+              exit 1
+            fi
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "Branch '${HEAD_BRANCH}' found in ${PR_AUTHOR}/${REPO}. Checking for open PR in opencv/${REPO}..."
+
+              PR_COUNT=$(curl -s \
+                -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/opencv/${REPO}/pulls?state=open&head=${PR_AUTHOR}:${HEAD_BRANCH}" \
+                | grep -c '"number"' || true)
+
+              if [ "$PR_COUNT" -eq 0 ]; then
+                echo "::error title=Missing Companion PR::Branch '${HEAD_BRANCH}' exists in ${PR_AUTHOR}/${REPO} but no open PR was found in opencv/${REPO}. Please open a PR or the branch will not be merged."
+                FAILED=true
+              else
+                echo "Companion PR found in opencv/${REPO}."
+              fi
+            else
+              echo "Branch '${HEAD_BRANCH}' not found in ${PR_AUTHOR}/${REPO}. No companion PR required."
+            fi
+          done
+
+          if [ "$FAILED" = true ]; then
+            exit 1
+          fi
+
+          echo "Companion PR check passed."
+
+      - name: Check PR size
+        if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          DIFF_SIZE=$(curl -s \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.diff" \
+            "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}" \
+            | wc -c)
+
+          echo "PR diff size: ${DIFF_SIZE} bytes"
+
+          LIMIT=1048576
+          if [ "${DIFF_SIZE}" -gt "${LIMIT}" ]; then
+            echo "::error title=PR Too Large::PR diff size ${DIFF_SIZE} bytes exceeds the limit of ${LIMIT} bytes (1 MiB). Consider splitting the PR into smaller parts."
+            exit 1
+          fi
+
+          echo "PR size check passed."
