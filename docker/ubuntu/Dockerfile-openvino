@@ -1,7 +1,7 @@
-# Version: 20230724
-# Image name: quay.io/opencv-ci/opencv-ubuntu-20.04-openvino
+# Version: 20260622
+# Image name: quay.io/opencv-ci/opencv-ubuntu-24.04-openvino
 
-FROM openvino/ubuntu20_dev:2024.0.0
+FROM openvino/ubuntu24_dev:2026.2.1
 
 USER root
 
@@ -36,15 +36,14 @@ RUN \
     libavcodec-dev \
     libavformat-dev \
     libswscale-dev \
-    libavresample-dev \
+    libavdevice-dev \
     hdf5-tools \
     libhdf5-dev \
     liblept5 \
     libgoogle-glog-dev \
-    libatlas-base-dev \
-    libeigen3-dev \
     libsuitesparse-dev \
     liblapacke-dev \
+    libopenblas-dev \
     libeigen3-dev \
     xvfb \
     pkg-config \
