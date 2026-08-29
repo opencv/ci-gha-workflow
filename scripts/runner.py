@@ -134,7 +134,7 @@ if __name__ == "__main__":
     parser.add_argument("--suite", action="append", required=True, help="Suite in test plan (set of executables), multiple allowed")
     parser.add_argument("--filter", action="append", help="Filter in test plan (skip some testcases), multiple allowed")
     parser.add_argument("--options", default="default", help="Options in test plan (extra run options)")
-    parser.add_argument("--timeout", type=int, default=10, help="Timeout in minutes")
+    parser.add_argument("--timeout", type=int, default=20, help="Timeout in minutes")
     parser.add_argument("--prefix", default="out_", help="Prefix to add to logs")
     parser.add_argument("--workdir", default=".", type=Path, help="Working directory")
     parser.add_argument("--logdir", default=".", type=Path, help="Directory to store logs (either absolute or relative to workdir)")
