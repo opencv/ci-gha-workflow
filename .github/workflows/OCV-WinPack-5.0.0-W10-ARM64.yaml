@@ -22,32 +22,30 @@ jobs:
       run:
         shell: bash
     env:
-      # ARM64-only flags carried over from the Windows-on-ARM CI findings in
-      # https://github.com/opencv/ci-gha-workflow/pull/273 (found on a different ARM64
-      # runner image, kept here as a defensive default -- drop any that don't apply):
-      #  - CMAKE_ASM_COMPILER-NOTFOUND: works around images with MinGW's cc.exe on PATH,
-      #    which CMake else picks as ASM compiler, emitting GNU-style link flags MSVC rejects.
-      #  - WITH_OPENMP=ON: default MS-Concurrency/PPL backend had a concurrency bug on
-      #    MSVC/ARM64 (failed Core_Rand.parallel_for_stable_results + imgproc/G-API tests).
-      #  - WITH_TBB stays OFF: bundled 3rdparty/tbb's WIN32-AND-NOT-ARM guard is inverted
-      #    for AArch64 and hard-errors on that platform.
+      # WITH_OPENMP=ON: default MS-Concurrency/PPL backend has a concurrency bug on
+      # MSVC/ARM64 (fails Core_Rand.parallel_for_stable_results + imgproc/G-API tests);
+      # TBB is left unset since 3rdparty/tbb is off by default already.
       EXTRA_CMAKE_OPTIONS: >-
         -A ARM64
-        -DCMAKE_ASM_COMPILER=CMAKE_ASM_COMPILER-NOTFOUND
-        -DWITH_OPENMP=ON
-        -DWITH_OPENCL=OFF
-        -DWITH_TBB=OFF
-        -DWITH_LAPACK=OFF
-        -DBUILD_opencv_java=OFF
         -DBUILD_SHARED_LIBS=ON
+        -DCMAKE_BUILD_TYPE=Release
         -DBUILD_TESTS=OFF
         -DBUILD_PERF_TESTS=OFF
+        -DINSTALL_CREATE_DISTRIB=ON
+        -DINSTALL_PDB=ON
+        -DINSTALL_PDB_COMPONENT_EXCLUDE_FROM_ALL=OFF
+        -DOPENCV_GENERATE_SETUPVARS=ON
+        -DBUILD_opencv_java=OFF
         -DBUILD_EXAMPLES=OFF
         -DBUILD_DOCS=OFF
-        -DINSTALL_PDB=ON
-        -DINSTALL_CREATE_DISTRIB=ON
+        -DWITH_FFMPEG=OFF
+        -DWITH_OPENCL=OFF
+        -DWITH_OPENMP=ON
+        -DCPU_BASELINE=NEON
+        -DCPU_DISPATCH=NEON
+        -DCMAKE_SYSTEM_PROCESSOR=arm64
+        -DOPENCV_WORKAROUND_CMAKE_20989=ON
         -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
-        -DCMAKE_BUILD_TYPE=Release
         # -- add your own custom options below --
 
     steps:
