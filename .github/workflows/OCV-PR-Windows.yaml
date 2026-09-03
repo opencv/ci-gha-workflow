@@ -65,7 +65,7 @@ jobs:
             cmake_arch: x64
           - arch: arm64
             config: base
-            runner: qdc-snapdragon-x-elite
+            runner: windows-arm64
             vs: 'Visual Studio 17 2022'
             cmake_arch: ARM64
             no_opencl: true
