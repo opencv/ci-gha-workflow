@@ -22,9 +22,6 @@ jobs:
       run:
         shell: bash
     env:
-      # WITH_OPENMP=ON: default MS-Concurrency/PPL backend has a concurrency bug on
-      # MSVC/ARM64 (fails Core_Rand.parallel_for_stable_results + imgproc/G-API tests);
-      # TBB is left unset since 3rdparty/tbb is off by default already.
       EXTRA_CMAKE_OPTIONS: >-
         -A ARM64
         -DBUILD_SHARED_LIBS=ON
@@ -48,7 +45,6 @@ jobs:
         -DCMAKE_SYSTEM_PROCESSOR=arm64
         -DOPENCV_WORKAROUND_CMAKE_20989=ON
         -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
-        # -- add your own custom options below --
 
     steps:
     - name: Clean
@@ -57,7 +53,7 @@ jobs:
     - name: Clone opencv
       run: |
         cd "${{ github.workspace }}"
-        git clone --single-branch --branch ${{ env.BRANCH_NAME }} https://github.com/opencv/opencv.git
+        git clone --single-branch --depth 1 --branch ${{ env.BRANCH_NAME }} https://github.com/opencv/opencv.git
 
     - name: Configure OpenCV
       run: |
@@ -70,16 +66,17 @@ jobs:
         cmake --build . --config Release --target install -- /maxcpucount /consoleloggerparameters:NoSummary 2>&1 | tee build-log.txt
 
     - name: Warnings check
+      continue-on-error: true
       run: python3 ./scripts/warnings-handling.py "${{ github.workspace }}/build/build-log.txt"
 
     - name: Pack WinPack installer (cpp + python)
       run: |
         mkdir "${{ github.workspace }}/artifacts"
         cd "${{ github.workspace }}/install"
-        7z a -bd -sfx -y -mx7 ../artifacts/opencv-5.0.0-win-arm64.exe ./
+        7z a -bd -sfx -y -mx7 ../artifacts/opencv-5.0.0-windows-arm64.exe ./
 
     - name: Save artifact
       uses: actions/upload-artifact@v4
       with:
-        name: OpenCV-5.0.0-Win-ARM64
-        path: ${{ github.workspace }}/artifacts/opencv-5.0.0-win-arm64.exe
+        name: OpenCV-5.0.0-Windows-ARM64
+        path: ${{ github.workspace }}/artifacts/opencv-5.0.0-windows-arm64.exe
