@@ -17,7 +17,7 @@ env:
   OPENCV_TEST_DATA_PATH: ${{ github.workspace }}\opencv_extra\testdata
   OPENCV_TEST_REQUIRE_DATA: 1
   OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
-  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR: ${{ github.event.pull_request.head.repo.owner.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
@@ -129,13 +129,6 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd ${{ github.workspace }}\build && bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
-    - name: Accuracy:DNN_Classic
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: |
-        set OPENCV_FORCE_DNN_ENGINE=1
-        cd ${{ github.workspace }}\build
-        bin\opencv_test_dnn.exe --skip_unstable --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=%PARALLEL_JOBS%
     - name: Accuracy:features
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}

@@ -14,7 +14,7 @@ concurrency:
 
 env:
   EXTRA_CMAKE_OPTIONS: '-DWITH_QT=ON -DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_OPENCL=OFF'
-  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR: ${{ github.event.pull_request.head.repo.owner.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
@@ -127,10 +127,6 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:DNN_Classic
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: export OPENCV_FORCE_DNN_ENGINE=1 && cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:features
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}

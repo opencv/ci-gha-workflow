@@ -52,3 +52,14 @@ runs:
         if [ $? -ne 0 ]; then
           echo "WARNINGS=1" >> $GITHUB_ENV
         fi
+
+    - shell: bash
+      run: |
+        set -x
+        echo "::group::Stat"
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          echo "No statistics on Windows for now"
+        else
+          ccache --show-stats
+        fi
+        echo "::endgroup::"

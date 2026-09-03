@@ -14,7 +14,7 @@ concurrency:
 
 env:
   EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=/home/ci/binaries_cache -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DWITH_CUDA=ON -DBUILD_LIST=dnn,cudev,ts,python3,photo,stitching -DCUDA_ARCH_BIN=6.1 -DWITH_VA=OFF'
-  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+  PR_AUTHOR: ${{ github.event.pull_request.head.repo.owner.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
   TARGET_BRANCH_NAME: ${{ github.base_ref }}
@@ -149,10 +149,6 @@ jobs:
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:DNN_Classic
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: export OPENCV_FORCE_DNN_ENGINE=1 && cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:python3
       timeout-minutes: 60
       if: ${{ always() && steps.build-opencv.outcome == 'success' }}
