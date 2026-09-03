@@ -72,14 +72,14 @@ jobs:
     - name: Warnings check
       run: python3 ./scripts/warnings-handling.py "${{ github.workspace }}/build/build-log.txt"
 
-    - name: Pack install tree (cpp + python)
+    - name: Pack WinPack installer (cpp + python)
       run: |
         mkdir "${{ github.workspace }}/artifacts"
         cd "${{ github.workspace }}/install"
-        7z a -bd -t7z -y -mx7 ../artifacts/opencv-5.0.0-win-arm64.7z ./
+        7z a -bd -sfx -y -mx7 ../artifacts/opencv-5.0.0-win-arm64.exe ./
 
     - name: Save artifact
       uses: actions/upload-artifact@v4
       with:
         name: OpenCV-5.0.0-Win-ARM64
-        path: ${{ github.workspace }}/artifacts/opencv-5.0.0-win-arm64.7z
+        path: ${{ github.workspace }}/artifacts/opencv-5.0.0-win-arm64.exe
