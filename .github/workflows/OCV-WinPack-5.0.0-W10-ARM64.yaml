@@ -17,18 +17,20 @@ env:
 
 jobs:
   Build:
-    runs-on: windows-11-vs2026-arm
+    runs-on: windows-arm64
     defaults:
       run:
         shell: bash
     env:
-      # ARM64-only fixes validated in https://github.com/opencv/ci-gha-workflow/pull/273:
-      #  - CMAKE_ASM_COMPILER-NOTFOUND: runner has C:\mingw64 on PATH, CMake else picks
-      #    MinGW's cc.exe as ASM compiler and emits GNU-style link flags MSVC rejects.
-      #  - WITH_OPENMP=ON: default MS-Concurrency/PPL backend has a concurrency bug on
-      #    MSVC/ARM64 (fails Core_Rand.parallel_for_stable_results + imgproc/G-API tests).
+      # ARM64-only flags carried over from the Windows-on-ARM CI findings in
+      # https://github.com/opencv/ci-gha-workflow/pull/273 (found on a different ARM64
+      # runner image, kept here as a defensive default -- drop any that don't apply):
+      #  - CMAKE_ASM_COMPILER-NOTFOUND: works around images with MinGW's cc.exe on PATH,
+      #    which CMake else picks as ASM compiler, emitting GNU-style link flags MSVC rejects.
+      #  - WITH_OPENMP=ON: default MS-Concurrency/PPL backend had a concurrency bug on
+      #    MSVC/ARM64 (failed Core_Rand.parallel_for_stable_results + imgproc/G-API tests).
       #  - WITH_TBB stays OFF: bundled 3rdparty/tbb's WIN32-AND-NOT-ARM guard is inverted
-      #    for AArch64 and hard-errors on this exact platform.
+      #    for AArch64 and hard-errors on that platform.
       EXTRA_CMAKE_OPTIONS: >-
         -A ARM64
         -DCMAKE_ASM_COMPILER=CMAKE_ASM_COMPILER-NOTFOUND
@@ -60,7 +62,7 @@ jobs:
     - name: Configure OpenCV
       run: |
         mkdir "${{ github.workspace }}/build" && cd "${{ github.workspace }}/build"
-        cmake -G "Visual Studio 18 2026" ${{ env.EXTRA_CMAKE_OPTIONS }} "${{ github.workspace }}/opencv"
+        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} "${{ github.workspace }}/opencv"
 
     - name: Build and install OpenCV
       run: |
