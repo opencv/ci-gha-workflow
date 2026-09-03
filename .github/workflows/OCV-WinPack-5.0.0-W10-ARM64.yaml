@@ -36,6 +36,8 @@ jobs:
         -DINSTALL_PDB_COMPONENT_EXCLUDE_FROM_ALL=OFF
         -DOPENCV_GENERATE_SETUPVARS=ON
         -DBUILD_opencv_java=OFF
+        -DBUILD_opencv_python2=OFF
+        -DOPENCV_PYTHON_INSTALL_PATH=python
         -DBUILD_EXAMPLES=OFF
         -DBUILD_DOCS=OFF
         -DWITH_FFMPEG=OFF
@@ -70,7 +72,7 @@ jobs:
     - name: Warnings check
       run: python3 ./scripts/warnings-handling.py "${{ github.workspace }}/build/build-log.txt"
 
-    - name: Pack shared libs
+    - name: Pack install tree (cpp + python)
       run: |
         mkdir "${{ github.workspace }}/artifacts"
         cd "${{ github.workspace }}/install"
