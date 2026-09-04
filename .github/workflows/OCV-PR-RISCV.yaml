@@ -122,7 +122,7 @@ jobs:
         suite: "[ 'pr' ]"
         filter: "[ 'clang' ]"
         options: "qemu"
-        timeout: "20"
+        timeout: "60"
         enable_python: "false"
         enable_java: "false"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}_hal-${{ matrix.hal }}'
