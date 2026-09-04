@@ -22,8 +22,7 @@ concurrency:
   group: OCV-PR-RISCV-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   branch_eval:
