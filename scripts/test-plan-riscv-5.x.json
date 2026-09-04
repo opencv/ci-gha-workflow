@@ -87,6 +87,8 @@
                 "multiview_calibration.*",
                 "RegisterCamerasTest.hetero*"
             ]
+        },
+        "clang": {
         }
     },
     "options": {
@@ -130,7 +132,7 @@
             "exe": {},
             "env": {}
         },
-        "clang": {
+        "qemu": {
             "wrap": {
                 "": "/opt/riscv/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/riscv/sysroot"
             },

@@ -22,6 +22,9 @@ concurrency:
   group: OCV-PR-RISCV-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   branch_eval:
     runs-on: ubuntu-24.04
@@ -117,8 +120,9 @@ jobs:
         logdir: '${{ env.HOME }}/build'
         plan: "test-plan-riscv-${{ matrix.branch }}.json"
         suite: "[ 'pr' ]"
-        filter: "[ 'nds' ]"
-        options: "clang"
+        filter: "[ 'clang' ]"
+        options: "qemu"
+        timeout: "20"
         enable_python: "false"
         enable_java: "false"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}_hal-${{ matrix.hal }}'
