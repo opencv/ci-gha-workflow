@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-PR-Windows.yaml'
+      # - '.github/workflows/OCV-PR-Windows.yaml'
       # TODO: are following paths necessary?
       # - 'checkout-and-merge/*'
       - 'configure-and-build/*'
