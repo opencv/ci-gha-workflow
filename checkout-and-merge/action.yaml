@@ -19,10 +19,18 @@ inputs:
     default: "/home/ubuntu"
   workdir:
     description: "Work directory on executor, repositories will be cloned to opencv/opencv_contrib/opencv_extra"
+  repo-token:
+    description: "Access token"
 
 runs:
   using: "composite"
   steps:
+
+  - if: ${{ inputs.repo-token }}
+    working-directory: ${{ inputs.home }}
+    shell: bash
+    run: |
+      git config --global url."https://${{ inputs.repo-token }}@github.com/".insteadOf "https://github.com"
 
   # opencv
 
