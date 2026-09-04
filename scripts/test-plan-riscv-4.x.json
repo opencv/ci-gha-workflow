@@ -14,6 +14,11 @@
         "short": [
             "opencv_test_core",
             "opencv_test_imgproc"
+        ],
+        "pr": [
+            "opencv_test_core",
+            "opencv_test_imgproc",
+            "opencv_test_dnn"
         ]
     },
     "filters": {
@@ -70,6 +75,8 @@
                 "Calib3d_InitUndistortRectifyMap.*",
                 "usac_Fundamental.accuracy"
             ]
+        },
+        "clang": {
         }
     },
     "options": {
@@ -106,6 +113,16 @@
         "sc": {
             "wrap": {
                 "": "/opt/sc-dt/tools/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/sc-dt/riscv-gcc/sysroot"
+            },
+            "args": {
+                "test": "--skip_unstable=1"
+            },
+            "exe": {},
+            "env": {}
+        },
+        "qemu": {
+            "wrap": {
+                "": "/opt/riscv/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/riscv/sysroot"
             },
             "args": {
                 "test": "--skip_unstable=1"

@@ -5,13 +5,13 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-PR-Windows.yaml'
+      # - '.github/workflows/OCV-PR-Windows.yaml'
       # TODO: are following paths necessary?
-      - 'checkout-and-merge/*'
+      # - 'checkout-and-merge/*'
       - 'configure-and-build/*'
       - 'run-tests/*'
       - 'scripts/runner.py'
-      - 'scripts/test-plan.json'
+      - 'scripts/test-plan-win-*.json'
   workflow_call:
     inputs:
       workflow_branch:

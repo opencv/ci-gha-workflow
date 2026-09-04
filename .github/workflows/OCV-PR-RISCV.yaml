@@ -1,0 +1,135 @@
+name: OCV PR RISC-V
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/OCV-PR-RISCV.yaml'
+      - 'checkout-and-merge/*'
+      - 'configure-and-build/*'
+      - 'run-tests/*'
+      - 'scripts/runner.py'
+      - 'scripts/test-plan-riscv-*.json'
+  workflow_call:
+    inputs:
+      workflow_branch:
+        description: "Branch for ci-gha-workflow repository"
+        required: true
+        type: string
+
+concurrency:
+  group: OCV-PR-RISCV-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  branch_eval:
+    runs-on: ubuntu-24.04
+    outputs:
+      branches: ${{ steps.determine-branches.outputs.branches }}
+    steps:
+        - id: determine-branches
+          shell: bash
+          run: |
+            if [ "${{ github.event.repository.name == 'ci-gha-workflow' }}" = "true" ] ; then
+              echo "branches=[ '4.x', '5.x' ]" >> "$GITHUB_OUTPUT"
+            else
+              echo "branches=[ '${{ github.base_ref }}' ]" >> "$GITHUB_OUTPUT"
+            fi
+
+  RISC-V:
+    runs-on: opencv-ru-lin-riscv
+    needs:
+      - branch_eval
+    strategy:
+      # NOTE: Debugging
+      fail-fast: true
+      max-parallel: 3
+      # fail-fast: false
+      # max-parallel: 3
+      matrix:
+        version:
+          - 'clang'
+        branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
+        hal:
+          - true
+          - false
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: quay.io/opencv-ci/opencv-ubuntu-22.04-riscv-main:20240709
+      volumes:
+        - /mnt/cache/git_cache:/home/ci/git_cache
+        - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
+        - /mnt/cache/binaries_cache:/home/ci/binaries_cache
+    env:
+      CCACHE_DIR: '/home/ci/.ccache'
+      CCACHE_MAXSIZE: '8G'
+      OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
+      GIT_CACHE_DOCKER: '/home/ci/git_cache'
+      CMAKE_OPT: >-
+        -DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake
+        -DBUILD_EXAMPLES=ON
+        -DOPENCV_ENABLE_NONFREE=ON
+        -DCPU_BASELINE=RVV
+        -DCPU_BASELINE_REQUIRE=RVV
+        -DRISCV_RVV_SCALABLE=ON
+        ${{ matrix.hal && '-DWITH_HAL_RVV=ON' || '-DWITH_HAL_RVV=OFF' }}
+      HOME: '/home/ci'
+      MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
+
+    steps:
+
+    - name: Checkout workflow repository
+      uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: "${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || inputs.workflow_branch }}"
+
+    - name: Checkout and merge OpenCV
+      uses: ./checkout-and-merge
+      with:
+        target_branch: "${{ matrix.branch }}"
+        author: "${{ github.event.pull_request.user.login }}"
+        source_branch: "${{ github.event.repository.name == 'ci-gha-workflow' && '' || github.head_ref }}"
+        gitcache: '${{ env.GIT_CACHE_DOCKER }}'
+        home: '${{ env.HOME }}'
+        workdir: '${{ env.HOME }}'
+        repo-token: ${{ github.token }}
+
+    - name: Configure and build OpenCV
+      uses: ./configure-and-build
+      with:
+        workdir: '${{ env.HOME }}'
+        builddir: 'build'
+        generator: 'Ninja'
+        options: '${{ env.CMAKE_OPT }}'
+
+    - name: Run OpenCV tests
+      uses: ./run-tests
+      env:
+        OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
+        OPENCV_TEST_REQUIRE_DATA: 0
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: 0
+      with:
+        workdir: '${{ env.HOME }}'
+        builddir: 'build'
+        logdir: '${{ env.HOME }}/build'
+        plan: "test-plan-riscv-${{ matrix.branch }}.json"
+        suite: "[ 'pr' ]"
+        filter: "[ 'clang' ]"
+        options: "qemu"
+        timeout: "60"
+        enable_python: "false"
+        enable_java: "false"
+        suffix: '${{ matrix.version }}_${{ matrix.branch }}_hal-${{ matrix.hal }}'
+
+    - if: ${{ always() && env.WARNINGS == '1' }}
+      name: Warnings check
+      run: |
+        echo "::error Warnings have been found!"
+        exit 1
+
