@@ -7,7 +7,7 @@ on:
     paths:
       - '.github/workflows/OCV-PR-Windows.yaml'
       # TODO: are following paths necessary?
-      - 'checkout-and-merge/*'
+      # - 'checkout-and-merge/*'
       - 'configure-and-build/*'
       - 'run-tests/*'
       - 'scripts/runner.py'

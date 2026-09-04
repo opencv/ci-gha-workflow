@@ -6,11 +6,11 @@ on:
       - main
     paths:
       - '.github/workflows/OCV-PR-Linux.yaml'
-      - 'checkout-and-merge/*'
+      # - 'checkout-and-merge/*'
       - 'configure-and-build/*'
       - 'run-tests/*'
       - 'scripts/runner.py'
-      - 'scripts/test-plan.json'
+      - 'scripts/test-plan-*.json'
   workflow_call:
     inputs:
       workflow_branch:

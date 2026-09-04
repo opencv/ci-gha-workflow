@@ -6,15 +6,20 @@ on:
       - main
     paths:
       - '.github/workflows/OCV-PR-RISCV.yaml'
+      - 'checkout-and-merge/*'
+      - 'configure-and-build/*'
+      - 'run-tests/*'
+      - 'scripts/runner.py'
+      - 'scripts/test-plan-riscv-*.json'
   workflow_call:
     inputs:
       branch:
-        description: "Branch for the OpenCV release"
+        description: "Branch for ci-gha-workflow repository"
         required: true
         type: string
 
 concurrency:
-  group: OCV-PR-RISCV-${{ github.ref }}-${{ inputs.branch || 'default' }}
+  group: OCV-PR-RISCV-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
