@@ -30,7 +30,7 @@ runs:
     working-directory: ${{ inputs.home }}
     shell: bash
     run: |
-      git config --global url."https://${{ inputs.repo-token }}@github.com/".insteadOf "https://github.com"
+      git config --global url."https://x-access-token:${{ inputs.repo-token }}@github.com/".insteadOf "https://github.com"
 
   # opencv
 
