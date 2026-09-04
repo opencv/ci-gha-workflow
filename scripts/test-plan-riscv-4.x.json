@@ -14,6 +14,11 @@
         "short": [
             "opencv_test_core",
             "opencv_test_imgproc"
+        ],
+        "pr": [
+            "opencv_test_core",
+            "opencv_test_imgproc",
+            "opencv_test_dnn"
         ]
     },
     "filters": {
@@ -70,6 +75,26 @@
                 "Calib3d_InitUndistortRectifyMap.*",
                 "usac_Fundamental.accuracy"
             ]
+        },
+        "clang": {},
+        "hal-off": {
+            "test_core": [
+                "Core_Array.expressions",
+                "Core_SVD.accuracy",
+                "Core_SVD.flt",
+                "Core_Invert.small",
+                "Core_SolveLinearSystem.accuracy",
+                "Core_QR_Solver.accuracy64f",
+                "Core_Solve.regression_11888",
+                "Core_Solve.Matx_4_4"
+            ],
+            "test_imgproc": [
+                "fitEllipse.small",
+                "Imgproc_FitEllipse_HorizontalLine.accuracy",
+                "Imgproc_getPerspectiveTransform.issue_26916",
+                "fitEllipse_Modes.accuracy/0",
+                "fitEllipse_Modes.accuracy/1"
+            ]
         }
     },
     "options": {
@@ -106,6 +131,16 @@
         "sc": {
             "wrap": {
                 "": "/opt/sc-dt/tools/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/sc-dt/riscv-gcc/sysroot"
+            },
+            "args": {
+                "test": "--skip_unstable=1"
+            },
+            "exe": {},
+            "env": {}
+        },
+        "qemu": {
+            "wrap": {
+                "": "/opt/riscv/bin/qemu-riscv64 -cpu rv64,v=true,vext_spec=v1.0 -L /opt/riscv/sysroot"
             },
             "args": {
                 "test": "--skip_unstable=1"
