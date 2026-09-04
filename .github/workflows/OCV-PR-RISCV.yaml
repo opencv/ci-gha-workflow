@@ -67,8 +67,10 @@ jobs:
         - /mnt/cache/ci_cache/opencv:/home/ci/.ccache
         - /mnt/cache/binaries_cache:/home/ci/binaries_cache
     env:
-      CCACHE_DIR: '/opt/.ccache'
+      CCACHE_DIR: '/home/ci/.ccache'
       CCACHE_MAXSIZE: '8G'
+      OPENCV_DOWNLOAD_PATH: '/home/ci/binaries_cache'
+      GIT_CACHE_DOCKER: '/home/ci/git_cache'
       CMAKE_OPT: >-
         -DCMAKE_TOOLCHAIN_FILE=$HOME/opencv/platforms/linux/riscv64-clang.toolchain.cmake
         -DBUILD_EXAMPLES=ON
@@ -78,7 +80,6 @@ jobs:
         -DRISCV_RVV_SCALABLE=ON
         ${{ matrix.hal && '-DWITH_HAL_RVV=ON' || '-DWITH_HAL_RVV=OFF' }}
       HOME: '/home/ci'
-      GIT_CACHE_DOCKER: '/home/ci/git_cache'
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
 
     steps:
