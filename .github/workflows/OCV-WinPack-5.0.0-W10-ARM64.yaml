@@ -69,6 +69,12 @@ jobs:
     - name: Install 7-Zip
       run: winget install --id 7zip.7zip -e --architecture arm64 --silent --accept-package-agreements --accept-source-agreements
 
+    # numpy headers are required to generate the cv2 bindings; without them
+    # CMake silently drops opencv_python3 the same way it dropped it when the
+    # interpreter itself wasn't found.
+    - name: Install numpy
+      run: '"C:/Program Files/Python312-arm64/python.exe" -m pip install numpy'
+
     - name: Clone opencv
       run: |
         cd "${{ env.WORKSPACE }}"
