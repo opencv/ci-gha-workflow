@@ -79,33 +79,36 @@ jobs:
     # No limited-API build here (matches the old x64 WinPack template): every
     # target Python version gets its own compiled cv2 extension, so each one
     # needs its own ARM64 interpreter installed and its own numpy.
+    # --scope user + a workspace-local --location: a machine-wide install to
+    # Program Files failed with MSI error 1603 (this CI account isn't admin
+    # here), but it's already proven able to write under WORKSPACE all along.
     - name: Install Python 3.11
-      run: winget install --id Python.Python.3.11 -e --architecture arm64 --location "C:/Program Files/Python311-arm64" --silent --accept-package-agreements --accept-source-agreements
+      run: winget install --id Python.Python.3.11 -e --architecture arm64 --scope user --location "${{ env.WORKSPACE }}/pythons/311" --silent --accept-package-agreements --accept-source-agreements
 
     - name: Install numpy for 3.11
       run: |
         unset PYTHONHOME PYTHONPATH
-        PY="C:/Program Files/Python311-arm64/python.exe"
+        PY="${{ env.WORKSPACE }}/pythons/311/python.exe"
         "$PY" -m pip install --no-cache-dir numpy
         "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
 
     - name: Install Python 3.13
-      run: winget install --id Python.Python.3.13 -e --architecture arm64 --location "C:/Program Files/Python313-arm64" --silent --accept-package-agreements --accept-source-agreements
+      run: winget install --id Python.Python.3.13 -e --architecture arm64 --scope user --location "${{ env.WORKSPACE }}/pythons/313" --silent --accept-package-agreements --accept-source-agreements
 
     - name: Install numpy for 3.13
       run: |
         unset PYTHONHOME PYTHONPATH
-        PY="C:/Program Files/Python313-arm64/python.exe"
+        PY="${{ env.WORKSPACE }}/pythons/313/python.exe"
         "$PY" -m pip install --no-cache-dir numpy
         "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
 
     - name: Install Python 3.14
-      run: winget install --id Python.Python.3.14 -e --architecture arm64 --location "C:/Program Files/Python314-arm64" --silent --accept-package-agreements --accept-source-agreements
+      run: winget install --id Python.Python.3.14 -e --architecture arm64 --scope user --location "${{ env.WORKSPACE }}/pythons/314" --silent --accept-package-agreements --accept-source-agreements
 
     - name: Install numpy for 3.14
       run: |
         unset PYTHONHOME PYTHONPATH
-        PY="C:/Program Files/Python314-arm64/python.exe"
+        PY="${{ env.WORKSPACE }}/pythons/314/python.exe"
         "$PY" -m pip install --no-cache-dir numpy
         "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
 
@@ -135,7 +138,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_311" && cd "${{ env.WORKSPACE }}/build/python_311"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="C:/Program Files/Python311-arm64/python.exe" -DPYTHON_INCLUDE_DIR="C:/Program Files/Python311-arm64/include" -DPYTHON_LIBRARY="C:/Program Files/Python311-arm64/libs/python311.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Program Files/Python311-arm64/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="${{ env.WORKSPACE }}/pythons/311/python.exe" -DPYTHON_INCLUDE_DIR="${{ env.WORKSPACE }}/pythons/311/include" -DPYTHON_LIBRARY="${{ env.WORKSPACE }}/pythons/311/libs/python311.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="${{ env.WORKSPACE }}/pythons/311/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.11 bindings
       run: |
@@ -146,7 +149,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_313" && cd "${{ env.WORKSPACE }}/build/python_313"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="C:/Program Files/Python313-arm64/python.exe" -DPYTHON_INCLUDE_DIR="C:/Program Files/Python313-arm64/include" -DPYTHON_LIBRARY="C:/Program Files/Python313-arm64/libs/python313.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Program Files/Python313-arm64/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="${{ env.WORKSPACE }}/pythons/313/python.exe" -DPYTHON_INCLUDE_DIR="${{ env.WORKSPACE }}/pythons/313/include" -DPYTHON_LIBRARY="${{ env.WORKSPACE }}/pythons/313/libs/python313.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="${{ env.WORKSPACE }}/pythons/313/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.13 bindings
       run: |
@@ -157,7 +160,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_314" && cd "${{ env.WORKSPACE }}/build/python_314"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="C:/Program Files/Python314-arm64/python.exe" -DPYTHON_INCLUDE_DIR="C:/Program Files/Python314-arm64/include" -DPYTHON_LIBRARY="C:/Program Files/Python314-arm64/libs/python314.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Program Files/Python314-arm64/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="${{ env.WORKSPACE }}/pythons/314/python.exe" -DPYTHON_INCLUDE_DIR="${{ env.WORKSPACE }}/pythons/314/include" -DPYTHON_LIBRARY="${{ env.WORKSPACE }}/pythons/314/libs/python314.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="${{ env.WORKSPACE }}/pythons/314/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.14 bindings
       run: |
