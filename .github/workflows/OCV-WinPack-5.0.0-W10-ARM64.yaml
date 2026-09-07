@@ -80,6 +80,25 @@ jobs:
         cd "${{ env.WORKSPACE }}"
         git clone --single-branch --depth 1 --branch ${{ env.BRANCH_NAME }} https://github.com/opencv/opencv.git
 
+    # Temporary: print the exact variables modules/python/python3/CMakeLists.txt
+    # gates on (PYTHON3_INCLUDE_PATH, PYTHON3_NUMPY_INCLUDE_DIRS) right after
+    # find_python() runs, since python3 keeps landing in "Unavailable" for a
+    # reason that isn't visible anywhere else in the configure log. Patches
+    # our own checked-out copy only -- never touches upstream opencv/opencv.
+    - name: Diagnose Python detection
+      run: |
+        cat > /tmp/py_diag.cmake << 'DIAGEOF'
+        message(STATUS "DIAG PYTHON3INTERP_FOUND=${PYTHON3INTERP_FOUND}")
+        message(STATUS "DIAG PYTHON3_EXECUTABLE=${PYTHON3_EXECUTABLE}")
+        message(STATUS "DIAG PYTHON3LIBS_FOUND=${PYTHON3LIBS_FOUND}")
+        message(STATUS "DIAG PYTHON3_INCLUDE_PATH=${PYTHON3_INCLUDE_PATH}")
+        message(STATUS "DIAG PYTHON3_INCLUDE_DIR=${PYTHON3_INCLUDE_DIR}")
+        message(STATUS "DIAG PYTHON3_LIBRARY=${PYTHON3_LIBRARY}")
+        message(STATUS "DIAG PYTHON3_NUMPY_INCLUDE_DIRS=${PYTHON3_NUMPY_INCLUDE_DIRS}")
+        message(STATUS "DIAG PYTHON3_NUMPY_VERSION=${PYTHON3_NUMPY_VERSION}")
+        DIAGEOF
+        sed -i '284r /tmp/py_diag.cmake' "${{ env.WORKSPACE }}/opencv/cmake/OpenCVDetectPython.cmake"
+
     - name: Configure OpenCV
       run: |
         unset PYTHONHOME PYTHONPATH
