@@ -45,39 +45,46 @@ jobs:
         -DCPU_DISPATCH=NEON
         -DCMAKE_SYSTEM_PROCESSOR=arm64
         -DOPENCV_WORKAROUND_CMAKE_20989=ON
-        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
 
     steps:
+    # $GITHUB_WORKSPACE is a backslash Windows path; word-split unquoted (as
+    # EXTRA_CMAKE_OPTIONS must be, to become separate -D flags) bash strips
+    # each backslash as an escape char instead of treating it as a separator,
+    # corrupting the path. cygpath -m gives a drive-letter/forward-slash form
+    # that's safe both quoted and unquoted.
+    - name: Propagate environment
+      run: echo "WORKSPACE=$(cygpath -m "$GITHUB_WORKSPACE")" >> "$GITHUB_ENV"
+
     - name: Clean
-      run: rm -rf "${{ github.workspace }}"/* "${{ github.workspace }}"/install
+      run: rm -rf "${{ env.WORKSPACE }}"/* "${{ env.WORKSPACE }}"/install
 
     - name: Clone opencv
       run: |
-        cd "${{ github.workspace }}"
+        cd "${{ env.WORKSPACE }}"
         git clone --single-branch --depth 1 --branch ${{ env.BRANCH_NAME }} https://github.com/opencv/opencv.git
 
     - name: Configure OpenCV
       run: |
-        mkdir "${{ github.workspace }}/build" && cd "${{ github.workspace }}/build"
-        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} "${{ github.workspace }}/opencv"
+        mkdir "${{ env.WORKSPACE }}/build" && cd "${{ env.WORKSPACE }}/build"
+        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" "${{ env.WORKSPACE }}/opencv"
 
     - name: Build and install OpenCV
       run: |
-        cd "${{ github.workspace }}/build"
+        cd "${{ env.WORKSPACE }}/build"
         cmake --build . --config Release --target install 2>&1 | tee build-log.txt
 
     - name: Warnings check
       continue-on-error: true
-      run: python3 ./scripts/warnings-handling.py "${{ github.workspace }}/build/build-log.txt"
+      run: python ./scripts/warnings-handling.py "${{ env.WORKSPACE }}/build/build-log.txt"
 
     - name: Pack WinPack installer (cpp + python)
       run: |
-        mkdir "${{ github.workspace }}/artifacts"
-        cd "${{ github.workspace }}/install"
+        mkdir "${{ env.WORKSPACE }}/artifacts"
+        cd "${{ env.WORKSPACE }}/install"
         7z a -bd -sfx -y -mx7 ../artifacts/opencv-5.0.0-windows-arm64.exe ./
 
     - name: Save artifact
       uses: actions/upload-artifact@v4
       with:
         name: OpenCV-5.0.0-Windows-ARM64
-        path: ${{ github.workspace }}/artifacts/opencv-5.0.0-windows-arm64.exe
+        path: ${{ env.WORKSPACE }}/artifacts/opencv-5.0.0-windows-arm64.exe
