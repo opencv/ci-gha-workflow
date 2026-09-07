@@ -63,12 +63,6 @@ jobs:
     - name: Checkout workflow repository
       uses: actions/checkout@v4
 
-    # 7-Zip isn't preinstalled on this runner (7z: command not found). Install
-    # via winget (built into Windows 11) rather than pin a download URL/version.
-    # --architecture arm64 forces the native build, not an x64 one under emulation.
-    - name: Install 7-Zip
-      run: winget install --id 7zip.7zip -e --architecture arm64 --silent --accept-package-agreements --accept-source-agreements
-
     # numpy headers are required to generate the cv2 bindings; without them
     # CMake silently drops opencv_python3 the same way it dropped it when the
     # interpreter itself wasn't found.
