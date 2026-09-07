@@ -58,6 +58,17 @@ jobs:
     - name: Clean
       run: rm -rf "${{ env.WORKSPACE }}"/* "${{ env.WORKSPACE }}"/install
 
+    # scripts/warnings-handling.py (and any other repo-local tooling) needs
+    # this repo's own content checked out -- nothing does that automatically.
+    - name: Checkout workflow repository
+      uses: actions/checkout@v4
+
+    # 7-Zip isn't preinstalled on this runner (7z: command not found). Install
+    # via winget (built into Windows 11) rather than pin a download URL/version.
+    # --architecture arm64 forces the native build, not an x64 one under emulation.
+    - name: Install 7-Zip
+      run: winget install --id 7zip.7zip -e --architecture arm64 --silent --accept-package-agreements --accept-source-agreements
+
     - name: Clone opencv
       run: |
         cd "${{ env.WORKSPACE }}"
@@ -81,7 +92,7 @@ jobs:
       run: |
         mkdir "${{ env.WORKSPACE }}/artifacts"
         cd "${{ env.WORKSPACE }}/install"
-        7z a -bd -sfx -y -mx7 ../artifacts/opencv-5.0.0-windows-arm64.exe ./
+        "C:/Program Files/7-Zip/7z.exe" a -bd -sfx -y -mx7 ../artifacts/opencv-5.0.0-windows-arm64.exe ./
 
     - name: Save artifact
       uses: actions/upload-artifact@v4
