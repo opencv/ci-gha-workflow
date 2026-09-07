@@ -63,11 +63,17 @@ jobs:
     - name: Checkout workflow repository
       uses: actions/checkout@v4
 
-    # numpy headers are required to generate the cv2 bindings; without them
-    # CMake silently drops opencv_python3 the same way it dropped it when the
-    # interpreter itself wasn't found.
+    # numpy headers are required to generate the cv2 bindings. OpenCVDetectPython.cmake's
+    # numpy probe (execute_process running "import numpy") fails completely silently, so a
+    # pip success here doesn't guarantee CMake's later re-invocation of this same python.exe
+    # can actually import it (e.g. pip falling back to a per-user install CMake's subprocess
+    # doesn't see). Importing it back out immediately turns a silent failure into a loud one.
     - name: Install numpy
-      run: '"C:/Program Files/Python312-arm64/python.exe" -m pip install numpy'
+      run: |
+        unset PYTHONHOME PYTHONPATH
+        PY="C:/Program Files/Python312-arm64/python.exe"
+        "$PY" -m pip install --no-cache-dir numpy
+        "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
 
     - name: Clone opencv
       run: |
@@ -76,6 +82,7 @@ jobs:
 
     - name: Configure OpenCV
       run: |
+        unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build" && cd "${{ env.WORKSPACE }}/build"
         cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DPYTHON3_EXECUTABLE="C:/Program Files/Python312-arm64/python.exe" "${{ env.WORKSPACE }}/opencv"
 
