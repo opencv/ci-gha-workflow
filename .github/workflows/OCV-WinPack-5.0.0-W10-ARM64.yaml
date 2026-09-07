@@ -84,7 +84,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build" && cd "${{ env.WORKSPACE }}/build"
-        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DPYTHON3_EXECUTABLE="C:/Program Files/Python312-arm64/python.exe" -DPYTHON3_NUMPY_INCLUDE_DIRS="C:/Program Files/Python312-arm64/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv"
+        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DPYTHON3_EXECUTABLE="C:/Program Files/Python312-arm64/python.exe" -DPYTHON3_INCLUDE_DIR="C:/Program Files/Python312-arm64/include" -DPYTHON3_LIBRARY="C:/Program Files/Python312-arm64/libs/python312.lib" -DPYTHON3_NUMPY_INCLUDE_DIRS="C:/Program Files/Python312-arm64/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv"
 
     - name: Build and install OpenCV
       run: |
