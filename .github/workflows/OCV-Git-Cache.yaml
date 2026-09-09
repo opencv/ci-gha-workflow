@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64]
+        os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64, opencv-ci, opencv-cn-lin2-x86-64 , opencv-windows-in]
     steps:
       - name: Update Git cache
         timeout-minutes: 60
