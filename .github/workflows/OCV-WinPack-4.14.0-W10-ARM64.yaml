@@ -35,6 +35,7 @@ jobs:
         -DOPENCV_GENERATE_SETUPVARS=ON
         -DBUILD_opencv_java=OFF
         -DBUILD_opencv_python2=OFF
+        -DBUILD_opencv_python3=ON
         -DOPENCV_PYTHON_INSTALL_PATH=python
         -DBUILD_EXAMPLES=OFF
         -DBUILD_DOCS=OFF
@@ -58,6 +59,50 @@ jobs:
     - name: Clean
       run: rm -rf "${{ env.WORKSPACE }}"/* "${{ env.WORKSPACE }}"/install
 
+    # scripts/warnings-handling.py (and any other repo-local tooling) needs
+    # this repo's own content checked out -- nothing does that automatically.
+    - name: Checkout workflow repository
+      uses: actions/checkout@v4
+
+    # numpy headers are required to generate the cv2 bindings. OpenCVDetectPython.cmake's
+    # numpy probe (execute_process running "import numpy") fails completely silently, so a
+    # pip success here doesn't guarantee CMake's later re-invocation of this same python.exe
+    # can actually import it (e.g. pip falling back to a per-user install CMake's subprocess
+    # doesn't see). Importing it back out immediately turns a silent failure into a loud one.
+    - name: Install numpy
+      run: |
+        unset PYTHONHOME PYTHONPATH
+        PY="C:/Program Files/Python312-arm64/python.exe"
+        "$PY" -m pip install --no-cache-dir numpy
+        "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
+
+    # No limited-API build here (matches the old x64 WinPack template): every
+    # target Python version gets its own compiled cv2 extension. 3.11/3.13/3.14
+    # are provisioned directly on the runner at C:\Python\<ver>\ (in-job winget
+    # installs hit MSI error 1603 consistently regardless of scope/location --
+    # this box blocks installers outright), so we just reference them, same as
+    # every other Windows workflow in this repo does for its own Python setup.
+    - name: Install numpy for 3.11
+      run: |
+        unset PYTHONHOME PYTHONPATH
+        PY="C:/Python/3.11/python.exe"
+        "$PY" -m pip install --no-cache-dir numpy
+        "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
+
+    - name: Install numpy for 3.13
+      run: |
+        unset PYTHONHOME PYTHONPATH
+        PY="C:/Python/3.13/python.exe"
+        "$PY" -m pip install --no-cache-dir numpy
+        "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
+
+    - name: Install numpy for 3.14
+      run: |
+        unset PYTHONHOME PYTHONPATH
+        PY="C:/Python/3.14/python.exe"
+        "$PY" -m pip install --no-cache-dir numpy
+        "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
+
     - name: Clone opencv
       run: |
         cd "${{ env.WORKSPACE }}"
@@ -65,13 +110,57 @@ jobs:
 
     - name: Configure OpenCV
       run: |
+        unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build" && cd "${{ env.WORKSPACE }}/build"
-        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" "${{ env.WORKSPACE }}/opencv"
+        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DPYTHON3_EXECUTABLE="C:/Program Files/Python312-arm64/python.exe" -DPYTHON3_INCLUDE_DIR="C:/Program Files/Python312-arm64/include" -DPYTHON3_LIBRARY="C:/Program Files/Python312-arm64/libs/python312.lib" -DPYTHON3_NUMPY_INCLUDE_DIRS="C:/Program Files/Python312-arm64/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv"
 
     - name: Build and install OpenCV
       run: |
         cd "${{ env.WORKSPACE }}/build"
         cmake --build . --config Release --target install 2>&1 | tee build-log.txt
+
+    # Each extra Python version's cv2 module is built as a separate standalone
+    # pass against the already-built OpenCV libs (modules/python/standalone.cmake),
+    # matching the old x64 WinPack template. -DOpenCV_BINARY_DIR alone pulls in
+    # CMAKE_INSTALL_PREFIX/OPENCV_PYTHON_INSTALL_PATH/OpenCV_SOURCE_DIR from the
+    # main build's generated opencv_python_config.cmake (a plain set(), not
+    # CACHE, so it overrides any -D of those three unconditionally -- no point
+    # passing them here). Only the per-version PYTHON_* vars need overriding
+    # (no "3", unlike the main build's PYTHON3_* -- a different code path,
+    # entered because OPENCV_INITIAL_PASS isn't defined when cmake targets
+    # modules/python directly, so this doesn't hit the world-build python3 gate).
+    - name: Configure Python 3.11 bindings
+      run: |
+        unset PYTHONHOME PYTHONPATH
+        mkdir "${{ env.WORKSPACE }}/build/python_311" && cd "${{ env.WORKSPACE }}/build/python_311"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.11/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.11/include" -DPYTHON_LIBRARY="C:/Python/3.11/libs/python311.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.11/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+
+    - name: Build and install Python 3.11 bindings
+      run: |
+        cd "${{ env.WORKSPACE }}/build/python_311"
+        cmake --build . --config Release --target install
+
+    - name: Configure Python 3.13 bindings
+      run: |
+        unset PYTHONHOME PYTHONPATH
+        mkdir "${{ env.WORKSPACE }}/build/python_313" && cd "${{ env.WORKSPACE }}/build/python_313"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.13/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.13/include" -DPYTHON_LIBRARY="C:/Python/3.13/libs/python313.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.13/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+
+    - name: Build and install Python 3.13 bindings
+      run: |
+        cd "${{ env.WORKSPACE }}/build/python_313"
+        cmake --build . --config Release --target install
+
+    - name: Configure Python 3.14 bindings
+      run: |
+        unset PYTHONHOME PYTHONPATH
+        mkdir "${{ env.WORKSPACE }}/build/python_314" && cd "${{ env.WORKSPACE }}/build/python_314"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.14/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.14/include" -DPYTHON_LIBRARY="C:/Python/3.14/libs/python314.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.14/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+
+    - name: Build and install Python 3.14 bindings
+      run: |
+        cd "${{ env.WORKSPACE }}/build/python_314"
+        cmake --build . --config Release --target install
 
     - name: Warnings check
       continue-on-error: true
@@ -81,7 +170,7 @@ jobs:
       run: |
         mkdir "${{ env.WORKSPACE }}/artifacts"
         cd "${{ env.WORKSPACE }}/install"
-        7z a -bd -sfx -y -mx7 ../artifacts/opencv-4.14.0-windows-arm64.exe ./
+        "C:/Program Files/7-Zip/7z.exe" a -bd -sfx -y -mx7 ../artifacts/opencv-4.14.0-windows-arm64.exe ./
 
     - name: Save artifact
       uses: actions/upload-artifact@v4
