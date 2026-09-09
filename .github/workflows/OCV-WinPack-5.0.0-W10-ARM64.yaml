@@ -121,15 +121,19 @@ jobs:
 
     # Each extra Python version's cv2 module is built as a separate standalone
     # pass against the already-built OpenCV libs (modules/python/standalone.cmake),
-    # not by reconfiguring the whole project. That file uses PYTHON_* variable
-    # names (no "3"), unlike the main build's PYTHON3_* -- different code path,
+    # matching the old x64 WinPack template. -DOpenCV_BINARY_DIR alone pulls in
+    # CMAKE_INSTALL_PREFIX/OPENCV_PYTHON_INSTALL_PATH/OpenCV_SOURCE_DIR from the
+    # main build's generated opencv_python_config.cmake (a plain set(), not
+    # CACHE, so it overrides any -D of those three unconditionally -- no point
+    # passing them here). Only the per-version PYTHON_* vars need overriding
+    # (no "3", unlike the main build's PYTHON3_* -- a different code path,
     # entered because OPENCV_INITIAL_PASS isn't defined when cmake targets
-    # modules/python directly, so this doesn't hit the world-build python3 gate.
+    # modules/python directly, so this doesn't hit the world-build python3 gate).
     - name: Configure Python 3.11 bindings
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_311" && cd "${{ env.WORKSPACE }}/build/python_311"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="C:/Python/3.11/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.11/include" -DPYTHON_LIBRARY="C:/Python/3.11/libs/python311.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.11/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.11/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.11/include" -DPYTHON_LIBRARY="C:/Python/3.11/libs/python311.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.11/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.11 bindings
       run: |
@@ -140,7 +144,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_313" && cd "${{ env.WORKSPACE }}/build/python_313"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="C:/Python/3.13/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.13/include" -DPYTHON_LIBRARY="C:/Python/3.13/libs/python313.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.13/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.13/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.13/include" -DPYTHON_LIBRARY="C:/Python/3.13/libs/python313.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.13/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.13 bindings
       run: |
@@ -151,7 +155,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_314" && cd "${{ env.WORKSPACE }}/build/python_314"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DOpenCV_SOURCE_DIR="${{ env.WORKSPACE }}/opencv" -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DOPENCV_PYTHON_INSTALL_PATH=python -DPYTHON_EXECUTABLE="C:/Python/3.14/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.14/include" -DPYTHON_LIBRARY="C:/Python/3.14/libs/python314.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.14/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.14/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.14/include" -DPYTHON_LIBRARY="C:/Python/3.14/libs/python314.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.14/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.14 bindings
       run: |
