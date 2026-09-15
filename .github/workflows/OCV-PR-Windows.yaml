@@ -55,7 +55,7 @@ jobs:
         include:
           - arch: arm64
             config: base
-            runner: windows-11-vs2026-arm
+            runner: windows-arm64
             vs: 'Visual Studio 18 2026'
             cmake_arch: ARM64
             no_opencl: true
