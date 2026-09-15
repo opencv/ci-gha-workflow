@@ -151,7 +151,7 @@ jobs:
         OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
         OPENCV_TEST_REQUIRE_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
         OPENCV_TEST_CHECK_OPTIONAL_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
-        PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader:$PYTHONPATH'
+        PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader;${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/lib/python3'
         OPENCV_OPENCL_RUNTIME: 'disabled'
       with:
         workdir: '${{ github.workspace }}'
@@ -159,7 +159,7 @@ jobs:
         logdir: '${{ github.workspace }}'
         plan: "test-plan-win-${{ matrix.branch }}.json"
         suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''contrib'''  || '''main''' }} ]"
-        enable_python: "false"
+        enable_python: ${{ matrix.cmake_arch == 'x64' }}
         enable_java: "false"
         filter: "[ 'windows-common' ]"
         suffix: '${{ matrix.arch }}_${{ matrix.branch }}'

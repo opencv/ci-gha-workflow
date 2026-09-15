@@ -25,8 +25,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64]
-        branch: ['3.4', '4.x', '5.x']
+        os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64, opencv-ci, opencv-cn-lin2-x86-64 , opencv-windows-in]
+        branch: ['4.x', '5.x']
     steps:
       - name: Clean
         run: rm -rf ./* && rm -rf ./.??*
@@ -48,7 +48,7 @@ jobs:
             echo $LATEST_HASH | tee ${DNN_MODELS}/dnn/latest-hash-${{ matrix.branch }}.txt
           fi
       - name: Update DNN models on Windows
-        if: ${{ matrix.os == 'opencv-cn-win' }}
+        if: ${{ matrix.os == 'opencv-cn-win' || matrix.os == 'opencv-windows-in' }}
         timeout-minutes: 60
         run: |
           LATEST_SAVED_HASH=$(cat $DNN_MODELS\\dnn\\latest-hash-${{ matrix.branch }}.txt)
