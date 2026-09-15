@@ -50,9 +50,19 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        arch: [ arm64 ]
+        arch: [ x86, x64, arm64 ]
         config: [ base ]
         include:
+          - arch: x86
+            config: base
+            runner: opencv-cn-win
+            vs: 'Visual Studio 16 2019'
+            cmake_arch: Win32
+          - arch: x64
+            config: base
+            runner: opencv-cn-win
+            vs: 'Visual Studio 16 2019'
+            cmake_arch: x64
           - arch: arm64
             config: base
             runner: windows-arm64
@@ -69,7 +79,7 @@ jobs:
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
-        -DWITH_OPENMP=ON
+        ${{ matrix.arch == 'arm64' && '-DWITH_OPENMP=ON' || '' }}
         -DCMAKE_BUILD_TYPE=Release
         ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
         ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
@@ -152,7 +162,7 @@ jobs:
         OPENCV_TEST_REQUIRE_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
         OPENCV_TEST_CHECK_OPTIONAL_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
         PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader;${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/lib/python3'
-        OPENCV_OPENCL_RUNTIME: 'disabled'
+        OPENCV_OPENCL_RUNTIME: ${{ matrix.arch == 'arm64' && 'disabled' || '' }}
       with:
         workdir: '${{ github.workspace }}'
         builddir: '${{ env.MAIN_BUILD_DIR }}'
