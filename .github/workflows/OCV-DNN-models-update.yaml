@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [opencv-cn-lin-x86-64, opencv-cn-lin-arm64, opencv-cn-win, opencv-cn-mac-arm64, opencv-cn-mac-x86-64, opencv-ci, opencv-cn-lin2-x86-64 , opencv-windows-in]
+        os: [opencv-linux-cuda, opencv-cn-lin-arm64, opencv-cn-win-3, opencv-cn-mac-arm64, opencv-cn-mac-x86-64, opencv-ci, opencv-cn-lin2-x86-64 , opencv-windows-in]
         branch: ['4.x', '5.x']
     steps:
       - name: Clean
@@ -33,7 +33,7 @@ jobs:
       - name: Clone opencv_extra
         run: git clone --single-branch --branch ${{ matrix.branch }} --reference $GIT_CACHE_PATH/opencv_extra.git https://github.com/opencv/opencv_extra.git opencv_extra
       - name: Update DNN models on Linux / macOS
-        if: ${{ matrix.os != 'opencv-cn-win' }}
+        if: ${{ matrix.os != 'opencv-cn-win-3' || matrix.os != 'opencv-windows-in' }}
         timeout-minutes: 60
         run: |
           LATEST_SAVED_HASH=$(cat ${DNN_MODELS}/dnn/latest-hash-${{ matrix.branch }}.txt)
@@ -48,7 +48,7 @@ jobs:
             echo $LATEST_HASH | tee ${DNN_MODELS}/dnn/latest-hash-${{ matrix.branch }}.txt
           fi
       - name: Update DNN models on Windows
-        if: ${{ matrix.os == 'opencv-cn-win' || matrix.os == 'opencv-windows-in' }}
+        if: ${{ matrix.os == 'opencv-cn-win-3' || matrix.os == 'opencv-windows-in' }}
         timeout-minutes: 60
         run: |
           LATEST_SAVED_HASH=$(cat $DNN_MODELS\\dnn\\latest-hash-${{ matrix.branch }}.txt)
