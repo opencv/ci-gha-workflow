@@ -11,7 +11,7 @@ on:
       - 'configure-and-build/*'
       - 'run-tests/*'
       - 'scripts/runner.py'
-      - 'scripts/test-plan.json'
+      - 'scripts/test-plan-win-*.json'
   workflow_call:
     inputs:
       workflow_branch:

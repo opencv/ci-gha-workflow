@@ -10,7 +10,8 @@ on:
       - 'configure-and-build/*'
       - 'run-tests/*'
       - 'scripts/runner.py'
-      - 'scripts/test-plan.json'
+      - 'scripts/test-plan-4.x.json'
+      - 'scripts/test-plan-5.x.json'
   workflow_call:
     inputs:
       workflow_branch:
