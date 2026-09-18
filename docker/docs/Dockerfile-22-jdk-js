@@ -1,4 +1,4 @@
-#Version: 20250526
+#Version: 20260527
 # Image name: quay.io/opencv-ci/opencv-docs-jdk-js-22.04
 
 FROM ubuntu:22.04
@@ -23,6 +23,8 @@ RUN \
     pylint flake8 \
     python3-bs4 \
     openjdk-11-jdk \
+    python3-sphinx \
+    python3-myst-parser \
     default-jdk-headless \
     ant \
     && \

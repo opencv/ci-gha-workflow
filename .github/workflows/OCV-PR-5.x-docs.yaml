@@ -31,7 +31,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20250526
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20260527
       options: --user ci
     steps:
     - uses: actions/checkout@v4
