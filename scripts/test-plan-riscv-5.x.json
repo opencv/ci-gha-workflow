@@ -66,14 +66,6 @@
         },
         "sc": {
             "test_core": [
-                "hal_intrin128.float64x2_BASELINE",
-                "Core_ArithmMask.uninitialized",
-                "Core_ConvertScale*/ElemWiseTest.accuracy/*",
-                "Core_Add/ElemWiseTest.accuracy/*",
-                "Core_Sub/ElemWiseTest.accuracy/*",
-                "Core_AddS/ElemWiseTest.accuracy/*",
-                "Core_SubRS/ElemWiseTest.accuracy/*",
-                "Core_ScaleAdd/ElemWiseTest.accuracy/*",
                 "Core_DotProduct.accuracy"
             ],
             "test_dnn": [
