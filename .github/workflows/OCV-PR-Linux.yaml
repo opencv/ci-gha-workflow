@@ -61,14 +61,14 @@ jobs:
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
         include:
           - version: '26.04'
-            image: '26.04:20260425'
+            image: '26.04:20260928'
             jpegxl: true
             avif: true
             avx2: true
             gphoto2: true
             aravis: true
           - version: '24.04'
-            image: '24.04:20260515'
+            image: '24.04:20260928'
             jpegxl: true
             avif: true
             avx2: true
