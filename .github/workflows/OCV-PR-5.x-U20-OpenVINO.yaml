@@ -28,7 +28,7 @@ env:
 
 jobs:
   BuildAndTest:
-    runs-on: opencv-cn-lin-x86-64
+    runs-on: openvino
     defaults:
       run:
         shell: bash
