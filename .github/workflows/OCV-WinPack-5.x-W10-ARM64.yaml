@@ -64,7 +64,7 @@ jobs:
     - name: Checkout workflow repository
       uses: actions/checkout@v4
 
-    # Install missing interpreters at the paths used by the build below.
+    # Reuse registered ARM64 interpreters or install missing versions.
     # All-user installation requires an elevated runner service account.
     - name: Install ARM64 Python versions
       shell: powershell
@@ -72,6 +72,30 @@ jobs:
       run: |
         $ErrorActionPreference = 'Stop'
         Remove-Item Env:PYTHONHOME, Env:PYTHONPATH -ErrorAction SilentlyContinue
+
+        function Find-Arm64Python($minorVersion, $preferredDirectory) {
+          $directories = @($preferredDirectory)
+          # The installer may reuse an existing location instead of TargetDir.
+          foreach ($registryRoot in @('HKCU:\Software\Python\PythonCore', 'HKLM:\Software\Python\PythonCore', 'HKLM:\Software\WOW6432Node\Python\PythonCore')) {
+            foreach ($key in (Get-ChildItem $registryRoot -ErrorAction SilentlyContinue)) {
+              $installPath = Get-Item (Join-Path $key.PSPath 'InstallPath') -ErrorAction SilentlyContinue
+              if ($installPath) {
+                $directories += $installPath.GetValue('')
+              }
+            }
+          }
+          $tag = $minorVersion.Replace('.', '')
+          $directories += @("C:\Python\$minorVersion", "$env:ProgramFiles\Python$tag-arm64", "$env:LOCALAPPDATA\Programs\Python\Python$tag-arm64")
+          foreach ($directory in ($directories | Where-Object { $_ } | Select-Object -Unique)) {
+            $candidate = Join-Path $directory 'python.exe'
+            if (!(Test-Path $candidate)) { continue }
+            try {
+              $prefix = & $candidate -I -c "import platform, sys; print(sys.prefix if platform.machine().upper() == 'ARM64' and '.'.join(map(str, sys.version_info[:2])) == '$minorVersion' else '')" 2>$null
+              if ($LASTEXITCODE -eq 0 -and $prefix) { return ($prefix.Trim() -replace '\\', '/') }
+            } catch { continue }
+          }
+          return $null
+        }
 
         $versions = @(
           @{ Version = '3.11.9';  Directory = 'C:\Python\3.11' },
@@ -83,9 +107,10 @@ jobs:
         foreach ($item in $versions) {
           $version = $item.Version
           $directory = $item.Directory
-          $python = Join-Path $directory 'python.exe'
+          $minorVersion = ($version.Split('.')[0..1] -join '.')
+          $prefix = Find-Arm64Python $minorVersion $directory
 
-          if (!(Test-Path $python)) {
+          if (!$prefix) {
             $installer = Join-Path $env:RUNNER_TEMP "python-$version-arm64.exe"
             $log = Join-Path $env:RUNNER_TEMP "python-$version-install.log"
             Invoke-WebRequest "https://www.python.org/ftp/python/$version/python-$version-arm64.exe" -OutFile $installer
@@ -96,9 +121,20 @@ jobs:
               Get-Content $log -Tail 80 -ErrorAction SilentlyContinue
               throw "Python $version installation failed: $($process.ExitCode)"
             }
+            $prefix = Find-Arm64Python $minorVersion $directory
+            if (!$prefix) {
+              Get-Content $log -Tail 80 -ErrorAction SilentlyContinue
+              throw "Installer exited $($process.ExitCode), but no usable ARM64 Python $minorVersion was found"
+            }
           }
 
-          $minorVersion = ($version.Split('.')[0..1] -join '.')
+          $python = "$prefix/python.exe"
+          $tag = $minorVersion.Replace('.', '')
+          foreach ($required in @("$prefix/include/Python.h", "$prefix/libs/python$tag.lib")) {
+            if (!(Test-Path $required)) { throw "Python development file is missing: $required" }
+          }
+          Write-Host "Using Python $minorVersion at $python"
+          "PYTHON${tag}_ROOT=$prefix" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           & $python -c "import platform, sys; print(sys.version); print(platform.machine()); assert platform.machine().upper() == 'ARM64'; assert '.'.join(map(str, sys.version_info[:2])) == '$minorVersion'"
           if ($LASTEXITCODE -ne 0) {
             throw "Python $version ARM64 verification failed"
@@ -113,9 +149,10 @@ jobs:
     - name: Install numpy
       run: |
         unset PYTHONHOME PYTHONPATH
-        PY="C:/Program Files/Python312-arm64/python.exe"
+        PY="${PYTHON312_ROOT}/python.exe"
         "$PY" -m pip install --no-cache-dir numpy
         "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
+        echo "PYTHON312_NUMPY=$("$PY" -c "import numpy; print(numpy.get_include().replace(chr(92), chr(47)))")" >> "$GITHUB_ENV"
 
     # No limited-API build here (matches the old x64 WinPack template): every
     # target Python version gets its own compiled cv2 extension. Missing
@@ -123,23 +160,26 @@ jobs:
     - name: Install numpy for 3.11
       run: |
         unset PYTHONHOME PYTHONPATH
-        PY="C:/Python/3.11/python.exe"
+        PY="${PYTHON311_ROOT}/python.exe"
         "$PY" -m pip install --no-cache-dir numpy
         "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
+        echo "PYTHON311_NUMPY=$("$PY" -c "import numpy; print(numpy.get_include().replace(chr(92), chr(47)))")" >> "$GITHUB_ENV"
 
     - name: Install numpy for 3.13
       run: |
         unset PYTHONHOME PYTHONPATH
-        PY="C:/Python/3.13/python.exe"
+        PY="${PYTHON313_ROOT}/python.exe"
         "$PY" -m pip install --no-cache-dir numpy
         "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
+        echo "PYTHON313_NUMPY=$("$PY" -c "import numpy; print(numpy.get_include().replace(chr(92), chr(47)))")" >> "$GITHUB_ENV"
 
     - name: Install numpy for 3.14
       run: |
         unset PYTHONHOME PYTHONPATH
-        PY="C:/Python/3.14/python.exe"
+        PY="${PYTHON314_ROOT}/python.exe"
         "$PY" -m pip install --no-cache-dir numpy
         "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
+        echo "PYTHON314_NUMPY=$("$PY" -c "import numpy; print(numpy.get_include().replace(chr(92), chr(47)))")" >> "$GITHUB_ENV"
 
     - name: Clone opencv
       run: |
@@ -150,7 +190,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build" && cd "${{ env.WORKSPACE }}/build"
-        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DPYTHON3_EXECUTABLE="C:/Program Files/Python312-arm64/python.exe" -DPYTHON3_INCLUDE_DIR="C:/Program Files/Python312-arm64/include" -DPYTHON3_LIBRARY="C:/Program Files/Python312-arm64/libs/python312.lib" -DPYTHON3_NUMPY_INCLUDE_DIRS="C:/Program Files/Python312-arm64/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv"
+        cmake -G "Visual Studio 17 2022" ${{ env.EXTRA_CMAKE_OPTIONS }} -DCMAKE_INSTALL_PREFIX="${{ env.WORKSPACE }}/install" -DPYTHON3_EXECUTABLE="${PYTHON312_ROOT}/python.exe" -DPYTHON3_INCLUDE_DIR="${PYTHON312_ROOT}/include" -DPYTHON3_LIBRARY="${PYTHON312_ROOT}/libs/python312.lib" -DPYTHON3_NUMPY_INCLUDE_DIRS="${PYTHON312_NUMPY}" "${{ env.WORKSPACE }}/opencv"
 
     - name: Build and install OpenCV
       run: |
@@ -171,7 +211,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_311" && cd "${{ env.WORKSPACE }}/build/python_311"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.11/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.11/include" -DPYTHON_LIBRARY="C:/Python/3.11/libs/python311.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.11/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="${PYTHON311_ROOT}/python.exe" -DPYTHON_INCLUDE_DIR="${PYTHON311_ROOT}/include" -DPYTHON_LIBRARY="${PYTHON311_ROOT}/libs/python311.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="${PYTHON311_NUMPY}" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.11 bindings
       run: |
@@ -182,7 +222,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_313" && cd "${{ env.WORKSPACE }}/build/python_313"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.13/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.13/include" -DPYTHON_LIBRARY="C:/Python/3.13/libs/python313.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.13/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="${PYTHON313_ROOT}/python.exe" -DPYTHON_INCLUDE_DIR="${PYTHON313_ROOT}/include" -DPYTHON_LIBRARY="${PYTHON313_ROOT}/libs/python313.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="${PYTHON313_NUMPY}" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.13 bindings
       run: |
@@ -193,7 +233,7 @@ jobs:
       run: |
         unset PYTHONHOME PYTHONPATH
         mkdir "${{ env.WORKSPACE }}/build/python_314" && cd "${{ env.WORKSPACE }}/build/python_314"
-        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="C:/Python/3.14/python.exe" -DPYTHON_INCLUDE_DIR="C:/Python/3.14/include" -DPYTHON_LIBRARY="C:/Python/3.14/libs/python314.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="C:/Python/3.14/Lib/site-packages/numpy/_core/include" "${{ env.WORKSPACE }}/opencv/modules/python"
+        cmake -G "Visual Studio 17 2022" -A ARM64 -DOpenCV_BINARY_DIR="${{ env.WORKSPACE }}/build" -DPYTHON_EXECUTABLE="${PYTHON314_ROOT}/python.exe" -DPYTHON_INCLUDE_DIR="${PYTHON314_ROOT}/include" -DPYTHON_LIBRARY="${PYTHON314_ROOT}/libs/python314.lib" -DPYTHON_NUMPY_INCLUDE_DIRS="${PYTHON314_NUMPY}" "${{ env.WORKSPACE }}/opencv/modules/python"
 
     - name: Build and install Python 3.14 bindings
       run: |
