@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/OCV-WinPack-5.1.0-W10-ARM64.yaml'
+      - '.github/workflows/OCV-WinPack-5.x-W10-ARM64.yaml'
   workflow_dispatch:
 
 concurrency:
@@ -64,6 +64,47 @@ jobs:
     - name: Checkout workflow repository
       uses: actions/checkout@v4
 
+    # Install missing interpreters at the paths used by the build below.
+    # All-user installation requires an elevated runner service account.
+    - name: Install ARM64 Python versions
+      shell: powershell
+      timeout-minutes: 30
+      run: |
+        $ErrorActionPreference = 'Stop'
+        Remove-Item Env:PYTHONHOME, Env:PYTHONPATH -ErrorAction SilentlyContinue
+
+        $versions = @(
+          @{ Version = '3.11.9';  Directory = 'C:\Python\3.11' },
+          @{ Version = '3.12.10'; Directory = 'C:\Program Files\Python312-arm64' },
+          @{ Version = '3.13.9';  Directory = 'C:\Python\3.13' },
+          @{ Version = '3.14.0';  Directory = 'C:\Python\3.14' }
+        )
+
+        foreach ($item in $versions) {
+          $version = $item.Version
+          $directory = $item.Directory
+          $python = Join-Path $directory 'python.exe'
+
+          if (!(Test-Path $python)) {
+            $installer = Join-Path $env:RUNNER_TEMP "python-$version-arm64.exe"
+            $log = Join-Path $env:RUNNER_TEMP "python-$version-install.log"
+            Invoke-WebRequest "https://www.python.org/ftp/python/$version/python-$version-arm64.exe" -OutFile $installer
+
+            $arguments = "/quiet /log `"$log`" InstallAllUsers=1 TargetDir=`"$directory`" Include_pip=1 Include_dev=1 Include_test=0 Include_launcher=0 PrependPath=0"
+            $process = Start-Process $installer -ArgumentList $arguments -Wait -PassThru
+            if ($process.ExitCode -notin @(0, 3010)) {
+              Get-Content $log -Tail 80 -ErrorAction SilentlyContinue
+              throw "Python $version installation failed: $($process.ExitCode)"
+            }
+          }
+
+          $minorVersion = ($version.Split('.')[0..1] -join '.')
+          & $python -c "import platform, sys; print(sys.version); print(platform.machine()); assert platform.machine().upper() == 'ARM64'; assert '.'.join(map(str, sys.version_info[:2])) == '$minorVersion'"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Python $version ARM64 verification failed"
+          }
+        }
+
     # numpy headers are required to generate the cv2 bindings. OpenCVDetectPython.cmake's
     # numpy probe (execute_process running "import numpy") fails completely silently, so a
     # pip success here doesn't guarantee CMake's later re-invocation of this same python.exe
@@ -77,11 +118,8 @@ jobs:
         "$PY" -c "import numpy; print('numpy', numpy.__version__, 'at', numpy.get_include())"
 
     # No limited-API build here (matches the old x64 WinPack template): every
-    # target Python version gets its own compiled cv2 extension. 3.11/3.13/3.14
-    # are provisioned directly on the runner at C:\Python\<ver>\ (in-job winget
-    # installs hit MSI error 1603 consistently regardless of scope/location --
-    # this box blocks installers outright), so we just reference them, same as
-    # every other Windows workflow in this repo does for its own Python setup.
+    # target Python version gets its own compiled cv2 extension. Missing
+    # interpreters are installed above before NumPy and CMake use these paths.
     - name: Install numpy for 3.11
       run: |
         unset PYTHONHOME PYTHONPATH
