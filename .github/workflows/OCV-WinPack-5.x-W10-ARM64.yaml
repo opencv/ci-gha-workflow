@@ -64,6 +64,37 @@ jobs:
     - name: Checkout workflow repository
       uses: actions/checkout@v4
 
+    - name: Set up 7-Zip for WinPack
+      shell: powershell
+      timeout-minutes: 10
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $candidates = @("$env:ProgramFiles\7-Zip\7z.exe")
+        $command = Get-Command 7z.exe -ErrorAction SilentlyContinue
+        if ($command) { $candidates += $command.Source }
+        $sevenZip = $null
+        foreach ($candidate in $candidates) {
+          if ((Test-Path $candidate) -and (Test-Path (Join-Path (Split-Path $candidate) '7z.sfx'))) {
+            $sevenZip = $candidate
+            break
+          }
+        }
+        if (!$sevenZip) {
+          $installer = Join-Path $env:RUNNER_TEMP '7z2605-arm64.exe'
+          $directory = Join-Path $env:RUNNER_TEMP '7zip-arm64'
+          Invoke-WebRequest 'https://github.com/ip7z/7zip/releases/download/26.05/7z2605-arm64.exe' -OutFile $installer
+          $process = Start-Process $installer -ArgumentList "/S /D=`"$directory`"" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "7-Zip installation failed: $($process.ExitCode)" }
+          $sevenZip = Join-Path $directory '7z.exe'
+        }
+        if (!(Test-Path $sevenZip)) { throw "7-Zip executable is missing: $sevenZip" }
+        if (!(Test-Path (Join-Path (Split-Path $sevenZip) '7z.sfx'))) {
+          throw '7-Zip self-extracting archive module is missing'
+        }
+        & $sevenZip i
+        if ($LASTEXITCODE -ne 0) { throw '7-Zip verification failed' }
+        "SEVEN_ZIP=$($sevenZip -replace '\\', '/')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     # Reuse registered ARM64 interpreters or install missing versions.
     # All-user installation requires an elevated runner service account.
     - name: Install ARM64 Python versions
@@ -248,7 +279,7 @@ jobs:
       run: |
         mkdir "${{ env.WORKSPACE }}/artifacts"
         cd "${{ env.WORKSPACE }}/install"
-        "C:/Program Files/7-Zip/7z.exe" a -bd -sfx -y -mx7 ../artifacts/opencv-5.1.0-windows-arm64.exe ./
+        "$SEVEN_ZIP" a -bd -sfx -y -mx7 ../artifacts/opencv-5.1.0-windows-arm64.exe ./
 
     - name: Save artifact
       uses: actions/upload-artifact@v4
