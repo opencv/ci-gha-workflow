@@ -129,27 +129,27 @@ jobs:
         ninja -j ${{ env.PARALLEL_JOBS }} | tee $HOME/build/build-log.txt
     - name: Accuracy:cudev
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_cudev --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:core
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_core --test_threads=${{ env.PARALLEL_JOBS }} --gtest_filter=${{ env.GTEST_FILTER_STRING }} ${{ env.EXTRA_GTEST_OPTIONS }}
       env:
         GTEST_FILTER_STRING: '*GPU*:*Gpu*:*CUDA*'
     - name: Accuracy:photo
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_photo --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:stitching
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_stitching --test_threads=${{ env.PARALLEL_JOBS }} ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:DNN_AUTO
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
     - name: Accuracy:python3
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/python/test/test_cuda.py --repo ${{ env.OPENCV_DOCKER_WORKDIR }} -v

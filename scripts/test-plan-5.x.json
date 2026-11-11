@@ -2,6 +2,25 @@
     "suites": {
         "short": [ "opencv_test_core", "opencv_test_imgproc", "opencv_test_photo" ],
 
+        "arm-debug": [
+            "opencv_test_calib",
+            "opencv_test_core",
+            "opencv_test_ptcloud",
+            "opencv_test_photo",
+            "opencv_test_imgproc",
+            "opencv_test_objdetect",
+            "opencv_test_geometry",
+            "opencv_test_video",
+            "opencv_test_videoio",
+            "opencv_test_features",
+            "opencv_test_dnn",
+            "opencv_test_imgcodecs",
+            "opencv_test_stitching",
+            "opencv_test_stereo",
+            "opencv_test_flann",
+            "opencv_test_highgui"
+        ],
+
         "linux": [
             "opencv_test_geometry",
             "opencv_test_calib",
@@ -98,6 +117,11 @@
                 "Core_InRangeS/ElemWiseTest.accuracy/0",
                 "Core_InRange/ElemWiseTest.accuracy/0"
             ]
+        },
+        "arm-debug": {
+            "test_videoio": [
+                "Media.audio/0"
+            ]
         }
     },
     "options": {
@@ -108,7 +132,17 @@
             "args": {
                 "test": "--skip_unstable=1",
                 "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"
-            }
+            },
+            "serial": [ "opencv_perf_", "opencv_test_highgui", "opencv_test_videoio" ]
+        },
+        "arm-debug": {
+            "wrap": {
+                "": "xvfb-run -a"
+            },
+            "args": {
+                "test": "--skip_unstable=1 --test_threads=4"
+            },
+            "serial": [ "opencv_test_highgui", "opencv_test_videoio" ]
         }
     }
 }

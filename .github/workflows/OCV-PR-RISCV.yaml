@@ -17,6 +17,11 @@ on:
         description: "Branch for ci-gha-workflow repository"
         required: true
         type: string
+      fast:
+        description: "Run the HAL-enabled core/imgproc smoke suite only"
+        default: false
+        required: false
+        type: boolean
 
 concurrency:
   group: OCV-PR-RISCV-${{ github.ref }}
@@ -53,9 +58,7 @@ jobs:
         version:
           - 'clang'
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
-        hal:
-          - true
-          - false
+        hal: ${{ fromJSON(inputs.fast && '[true]' || '[true, false]') }}
     defaults:
       run:
         shell: bash
@@ -119,17 +122,18 @@ jobs:
         builddir: 'build'
         logdir: '${{ env.HOME }}/build'
         plan: "test-plan-riscv-${{ matrix.branch }}.json"
-        suite: "[ 'pr' ]"
-        filter: "[ 'clang', ${{ matrix.hal && '' || '''hal-off''' }} ]"
+        suite: ${{ inputs.fast && '["short"]' || '["pr"]' }}
+        filter: ${{ matrix.hal && '["clang"]' || '["clang", "hal-off"]' }}
         options: "qemu"
         timeout: "60"
         enable_python: "false"
         enable_java: "false"
         suffix: '${{ matrix.version }}_${{ matrix.branch }}_hal-${{ matrix.hal }}'
+        jobs: "2"
+        fail_fast: ${{ inputs.fast }}
 
-    - if: ${{ always() && env.WARNINGS == '1' }}
+    - if: ${{ !cancelled() && env.WARNINGS == '1' }}
       name: Warnings check
       run: |
         echo "::error Warnings have been found!"
         exit 1
-
