@@ -31,7 +31,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20250526
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20260527
       options: --user ci
     steps:
     - uses: actions/checkout@v4
@@ -106,6 +106,19 @@ jobs:
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_contrib does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
+
+    - name: Install Sphinx dependencies
+      timeout-minutes: 60
+      run: |
+        python3 -m venv --without-pip "$HOME/sphinx-venv"
+        curl --fail --location --silent --show-error \
+          https://bootstrap.pypa.io/get-pip.py \
+          -o "$HOME/get-pip.py"
+        "$HOME/sphinx-venv/bin/python" "$HOME/get-pip.py"
+        "$HOME/sphinx-venv/bin/python" -m pip install \
+          -r "${{ env.OPENCV_DOCKER_WORKDIR }}/docs_sphinx/requirements.txt"
+        rm "$HOME/get-pip.py"
+
     - name: Whitespace OpenCV
       timeout-minutes: 60
       run: |
@@ -162,19 +175,28 @@ jobs:
         npm install
         node tests.js
 
-    - name: Configure OpenCV doxygen
+    - name: Configure OpenCV Sphinx
       if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
-      id: opencv-doxygen
+      id: opencv-sphinx
       timeout-minutes: 60
       run: |
-        cd $HOME/build
-        cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
-    - name: Build OpenCV doxygen
-      if: ${{ always() && steps.opencv-doxygen.outcome == 'success' }}
+        mkdir -p "$HOME/build/docs_sphinx"
+        cmake -E copy \
+          "$HOME/build/js/bin/opencv.js" \
+          "$HOME/build/docs_sphinx/opencv.js"
+        cd "$HOME/build"
+        cmake ${{ env.EXTRA_CMAKE_OPTIONS }} \
+          -DSPHINX_BUILD="$HOME/sphinx-venv/bin/sphinx-build" \
+          -DSPHINX_BUILD_DIAGRAMS=ON \
+          "${{ env.OPENCV_DOCKER_WORKDIR }}"
+    - name: Build OpenCV Sphinx
+      if: ${{ always() && steps.opencv-sphinx.outcome == 'success' }}
       timeout-minutes: 60
       id: build-opencv
       working-directory: ${{ env.HOME }}/build
-      run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
+      run: |
+        cmake --build . --config release --target sphinx -- -j$(nproc) 2>&1 | tee log.txt
+        test -s "$HOME/build/docs_sphinx/html/index.html"
     - name: Warnings check
       run: python3 scripts/warnings-handling.py ${{ env.HOME }}/build/log.txt
     - name: Pylint
