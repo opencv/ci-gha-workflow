@@ -20,7 +20,7 @@ jobs:
     name: Build Docs ${{ matrix.branch }}
     runs-on: ubuntu-22.04
     container:
-      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20250526
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20260527
       options: --user ci
     strategy:
       matrix:
@@ -81,21 +81,83 @@ jobs:
           cd $HOME/build/js/bin
           npm install
           node tests.js
-          
+
+      - name: Install Sphinx dependencies
+        if: matrix.branch == '5.x'
+        run: |
+          python3 -m venv --without-pip "$HOME/sphinx-venv"
+          curl --fail --location --silent --show-error \
+            https://bootstrap.pypa.io/get-pip.py \
+            -o "$HOME/get-pip.py"
+          "$HOME/sphinx-venv/bin/python" "$HOME/get-pip.py"
+          "$HOME/sphinx-venv/bin/python" -m pip install \
+            -r "${{ env.OPENCV_DOCKER_WORKDIR }}/docs_sphinx/requirements.txt"
+          rm "$HOME/get-pip.py"
+
       - name: Configure Doxygen
+        if: matrix.branch == '4.x'
         run: |
           mkdir -p $HOME/build
           cd $HOME/build
           cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
-  
+
       - name: Build Doxygen
+        if: matrix.branch == '4.x'
         working-directory: ${{ env.HOME }}/build
         run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
 
+      - name: Configure Sphinx
+        if: matrix.branch == '5.x'
+        run: |
+          mkdir -p "$HOME/build/docs_sphinx"
+          cmake -E copy \
+            "$HOME/build/js/bin/opencv.js" \
+            "$HOME/build/docs_sphinx/opencv.js"
+          cd "$HOME/build"
+          cmake ${{ env.EXTRA_CMAKE_OPTIONS }} \
+            -DSPHINX_BUILD="$HOME/sphinx-venv/bin/sphinx-build" \
+            -DSPHINX_BUILD_DIAGRAMS=ON \
+            "${{ env.OPENCV_DOCKER_WORKDIR }}"
+
+      - name: Build Sphinx
+        if: matrix.branch == '5.x'
+        working-directory: ${{ env.HOME }}/build
+        run: |
+          cmake --build . --config release --target sphinx -- -j$(nproc) 2>&1 | tee sphinx.log
+          test -s "$HOME/build/docs_sphinx/html/index.html"
+
+      - name: Stage Sphinx Docs
+        if: matrix.branch == '5.x'
+        run: |
+          mkdir -p "$HOME/publish/doc/doxygen/html"
+          mkdir -p "$HOME/publish/js/bin"
+          cmake -E copy_directory \
+            "$HOME/build/docs_sphinx/html" \
+            "$HOME/publish/doc/doxygen/html"
+          cmake -E copy_directory \
+            "${{ env.JAVA_DOC }}" \
+            "$HOME/publish/doc/doxygen/html/javadoc"
+          cmake -E copy \
+            "$HOME/build/js/bin/opencv.js" \
+            "$HOME/publish/js/bin/opencv.js"
+          test -s "$HOME/publish/doc/doxygen/html/index.html"
+
       - name: Archive Doxygen Docs
+        if: matrix.branch == '4.x'
         uses: actions/upload-artifact@v7
         with:
-          name: opencv-docs-${{ matrix.branch }}
+          name: opencv-docs-4.x
           path: |
             ${{ env.HOME }}/build/doc/doxygen/html
             ${{ env.HOME }}/build/js/bin/opencv.js
+          if-no-files-found: error
+
+      - name: Archive Sphinx Docs
+        if: matrix.branch == '5.x'
+        uses: actions/upload-artifact@v7
+        with:
+          name: opencv-docs-5.x
+          path: |
+            ${{ env.HOME }}/publish/doc/doxygen/html
+            ${{ env.HOME }}/publish/js/bin/opencv.js
+          if-no-files-found: error
