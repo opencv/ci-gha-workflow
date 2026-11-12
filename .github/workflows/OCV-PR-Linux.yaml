@@ -162,7 +162,8 @@ jobs:
       uses: ./configure-and-build
       with:
         workdir: '${{ env.HOME }}'
-        builddir: 'build-contrib'
+        builddir: "${{ (github.event.repository.name != 'opencv_contrib' && !matrix.config.compat_only) && 'build' || 'build-contrib' }}"
+        clean: "${{ (github.event.repository.name != 'opencv_contrib' && !matrix.config.compat_only) && 'false' || 'true' }}"
         generator: 'Ninja'
         options: '-DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 

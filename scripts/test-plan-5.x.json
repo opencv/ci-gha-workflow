@@ -142,6 +142,22 @@
             "args": {
                 "test": "--skip_unstable=1 --test_threads=4"
             },
+            "estimated_duration_seconds": {
+                "opencv_test_calib": 1560,
+                "opencv_test_core": 1440,
+                "opencv_test_ptcloud": 660,
+                "opencv_test_photo": 600,
+                "opencv_test_imgproc": 540,
+                "opencv_test_objdetect": 360,
+                "opencv_test_geometry": 300,
+                "opencv_test_video": 240,
+                "opencv_test_features": 180,
+                "opencv_test_dnn": 180,
+                "opencv_test_imgcodecs": 120,
+                "opencv_test_stitching": 90,
+                "opencv_test_stereo": 60,
+                "opencv_test_flann": 30
+            },
             "serial": [ "opencv_test_highgui", "opencv_test_videoio" ]
         }
     }

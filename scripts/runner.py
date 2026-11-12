@@ -176,6 +176,7 @@ def make_spec(name, plan, args, index):
     extra_args = []
     env = {}
     serial = False
+    estimated_duration = 0
 
     if args.options:
         opt_node = plan["options"][args.options]
@@ -190,6 +191,11 @@ def make_spec(name, plan, args, index):
         for value in find_matching_values(opt_node.get("env", {}), name):
             env.update(value)
         serial = any(pattern in name for pattern in opt_node.get("serial", []))
+        estimates = find_matching_values(
+            opt_node.get("estimated_duration_seconds", {}), name
+        )
+        if estimates:
+            estimated_duration = estimates[0]
 
     filters = []
     if args.filter:
@@ -214,6 +220,7 @@ def make_spec(name, plan, args, index):
         "env": env,
         "logname": args.logdir / (args.prefix + name + ".txt"),
         "serial": serial,
+        "estimated_duration": estimated_duration,
         "error": error,
     }
 
@@ -251,7 +258,10 @@ async def run_suite(specs, args):
         await run_phase(specs, 1, args, results, stop_requested)
         return results
 
-    parallel = [spec for spec in specs if not spec["serial"]]
+    parallel = sorted(
+        (spec for spec in specs if not spec["serial"]),
+        key=lambda spec: (-spec["estimated_duration"], spec["index"]),
+    )
     serial = [spec for spec in specs if spec["serial"]]
     await run_phase(parallel, args.jobs, args, results, stop_requested)
     if not (args.fail_fast and stop_requested.is_set()):
