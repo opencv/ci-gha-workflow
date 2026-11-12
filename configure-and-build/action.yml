@@ -11,9 +11,6 @@ inputs:
     description: "CMake generator, e.g. Ninja"
   options:
     description: "Extra CMake options"
-  clean:
-    description: "Remove the build directory before configuring"
-    default: "true"
 
 runs:
   using: "composite"
@@ -35,12 +32,7 @@ runs:
       shell: bash
       run: |
         echo "::group::Configure"
-        if [ '${{ inputs.clean }}' = 'true' ]; then
-          rm -rf '${{ inputs.builddir }}'
-        elif [ ! -d '${{ inputs.builddir }}' ]; then
-          echo "::error::Cannot reuse missing build directory: ${{ inputs.builddir }}"
-          exit 1
-        fi
+        rm -rf '${{ inputs.builddir }}'
         mkdir -p '${{ inputs.builddir }}'
         cmake \
           -S opencv \
