@@ -18,7 +18,12 @@ on:
         required: true
         type: string
       fast:
-        description: "Run the HAL-enabled core/imgproc smoke suite only"
+        description: "Run the HAL-enabled configuration only"
+        default: false
+        required: false
+        type: boolean
+      delta:
+        description: "Run only the HAL-disabled configuration after completed fast coverage"
         default: false
         required: false
         type: boolean
@@ -58,7 +63,7 @@ jobs:
         version:
           - 'clang'
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
-        hal: ${{ fromJSON(inputs.fast && '[true]' || '[true, false]') }}
+        hal: ${{ fromJSON(inputs.fast && '[true]' || inputs.delta && '[false]' || '[true, false]') }}
     defaults:
       run:
         shell: bash
@@ -122,7 +127,7 @@ jobs:
         builddir: 'build'
         logdir: '${{ env.HOME }}/build'
         plan: "test-plan-riscv-${{ matrix.branch }}.json"
-        suite: ${{ inputs.fast && '["short"]' || '["pr"]' }}
+        suite: "[ 'pr' ]"
         filter: ${{ matrix.hal && '["clang"]' || '["clang", "hal-off"]' }}
         options: "qemu"
         timeout: "60"

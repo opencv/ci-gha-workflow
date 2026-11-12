@@ -24,6 +24,11 @@ on:
         default: false
         required: false
         type: boolean
+      delta:
+        description: "Run only full-CI configurations not covered by a completed fast run"
+        default: false
+        required: false
+        type: boolean
 
 concurrency:
   group: OCV-PR-Linux-${{ github.ref }}
@@ -47,8 +52,10 @@ jobs:
             fi
             if [ "${{ inputs.fast }}" = "true" ]; then
               echo 'configurations=[{"version":"24.04","image":"24.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true}]' >> "$GITHUB_OUTPUT"
+            elif [ "${{ inputs.delta }}" = "true" ]; then
+              echo 'configurations=[{"version":"26.04","image":"26.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true},{"version":"22.04","image":"22.04:20260515","avif":true,"plugins":true},{"version":"20.04","image":"20.04:20260515","limited_api":true},{"version":"24.04","image":"24.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true,"compat_only":true}]' >> "$GITHUB_OUTPUT"
             else
-              echo 'configurations=[{"version":"24.04","image":"24.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true},{"version":"26.04","image":"26.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true},{"version":"22.04","image":"22.04:20260515","avif":true,"plugins":true},{"version":"20.04","image":"20.04:20260515","limited_api":true}]' >> "$GITHUB_OUTPUT"
+              echo 'configurations=[{"version":"26.04","image":"26.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true},{"version":"24.04","image":"24.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true},{"version":"22.04","image":"22.04:20260515","avif":true,"plugins":true},{"version":"20.04","image":"20.04:20260515","limited_api":true}]' >> "$GITHUB_OUTPUT"
             fi
 
   Ubuntu:
@@ -89,8 +96,8 @@ jobs:
       CCACHE_MAXSIZE: '8G'
       OPENCV_DOWNLOAD_PATH: '/opt/binaries_cache'
       CMAKE_OPT: >-
-        -DBUILD_DOCS=${{ inputs.fast && 'OFF' || 'ON' }}
-        -DBUILD_EXAMPLES=${{ inputs.fast && 'OFF' || 'ON' }}
+        -DBUILD_DOCS=ON
+        -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_IMGCODEC_GIF=ON
         ${{ matrix.config.jpegxl && '-DWITH_JPEGXL=ON' }}
@@ -132,6 +139,7 @@ jobs:
         workdir: '${{ env.HOME }}'
 
     - name: Update extra dnn models
+      if: ${{ !matrix.config.compat_only }}
       timeout-minutes: 60
       working-directory: '${{ env.HOME }}'
       run: |
@@ -140,7 +148,7 @@ jobs:
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
-    - if: ${{ github.event.repository.name != 'opencv_contrib' }}
+    - if: ${{ github.event.repository.name != 'opencv_contrib' && !matrix.config.compat_only }}
       name: Configure and build OpenCV
       uses: ./configure-and-build
       with:
@@ -159,6 +167,7 @@ jobs:
         options: '-DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 
     - name: Run OpenCV tests
+      if: ${{ !matrix.config.compat_only }}
       uses: ./run-tests
       env:
         OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'

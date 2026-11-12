@@ -24,6 +24,11 @@ on:
         default: false
         required: false
         type: boolean
+      delta:
+        description: "Run only full-CI architectures not covered by a completed fast run"
+        default: false
+        required: false
+        type: boolean
 
 concurrency:
   group: OCV-PR-Windows-${{ github.ref }}
@@ -47,6 +52,8 @@ jobs:
             fi
             if [ "${{ inputs.fast }}" = "true" ]; then
               echo 'configurations=[{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64"}]' >> "$GITHUB_OUTPUT"
+            elif [ "${{ inputs.delta }}" = "true" ]; then
+              echo 'configurations=[{"arch":"x86","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"Win32"},{"arch":"arm64","runner":"windows-arm64","vs":"Visual Studio 17 2022","cmake_arch":"ARM64","no_opencl":true},{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64","compat_only":true}]' >> "$GITHUB_OUTPUT"
             else
               echo 'configurations=[{"arch":"x86","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"Win32"},{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64"},{"arch":"arm64","runner":"windows-arm64","vs":"Visual Studio 17 2022","cmake_arch":"ARM64","no_opencl":true}]' >> "$GITHUB_OUTPUT"
             fi
@@ -120,7 +127,7 @@ jobs:
         workdir: '${{ github.workspace }}'
 
     - name: Update extra dnn models
-      if: ${{ matrix.config.arch != 'arm64' }}
+      if: ${{ matrix.config.arch != 'arm64' && !matrix.config.compat_only }}
       timeout-minutes: 60
       working-directory: '${{ github.workspace }}'
       run: |
@@ -129,7 +136,7 @@ jobs:
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
-    - if: ${{ github.event.repository.name != 'opencv_contrib' }}
+    - if: ${{ github.event.repository.name != 'opencv_contrib' && !matrix.config.compat_only }}
       name: Configure and build OpenCV
       uses: ./configure-and-build
       with:
@@ -148,6 +155,7 @@ jobs:
         options: '-A ${{ matrix.config.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 
     - name: Run OpenCV tests
+      if: ${{ !matrix.config.compat_only }}
       uses: ./run-tests
       env:
         OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
