@@ -143,6 +143,7 @@ jobs:
         builddir: 'build'
         logdir: '${{ env.HOME }}/build'
         plan: 'test-plan-5.x.json'
+        scripts_path: 'ci-gha-workflow/scripts'
         suite: "[ 'arm-debug' ]"
         filter: "[ 'arm-debug' ]"
         options: 'arm-debug'
