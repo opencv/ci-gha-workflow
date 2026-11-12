@@ -19,6 +19,16 @@ on:
         default: "main"
         required: false
         type: string
+      fast:
+        description: "Run x64 only and skip the compatibility build"
+        default: false
+        required: false
+        type: boolean
+      delta:
+        description: "Run only full-CI architectures not covered by a completed fast run"
+        default: false
+        required: false
+        type: boolean
 
 concurrency:
   group: OCV-PR-Windows-${{ github.ref }}
@@ -30,6 +40,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       branches: ${{ steps.determine-branches.outputs.branches }}
+      configurations: ${{ steps.determine-branches.outputs.configurations }}
     steps:
         - id: determine-branches
           shell: bash
@@ -39,9 +50,16 @@ jobs:
             else
               echo "branches=[ '${{ github.base_ref }}' ]" >> "$GITHUB_OUTPUT"
             fi
+            if [ "${{ inputs.fast }}" = "true" ]; then
+              echo 'configurations=[{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64"}]' >> "$GITHUB_OUTPUT"
+            elif [ "${{ inputs.delta }}" = "true" ]; then
+              echo 'configurations=[{"arch":"x86","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"Win32"},{"arch":"arm64","runner":"windows-arm64","vs":"Visual Studio 17 2022","cmake_arch":"ARM64","no_opencl":true},{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64","compat_only":true}]' >> "$GITHUB_OUTPUT"
+            else
+              echo 'configurations=[{"arch":"x86","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"Win32"},{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64"},{"arch":"arm64","runner":"windows-arm64","vs":"Visual Studio 17 2022","cmake_arch":"ARM64","no_opencl":true}]' >> "$GITHUB_OUTPUT"
+            fi
 
   Windows:
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.config.runner }}
     needs:
       - branch_eval
     strategy:
@@ -50,26 +68,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        arch: [ x86, x64, arm64 ]
-        config: [ base ]
-        include:
-          - arch: x86
-            config: base
-            runner: opencv-cn-win
-            vs: 'Visual Studio 16 2019'
-            cmake_arch: Win32
-          - arch: x64
-            config: base
-            runner: opencv-cn-win
-            vs: 'Visual Studio 16 2019'
-            cmake_arch: x64
-          - arch: arm64
-            config: base
-            runner: windows-arm64
-            vs: 'Visual Studio 17 2022'
-            cmake_arch: ARM64
-            no_opencl: true
-
+        config: ${{ fromJSON(needs.branch_eval.outputs.configurations) }}
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
     defaults:
       run:
@@ -80,10 +79,10 @@ jobs:
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
         -DCMAKE_BUILD_TYPE=Release
-        ${{ matrix.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
-        ${{ matrix.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
+        ${{ matrix.config.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
+        ${{ matrix.config.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
-      OPENCV_FOR_THREADS_NUM: 8
+      OPENCV_FOR_THREADS_NUM: 4
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     # ==========
@@ -128,7 +127,7 @@ jobs:
         workdir: '${{ github.workspace }}'
 
     - name: Update extra dnn models
-      if: ${{ matrix.arch != 'arm64' }}
+      if: ${{ matrix.config.arch != 'arm64' && !matrix.config.compat_only }}
       timeout-minutes: 60
       working-directory: '${{ github.workspace }}'
       run: |
@@ -137,44 +136,48 @@ jobs:
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
-    - if: ${{ github.event.repository.name != 'opencv_contrib' }}
+    - if: ${{ github.event.repository.name != 'opencv_contrib' && !matrix.config.compat_only }}
       name: Configure and build OpenCV
       uses: ./configure-and-build
       with:
         workdir: '${{ github.workspace }}'
         builddir: 'build'
-        generator: '${{ matrix.vs }}'
-        options: '-A ${{ matrix.cmake_arch }} ${{ env.CMAKE_OPT }}'
+        generator: '${{ matrix.config.vs }}'
+        options: '-A ${{ matrix.config.cmake_arch }} ${{ env.CMAKE_OPT }}'
 
     - name: Configure and build OpenCV with contrib
+      if: ${{ !inputs.fast || github.event.repository.name == 'opencv_contrib' }}
       uses: ./configure-and-build
       with:
         workdir: '${{ github.workspace }}'
         builddir: 'build-contrib'
-        generator: '${{ matrix.vs }}'
-        options: '-A ${{ matrix.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
+        generator: '${{ matrix.config.vs }}'
+        options: '-A ${{ matrix.config.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 
     - name: Run OpenCV tests
+      if: ${{ !matrix.config.compat_only }}
       uses: ./run-tests
       env:
         OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
-        OPENCV_TEST_REQUIRE_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
-        OPENCV_TEST_CHECK_OPTIONAL_DATA: ${{ matrix.arch == 'arm64' && '0' || '1' }}
+        OPENCV_TEST_REQUIRE_DATA: ${{ matrix.config.arch == 'arm64' && '0' || '1' }}
+        OPENCV_TEST_CHECK_OPTIONAL_DATA: ${{ matrix.config.arch == 'arm64' && '0' || '1' }}
         PYTHONPATH: '${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/python_loader;${{ github.workspace }}/${{ env.MAIN_BUILD_DIR }}/lib/python3'
-        OPENCV_OPENCL_RUNTIME: ${{ matrix.arch == 'arm64' && 'disabled' || '' }}
+        OPENCV_OPENCL_RUNTIME: ${{ matrix.config.arch == 'arm64' && 'disabled' || '' }}
       with:
         workdir: '${{ github.workspace }}'
         builddir: '${{ env.MAIN_BUILD_DIR }}'
         logdir: '${{ github.workspace }}'
         plan: "test-plan-win-${{ matrix.branch }}.json"
         suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''contrib'''  || '''main''' }} ]"
-        enable_python: ${{ matrix.cmake_arch == 'x64' }}
+        enable_python: ${{ matrix.config.cmake_arch == 'x64' }}
         enable_java: "false"
         filter: "[ 'windows-common' ]"
-        suffix: '${{ matrix.arch }}_${{ matrix.branch }}'
+        suffix: '${{ matrix.config.arch }}_${{ matrix.branch }}'
         timeout: 15
+        jobs: "2"
+        fail_fast: ${{ inputs.fast }}
 
-    - if: ${{ always() && env.WARNINGS == '1' }}
+    - if: ${{ !cancelled() && env.WARNINGS == '1' }}
       name: Warnings check
       run: |
         echo "::error Warnings have been found!"

@@ -121,7 +121,7 @@ jobs:
         enable_java: "false"
         suffix: 'alpine3_${{ matrix.branch }}'
 
-    - if: ${{ always() && env.WARNINGS == '1' }}
+    - if: ${{ !cancelled() && env.WARNINGS == '1' }}
       name: Warnings check
       run: |
         echo "::error Warnings have been found!"

@@ -104,169 +104,169 @@ jobs:
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:3d
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_geometry --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:calib
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_calib --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:core
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_core --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:dnn
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_dnn --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:features
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_features --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:flann
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_flann --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:highgui
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_highgui --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:imgcodecs
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_imgcodecs --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:imgproc
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_imgproc --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:objdetect
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_objdetect --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:photo
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_photo --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:ptcloud
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_ptcloud --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:stereo
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_stereo --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:stitching
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_stitching --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:video
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_video --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Accuracy:videoio
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_test_videoio --gtest_filter=${{ env.GTEST_FILTER_STRING }} --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
       working-directory: ${{ github.workspace }}/build
     - name: Performance:3d
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_geometry --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:calib
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_calib --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:core
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:dnn
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:features
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_features --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:imgcodecs
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:imgproc
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:objdetect
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:photo
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:ptcloud
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_ptcloud --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:stereo
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_stereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:stitching
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:video
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Performance:videoio
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: ./bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --gtest_filter=${{ env.GTEST_FILTER_STRING }} --perf_threads=$PARALLEL_JOBS
       working-directory: ${{ github.workspace }}/build
     - name: Python3
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: python3 ../opencv/modules/python/test/test.py --repo ../opencv -v
       working-directory: ${{ github.workspace }}/build
     - name: Java
       timeout-minutes: 60
       id: java-test
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: python3 ../opencv/modules/ts/misc/run.py . -a -t java
       working-directory: ${{ github.workspace }}/build
     - name: Save Unit Test Results
       timeout-minutes: 60
       uses: actions/upload-artifact@v7
-      if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
       with:
         name: junit-html-macos-arm64
         path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html
