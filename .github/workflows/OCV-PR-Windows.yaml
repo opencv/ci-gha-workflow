@@ -59,6 +59,7 @@ jobs:
             fi
 
   Windows:
+    name: Windows (${{ matrix.config.arch }}, base, ${{ matrix.branch }})
     runs-on: ${{ matrix.config.runner }}
     needs:
       - branch_eval

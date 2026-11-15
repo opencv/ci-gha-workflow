@@ -59,6 +59,7 @@ jobs:
             fi
 
   Ubuntu:
+    name: Ubuntu (${{ matrix.config.version }}, ${{ matrix.branch }})
     # runs-on: opencv-ru-lin-riscv
     runs-on: opencv-cn-lin-x86-64
     needs:
