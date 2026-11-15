@@ -19,6 +19,16 @@ on:
         default: "main"
         required: false
         type: string
+      fast:
+        description: "Run one representative configuration and skip the compatibility build"
+        default: false
+        required: false
+        type: boolean
+      delta:
+        description: "Run only full-CI configurations not covered by a completed fast run"
+        default: false
+        required: false
+        type: boolean
 
 concurrency:
   group: OCV-PR-Linux-${{ github.ref }}
@@ -30,6 +40,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       branches: ${{ steps.determine-branches.outputs.branches }}
+      configurations: ${{ steps.determine-branches.outputs.configurations }}
     steps:
         - id: determine-branches
           shell: bash
@@ -38,6 +49,13 @@ jobs:
               echo "branches=[ '4.x', '5.x' ]" >> "$GITHUB_OUTPUT"
             else
               echo "branches=[ '${{ github.base_ref }}' ]" >> "$GITHUB_OUTPUT"
+            fi
+            if [ "${{ inputs.fast }}" = "true" ]; then
+              echo 'configurations=[{"version":"24.04","image":"24.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true}]' >> "$GITHUB_OUTPUT"
+            elif [ "${{ inputs.delta }}" = "true" ]; then
+              echo 'configurations=[{"version":"26.04","image":"26.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true},{"version":"22.04","image":"22.04:20260515","avif":true,"plugins":true},{"version":"20.04","image":"20.04:20260515","limited_api":true},{"version":"24.04","image":"24.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true,"compat_only":true}]' >> "$GITHUB_OUTPUT"
+            else
+              echo 'configurations=[{"version":"26.04","image":"26.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true},{"version":"24.04","image":"24.04:20260928","jpegxl":true,"avif":true,"avx2":true,"gphoto2":true,"aravis":true},{"version":"22.04","image":"22.04:20260515","avif":true,"plugins":true},{"version":"20.04","image":"20.04:20260515","limited_api":true}]' >> "$GITHUB_OUTPUT"
             fi
 
   Ubuntu:
@@ -51,47 +69,13 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        version:
-          - '26.04'
-          - '24.04'
-          - '22.04'
-          - '20.04'
-          # TODO: enable later
-          # - '24.04_asan'
+        config: ${{ fromJSON(needs.branch_eval.outputs.configurations) }}
         branch: ${{ fromJSON(needs.branch_eval.outputs.branches )}}
-        include:
-          - version: '26.04'
-            image: '26.04:20260928'
-            jpegxl: true
-            avif: true
-            avx2: true
-            gphoto2: true
-            aravis: true
-          - version: '24.04'
-            image: '24.04:20260928'
-            jpegxl: true
-            avif: true
-            avx2: true
-            gphoto2: true
-            aravis: true
-          # TODO: enable later
-          # - version: '24.04_asan'
-          #   image: '24.04:20250505'
-          #   asan: true
-          #   jpegxl: true
-          #   avif: true
-          - version: '22.04'
-            image: '22.04:20260515'
-            avif: true
-            plugins: true
-          - version: '20.04'
-            image: '20.04:20260515'
-            limited_api: true
     defaults:
       run:
         shell: bash
     container:
-      image: 'quay.io/opencv-ci/opencv-ubuntu-${{ matrix.image }}'
+      image: 'quay.io/opencv-ci/opencv-ubuntu-${{ matrix.config.image }}'
       volumes:
         # NOTE: RU config
         # - /mnt/cache/git_cache:/opt/git_cache
@@ -100,8 +84,8 @@ jobs:
         # - vol_dnn_models:/opt/dnn-models
         # NOTE: CN config
         - /home/opencv-cn/git_cache:/opt/git_cache
-        - /home/opencv-cn/ci_cache/opencv/${{ matrix.version }}:/opt/.ccache
-        - /home/opencv-cn/binaries_cache/${{ matrix.version }}:/opt/binaries_cache
+        - /home/opencv-cn/ci_cache/opencv/${{ matrix.config.version }}:/opt/.ccache
+        - /home/opencv-cn/binaries_cache/${{ matrix.config.version }}:/opt/binaries_cache
         - /home/opencv-cn/dnn-models:/opt/dnn-models
       # NOTE: RU config
       # options: '--user root:root'
@@ -116,20 +100,20 @@ jobs:
         -DBUILD_EXAMPLES=ON
         -DOPENCV_ENABLE_NONFREE=ON
         -DWITH_IMGCODEC_GIF=ON
-        ${{ matrix.jpegxl && '-DWITH_JPEGXL=ON' }}
-        ${{ matrix.avif && '-DWITH_AVIF=ON' }}
-        ${{ matrix.gphoto2 && '-DWITH_GPHOTO2=ON' }}
-        ${{ matrix.aravis && '-DWITH_ARAVIS=ON' }}
-        ${{ matrix.avx2 && '-DCPU_BASELINE=AVX2'}}
-        ${{ matrix.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
-        ${{ matrix.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
-        ${{ matrix.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
-      HOME: ${{ ( contains(matrix.image, '24.04') || contains(matrix.image, '26.04') ) && '/home/ubuntu' || '/home/ci' }}
+        ${{ matrix.config.jpegxl && '-DWITH_JPEGXL=ON' }}
+        ${{ matrix.config.avif && '-DWITH_AVIF=ON' }}
+        ${{ matrix.config.gphoto2 && '-DWITH_GPHOTO2=ON' }}
+        ${{ matrix.config.aravis && '-DWITH_ARAVIS=ON' }}
+        ${{ matrix.config.avx2 && '-DCPU_BASELINE=AVX2'}}
+        ${{ matrix.config.plugins && '-DVIDEOIO_PLUGIN_LIST=all -DHIGHGUI_PLUGIN_LIST=all' }}
+        ${{ matrix.config.limited_api && '-DPYTHON3_LIMITED_API=ON' }}
+        ${{ matrix.config.asan && '-DENABLE_OMIT_FRAME_POINTER=OFF -DCMAKE_CXX_FLAGS="-fsanitize=address"' }}
+      HOME: ${{ ( contains(matrix.config.image, '24.04') || contains(matrix.config.image, '26.04') ) && '/home/ubuntu' || '/home/ci' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       # NOTE: CN config
-      OPENCV_FOR_THREADS_NUM: 8
+      OPENCV_FOR_THREADS_NUM: 4
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      OPENBLAS_NUM_THREADS: 8
+      OPENBLAS_NUM_THREADS: 4
       # NOTE: RU config
       # OPENCV_FOR_THREADS_NUM: 10
       # CMAKE_BUILD_PARALLEL_LEVEL: 20
@@ -155,6 +139,7 @@ jobs:
         workdir: '${{ env.HOME }}'
 
     - name: Update extra dnn models
+      if: ${{ !matrix.config.compat_only }}
       timeout-minutes: 60
       working-directory: '${{ env.HOME }}'
       run: |
@@ -163,7 +148,7 @@ jobs:
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
-    - if: ${{ github.event.repository.name != 'opencv_contrib' }}
+    - if: ${{ github.event.repository.name != 'opencv_contrib' && !matrix.config.compat_only }}
       name: Configure and build OpenCV
       uses: ./configure-and-build
       with:
@@ -173,6 +158,7 @@ jobs:
         options: '${{ env.CMAKE_OPT }}'
 
     - name: Configure and build OpenCV with contrib
+      if: ${{ !inputs.fast || github.event.repository.name == 'opencv_contrib' }}
       uses: ./configure-and-build
       with:
         workdir: '${{ env.HOME }}'
@@ -181,6 +167,7 @@ jobs:
         options: '-DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 
     - name: Run OpenCV tests
+      if: ${{ !matrix.config.compat_only }}
       uses: ./run-tests
       env:
         OPENCV_TEST_DATA_PATH: '${{ env.HOME }}/opencv_extra/testdata'
@@ -197,12 +184,14 @@ jobs:
         # NOTE: Just keeping this construction here for possible future use:
         #   ${{ (github.event.repository.name == 'opencv_contrib') && format('''linux-contrib-{0}''', matrix.branch)  || '' }}
         suite: "[ ${{ (github.event.repository.name == 'opencv_contrib') && '''linux-contrib'''  || '''linux''' }} ]"
-        filter: "[ 'ubuntu-common', ${{ matrix.avx2 && '''ubuntu-avx2''' }} ]"
+        filter: "[ 'ubuntu-common', ${{ matrix.config.avx2 && '''ubuntu-avx2''' }} ]"
         enable_python: "true"
         enable_java: "true"
-        suffix: '${{ matrix.version }}_${{ matrix.branch }}'
+        suffix: '${{ matrix.config.version }}_${{ matrix.branch }}'
+        jobs: "2"
+        fail_fast: ${{ inputs.fast }}
 
-    - if: ${{ always() && env.WARNINGS == '1' }}
+    - if: ${{ !cancelled() && env.WARNINGS == '1' }}
       name: Warnings check
       run: |
         echo "::error Warnings have been found!"

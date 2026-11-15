@@ -112,21 +112,21 @@ jobs:
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}
         git diff --check ${{ env.LATEST_COMMIT_OPENCV }} --
     - name: Patch size OpenCV
-      if: ${{ always() && steps.last-repo-step.outcome == 'success' && github.event.repository.name != 'ci-gha-workflow' }}
+      if: ${{ !cancelled() && steps.last-repo-step.outcome == 'success' && github.event.repository.name != 'ci-gha-workflow' }}
       timeout-minutes: 60
       run: |
         cd ${{ env.OPENCV_DOCKER_WORKDIR }}
         git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV }}..HEAD || true
         python3 $HOME/scripts/patch_size.py
     - name: Patch size OpenCV Extra
-      if: ${{ always() && steps.last-repo-step.outcome == 'success' && env.OPENCV_EXTRA_FORK == 1 && github.event.repository.name != 'ci-gha-workflow' }}
+      if: ${{ !cancelled() && steps.last-repo-step.outcome == 'success' && env.OPENCV_EXTRA_FORK == 1 && github.event.repository.name != 'ci-gha-workflow' }}
       timeout-minutes: 60
       run: |
         cd ${{ env.OPENCV_EXTRA_DOCKER_WORKDIR }}
         git bundle create test.bundle ${{ env.LATEST_COMMIT_OPENCV_EXTRA }}..HEAD || true
         python3 $HOME/scripts/patch_size.py
     - name: Patch size OpenCV Contrib
-      if: ${{ always() && steps.last-repo-step.outcome == 'success' && env.OPENCV_CONTRIB_FORK == 1 && github.event.repository.name != 'ci-gha-workflow' }}
+      if: ${{ !cancelled() && steps.last-repo-step.outcome == 'success' && env.OPENCV_CONTRIB_FORK == 1 && github.event.repository.name != 'ci-gha-workflow' }}
       timeout-minutes: 60
       run: |
         cd ${{ env.OPENCV_CONTRIB_DOCKER_WORKDIR }}
@@ -148,14 +148,14 @@ jobs:
           ant javadoc
 
     - name: Build js
-      if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.last-repo-step.outcome == 'success' }}
       timeout-minutes: 60
       run: |
         cd $HOME/build
         emcmake python ../opencv/platforms/js/build_js.py js --build_test
 
     - name: Run js tests
-      if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.last-repo-step.outcome == 'success' }}
       timeout-minutes: 60
       run: |
         cd $HOME/build/js/bin
@@ -163,14 +163,14 @@ jobs:
         node tests.js
 
     - name: Configure OpenCV doxygen
-      if: ${{ always() && steps.last-repo-step.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.last-repo-step.outcome == 'success' }}
       id: opencv-doxygen
       timeout-minutes: 60
       run: |
         cd $HOME/build
         cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
     - name: Build OpenCV doxygen
-      if: ${{ always() && steps.opencv-doxygen.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.opencv-doxygen.outcome == 'success' }}
       timeout-minutes: 60
       id: build-opencv
       working-directory: ${{ env.HOME }}/build
@@ -179,13 +179,13 @@ jobs:
       run: python3 scripts/warnings-handling.py ${{ env.HOME }}/build/log.txt
     - name: Pylint
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
         cmake --build . --config release --target check_pylint -- -j$(nproc)
     - name: Flake8
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       run: |
         cd $HOME/build
         cmake --build . --config release --target check_flake8 -- -j$(nproc)

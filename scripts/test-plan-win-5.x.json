@@ -97,7 +97,8 @@
             "args": {
                 "test": "--skip_unstable=1",
                 "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"
-            }
+            },
+            "serial": [ "opencv_perf_", "opencv_test_highgui", "opencv_test_videoio" ]
         }
     }
 }

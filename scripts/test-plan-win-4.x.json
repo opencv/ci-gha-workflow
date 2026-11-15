@@ -98,7 +98,8 @@
                 "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"
             },
             "exe": {},
-            "env": {}
+            "env": {},
+            "serial": [ "opencv_perf_", "opencv_test_highgui", "opencv_test_videoio" ]
         }
     }
 }

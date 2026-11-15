@@ -16,6 +16,18 @@ runs:
   using: "composite"
   steps:
 
+    - if: ${{ runner.os != 'Windows' }}
+      shell: bash
+      run: |
+        ccache --show-stats > /tmp/opencv-ccache-stats-before.txt
+        {
+          echo "### Runner: $RUNNER_NAME"
+          echo "- OS/architecture: $RUNNER_OS / $RUNNER_ARCH"
+          echo "- Build directory: ${{ inputs.builddir }}"
+          echo "- CPU count: $(nproc)"
+          echo "- Load before build: $(uptime)"
+        } >> "$GITHUB_STEP_SUMMARY"
+
     - working-directory: ${{ inputs.workdir }}
       shell: bash
       run: |
@@ -60,6 +72,21 @@ runs:
         if [ "$RUNNER_OS" == "Windows" ]; then
           echo "No statistics on Windows for now"
         else
-          ccache --show-stats
+          ccache --show-stats | tee /tmp/opencv-ccache-stats.txt
+          {
+            echo '<details><summary>ccache statistics</summary>'
+            echo
+            echo '**Before build**'
+            echo '```text'
+            cat /tmp/opencv-ccache-stats-before.txt
+            echo '```'
+            echo '**After build**'
+            echo '```text'
+            cat /tmp/opencv-ccache-stats.txt
+            echo '```'
+            echo '</details>'
+            echo "- Load after build: $(uptime)"
+            echo "- Filesystem: $(df -h '${{ inputs.workdir }}' | tail -1)"
+          } >> "$GITHUB_STEP_SUMMARY"
         fi
         echo "::endgroup::"
