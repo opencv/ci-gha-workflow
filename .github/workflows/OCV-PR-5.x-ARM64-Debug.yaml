@@ -7,6 +7,12 @@ on:
     paths:
       - '.github/workflows/OCV-PR-5.x-ARM64-Debug.yaml'
   workflow_call:
+    inputs:
+      workflow_branch:
+        description: "Branch for ci-gha-workflow repository"
+        default: "main"
+        required: false
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,15 +51,17 @@ jobs:
     - name: Define proper HOME path
       timeout-minutes: 60
       run: echo "HOME=/home/ci" >> $GITHUB_ENV
+    - name: Checkout workflow repository
+      uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: "${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || inputs.workflow_branch }}"
+        path: ci-gha-workflow
     - name: Setup infra environment
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       run: |
         echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
-    - name: Setup test environment
-      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
-      run: |
-        echo "EXTRA_GTEST_OPTIONS=--skip_unstable=1" >> $GITHUB_ENV
     - name: PR info
       timeout-minutes: 60
       run: |
@@ -123,88 +131,28 @@ jobs:
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
-    - name: Accuracy:3d
+    - name: Run OpenCV tests
       timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_geometry --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:calib
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_calib --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:core
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_core --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:dnn
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:features
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_features --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:flann
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_flann --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:highgui
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_highgui --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:imgcodecs
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_imgcodecs --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:imgproc
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_imgproc --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:objdetect
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_objdetect --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:photo
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_photo --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:ptcloud
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_ptcloud --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:stereo
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_stereo --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:stitching
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_stitching --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:video
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_video --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Accuracy:videoio
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a bin/opencv_test_videoio --test_threads=$PARALLEL_JOBS --gtest_filter="-:Media.audio/0" ${{ env.EXTRA_GTEST_OPTIONS }}
-    - name: Python3
-      timeout-minutes: 60
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: |
-        cd $HOME/build
-        python3 $HOME/opencv/modules/python/test/test.py --repo $HOME/opencv -v
-    - name: Java
-      timeout-minutes: 60
-      id: java-test
-      if: ${{ always() && steps.build-opencv.outcome == 'success' }}
-      run: cd $HOME/build && xvfb-run -a python3 ${{ env.OPENCV_DOCKER_WORKDIR }}/modules/ts/misc/run.py . -a -t java
-    - name: Save Unit Test Results
-      timeout-minutes: 60
-      uses: actions/upload-artifact@v7
-      if: ${{ always() && steps.java-test.outcome == 'success' && steps.build-opencv.outcome == 'success' }}
+      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
+      uses: ./ci-gha-workflow/run-tests
+      env:
+        OPENCV_FOR_THREADS_NUM: 4
+        OPENBLAS_NUM_THREADS: 1
       with:
-        name: junit-html-ubuntu20-arm64-debug
-        path: /home/ci/build/java_test/testResults/junit-noframes.html
+        workdir: '${{ env.HOME }}'
+        builddir: 'build'
+        logdir: '${{ env.HOME }}/build'
+        plan: 'test-plan-5.x.json'
+        scripts_path: 'ci-gha-workflow/scripts'
+        suite: "[ 'arm-debug' ]"
+        filter: "[ 'arm-debug' ]"
+        options: 'arm-debug'
+        timeout: '60'
+        jobs: '4'
+        enable_python: 'true'
+        enable_java: 'true'
+        wrapper: 'xvfb-run -a'
+        suffix: 'ubuntu24-arm64-debug'
 
   BuildContrib:
     runs-on: opencv-cn-lin-arm64

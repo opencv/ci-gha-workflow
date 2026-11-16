@@ -131,7 +131,7 @@ jobs:
         enable_java: "true"
         suffix: '24.04_${{ matrix.branch }}'
 
-    - if: ${{ always() && env.WARNINGS == '1' }}
+    - if: ${{ !cancelled() && env.WARNINGS == '1' }}
       name: Warnings check
       run: |
         echo "::error Warnings have been found!"
