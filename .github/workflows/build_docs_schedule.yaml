@@ -30,7 +30,7 @@ jobs:
       SOURCE_BRANCH_NAME: ${{ github.head_ref || matrix.branch }}
       TARGET_BRANCH_NAME: ${{ github.base_ref || matrix.branch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: opencv/ci-gha-workflow
           ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
@@ -77,7 +77,7 @@ jobs:
           emcmake python ../opencv/platforms/js/build_js.py js --build_test
 
       - name: Set up Node.js for js tests
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20.18.0'
 
