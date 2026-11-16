@@ -13,6 +13,7 @@ env:
   OPENCV_SRC: /home/ci/opencv
   OPENCV_BUILD: /home/ci/opencv-build
   JAVA_DOC: /home/ci/opencv-build/doc/doxygen/html/javadoc
+  DOXYGEN_EXECUTABLE: /opt/doxygen-1.12.0/bin/doxygen
 
 jobs:
 
@@ -75,6 +76,11 @@ jobs:
           cd $HOME/build
           emcmake python ../opencv/platforms/js/build_js.py js --build_test
 
+      - name: Set up Node.js for js tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.18.0'
+
       - name: Run js tests
         timeout-minutes: 60
         run: |
@@ -109,12 +115,14 @@ jobs:
       - name: Configure Sphinx
         if: matrix.branch == '5.x'
         run: |
+          "$DOXYGEN_EXECUTABLE" --version | grep -q '^1\.12\.0'
           mkdir -p "$HOME/build/docs_sphinx"
           cmake -E copy \
             "$HOME/build/js/bin/opencv.js" \
             "$HOME/build/docs_sphinx/opencv.js"
           cd "$HOME/build"
           cmake ${{ env.EXTRA_CMAKE_OPTIONS }} \
+            -DDOXYGEN_EXECUTABLE="$DOXYGEN_EXECUTABLE" \
             -DSPHINX_BUILD="$HOME/sphinx-venv/bin/sphinx-build" \
             -DSPHINX_BUILD_DIAGRAMS=ON \
             "${{ env.OPENCV_DOCKER_WORKDIR }}"
