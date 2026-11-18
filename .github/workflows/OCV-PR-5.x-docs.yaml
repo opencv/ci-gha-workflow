@@ -24,6 +24,7 @@ env:
   OPENCV_BUILD: /home/ci/opencv-build
   JAVA_DOC: /home/ci/opencv-build/doc/doxygen/html/javadoc
   DOXYGEN_EXECUTABLE: /opt/doxygen-1.12.0/bin/doxygen
+  SPHINX_BUILD: /opt/sphinx-venv/bin/sphinx-build
 
 jobs:
   BuildAndTest:
@@ -32,7 +33,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20260527
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20261118
       options: --user ci
     steps:
     - uses: actions/checkout@v5
@@ -107,19 +108,6 @@ jobs:
         else
           echo "No merge since ${{ env.PR_AUTHOR }}/opencv_contrib does not have branch ${{ env.SOURCE_BRANCH_NAME }}"
         fi
-
-    - name: Install Sphinx dependencies
-      timeout-minutes: 60
-      run: |
-        python3 -m venv --without-pip "$HOME/sphinx-venv"
-        curl --fail --location --silent --show-error \
-          https://bootstrap.pypa.io/get-pip.py \
-          -o "$HOME/get-pip.py"
-        "$HOME/sphinx-venv/bin/python" "$HOME/get-pip.py"
-        "$HOME/sphinx-venv/bin/python" -m pip install \
-          -r "${{ env.OPENCV_DOCKER_WORKDIR }}/docs_sphinx/requirements.txt"
-        rm "$HOME/get-pip.py"
-
     - name: Whitespace OpenCV
       timeout-minutes: 60
       run: |
@@ -188,6 +176,7 @@ jobs:
       timeout-minutes: 60
       run: |
         "$DOXYGEN_EXECUTABLE" --version | grep -q '^1\.12\.0'
+        "$SPHINX_BUILD" --version
         mkdir -p "$HOME/build/docs_sphinx"
         cmake -E copy \
           "$HOME/build/js/bin/opencv.js" \
@@ -195,7 +184,7 @@ jobs:
         cd "$HOME/build"
         cmake ${{ env.EXTRA_CMAKE_OPTIONS }} \
           -DDOXYGEN_EXECUTABLE="$DOXYGEN_EXECUTABLE" \
-          -DSPHINX_BUILD="$HOME/sphinx-venv/bin/sphinx-build" \
+          -DSPHINX_BUILD="$SPHINX_BUILD" \
           -DSPHINX_BUILD_DIAGRAMS=ON \
           "${{ env.OPENCV_DOCKER_WORKDIR }}"
     - name: Build OpenCV Sphinx
