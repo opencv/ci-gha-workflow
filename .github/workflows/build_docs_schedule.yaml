@@ -13,6 +13,7 @@ env:
   OPENCV_SRC: /home/ci/opencv
   OPENCV_BUILD: /home/ci/opencv-build
   JAVA_DOC: /home/ci/opencv-build/doc/doxygen/html/javadoc
+  SPHINX_CMAKE_OPTIONS: '-DDOXYGEN_EXECUTABLE=/opt/doxygen-1.12.0/bin/doxygen -DSPHINX_BUILD=/opt/sphinx-venv/bin/sphinx-build -DSPHINX_BUILD_DIAGRAMS=ON'
 
 jobs:
 
@@ -20,7 +21,7 @@ jobs:
     name: Build Docs ${{ matrix.branch }}
     runs-on: ubuntu-22.04
     container:
-      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20250526
+      image: quay.io/opencv-ci/opencv-docs-jdk-js-22.04:20261118
       options: --user ci
     strategy:
       matrix:
@@ -29,7 +30,7 @@ jobs:
       SOURCE_BRANCH_NAME: ${{ github.head_ref || matrix.branch }}
       TARGET_BRANCH_NAME: ${{ github.base_ref || matrix.branch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: opencv/ci-gha-workflow
           ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
@@ -75,27 +76,77 @@ jobs:
           cd $HOME/build
           emcmake python ../opencv/platforms/js/build_js.py js --build_test
 
+      - name: Set up Node.js for js tests
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20.18.0'
+
       - name: Run js tests
         timeout-minutes: 60
         run: |
           cd $HOME/build/js/bin
           npm install
           node tests.js
-          
+
       - name: Configure Doxygen
+        if: matrix.branch == '4.x'
         run: |
           mkdir -p $HOME/build
           cd $HOME/build
           cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
-  
+
       - name: Build Doxygen
+        if: matrix.branch == '4.x'
         working-directory: ${{ env.HOME }}/build
         run: cmake --build . --config release --target doxygen -- -j$(nproc) 2>&1 | tee log.txt
 
+      - name: Configure Sphinx
+        if: matrix.branch == '5.x'
+        run: |
+          mkdir -p "$HOME/build/docs_sphinx"
+          cmake -E copy "$HOME/build/js/bin/opencv.js" "$HOME/build/docs_sphinx/opencv.js"
+          cd "$HOME/build"
+          cmake ${{ env.EXTRA_CMAKE_OPTIONS }} ${{ env.SPHINX_CMAKE_OPTIONS }} ${{ env.OPENCV_DOCKER_WORKDIR }}
+
+      - name: Build Sphinx
+        if: matrix.branch == '5.x'
+        working-directory: ${{ env.HOME }}/build
+        run: |
+          cmake --build . --config release --target sphinx -- -j$(nproc) 2>&1 | tee sphinx.log
+          test -s "$HOME/build/docs_sphinx/html/index.html"
+
+      - name: Stage Sphinx Docs
+        if: matrix.branch == '5.x'
+        run: |
+          mkdir -p "$HOME/publish/doc/doxygen/html"
+          mkdir -p "$HOME/publish/js/bin"
+          cmake -E copy_directory \
+            "$HOME/build/docs_sphinx/html" \
+            "$HOME/publish/doc/doxygen/html"
+          cmake -E copy_directory \
+            "${{ env.JAVA_DOC }}" \
+            "$HOME/publish/doc/doxygen/html/javadoc"
+          cmake -E copy \
+            "$HOME/build/js/bin/opencv.js" \
+            "$HOME/publish/js/bin/opencv.js"
+          test -s "$HOME/publish/doc/doxygen/html/index.html"
+
       - name: Archive Doxygen Docs
+        if: matrix.branch == '4.x'
         uses: actions/upload-artifact@v7
         with:
-          name: opencv-docs-${{ matrix.branch }}
+          name: opencv-docs-4.x
           path: |
             ${{ env.HOME }}/build/doc/doxygen/html
             ${{ env.HOME }}/build/js/bin/opencv.js
+          if-no-files-found: error
+
+      - name: Archive Sphinx Docs
+        if: matrix.branch == '5.x'
+        uses: actions/upload-artifact@v7
+        with:
+          name: opencv-docs-5.x
+          path: |
+            ${{ env.HOME }}/publish/doc/doxygen/html
+            ${{ env.HOME }}/publish/js/bin/opencv.js
+          if-no-files-found: error
