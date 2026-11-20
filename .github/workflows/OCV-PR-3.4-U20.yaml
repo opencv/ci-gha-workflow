@@ -28,7 +28,6 @@ env:
 
 jobs:
   BuildAndTest:
-    if: ${{ false }}
     runs-on: opencv-cn-lin-x86-64
     defaults:
       run:
@@ -256,7 +255,6 @@ jobs:
       run: cd $HOME/build && cmake --build . --config release --target check_pylint -- -j4
 
   BuildContrib:
-    if: ${{ false }}
     runs-on: opencv-cn-lin-x86-64
     defaults:
       run:

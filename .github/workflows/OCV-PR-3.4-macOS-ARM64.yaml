@@ -25,7 +25,6 @@ env:
 
 jobs:
   BuildAndTest:
-    if: ${{ false }}
     runs-on: opencv-cn-mac-arm64
     defaults:
       run:
@@ -273,7 +272,6 @@ jobs:
         path: ${{ github.workspace }}/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
-    if: ${{ false }}
     runs-on: opencv-cn-mac-arm64
     defaults:
       run:

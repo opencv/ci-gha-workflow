@@ -28,7 +28,6 @@ env:
 
 jobs:
   BuildAndTest:
-    if: ${{ false }}
     runs-on: opencv-cn-lin-arm64
     defaults:
       run:
@@ -251,7 +250,6 @@ jobs:
         path: /home/ci/build/java_test/testResults/junit-noframes.html
 
   BuildContrib:
-    if: ${{ false }}
     runs-on: opencv-cn-lin-arm64
     defaults:
       run:

@@ -13,9 +13,54 @@ concurrency:
   group: OCV-PR-3.4-iOS-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PR_AUTHOR: ${{ github.event.pull_request.head.repo.owner.login }}
+  PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
+  SOURCE_BRANCH_NAME: ${{ github.head_ref }}
+  TARGET_BRANCH_NAME: ${{ github.base_ref }}
+
 jobs:
   Build:
-    if: ${{ false }}
-    runs-on: ubuntu-22.04
+    runs-on: opencv-cn-mac-x86-64
     steps:
-      - run: echo "OpenCV 3.4 iOS builds are disabled."
+      - name: Setup environment
+        timeout-minutes: 60
+        run: |
+          if [[ "${{ github.event.repository.name }}" == "ci-gha-workflow" || "${{ github.event_name }}" == "schedule" ]]; then
+            echo "TARGET_BRANCH_NAME=3.4" >> $GITHUB_ENV
+          else
+            echo "BUILD_PRECOMMIT=1" >> $GITHUB_ENV
+          fi
+      - name: PR info
+        timeout-minutes: 60
+        run: |
+          echo "PR Author: ${{ env.PR_AUTHOR }}"
+          echo "PR Author fork: ${{ env.PR_AUTHOR_FORK }}"
+          echo "Source branch name: ${{ env.SOURCE_BRANCH_NAME }}"
+          echo "Target branch name: ${{ env.TARGET_BRANCH_NAME }}"
+      - name: Clean
+        timeout-minutes: 60
+        run: cd ${{ github.workspace }} && find . -mindepth 1 -delete
+      - name: Fetch opencv
+        timeout-minutes: 60
+        run: cd ${{ github.workspace }} && git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git opencv
+      - name: Merge opencv with ${{ env.SOURCE_BRANCH_NAME }} branch
+        timeout-minutes: 60
+        if: ${{ startsWith(github.event.repository.name, 'opencv') && github.event_name == 'pull_request' }}
+        run: |
+          cd ${{ github.workspace }}/opencv
+          git pull -v "https://github.com/${{ env.PR_AUTHOR_FORK }}" "${{ env.SOURCE_BRANCH_NAME }}"
+      - name: Build OpenCV iOS Framework
+        timeout-minutes: 120
+        run: |
+          cd ${{ github.workspace }} && python3 opencv/platforms/ios/build_framework.py ios
+      - name: Create Artifact
+        timeout-minutes: 10
+        run: cd ${{ github.workspace }}/ios && zip -r -9 -y opencv-3.4-ios-framework.zip opencv2.framework
+      - name: Upload Artifact
+        timeout-minutes: 60
+        uses: actions/upload-artifact@v7
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || env.RUNNER_DEBUG == 1 }}
+        with:
+          name: OpenCViOSFramework
+          path: ${{ github.workspace }}/ios/opencv-3.4-ios-framework.zip

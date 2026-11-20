@@ -25,7 +25,6 @@ env:
 
 jobs:
   BuildAndTest:
-    if: ${{ false }}
     runs-on: opencv-cn-mac-arm64
     defaults:
       run:
