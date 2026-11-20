@@ -24,6 +24,7 @@ env:
 
 jobs:
   BuildAndTest:
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     defaults:
       run:

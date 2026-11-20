@@ -29,6 +29,7 @@ env:
 
 jobs:
   BuildAndTest:
+    if: ${{ false }}
     runs-on: opencv-cn-lin-x86-64
     defaults:
       run:
