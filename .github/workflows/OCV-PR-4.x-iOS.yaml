@@ -23,7 +23,7 @@ env:
 
 jobs:
   Build:
-    runs-on: opencv-cn-mac-x86-64
+    runs-on: opencv-cn-mac-arm64
     steps:
       - name: Setup environment
         timeout-minutes: 60
@@ -55,7 +55,7 @@ jobs:
       - name: Build OpenCV iOS Framework
         timeout-minutes: 120
         run: |
-          cd ${{ github.workspace }} && python3 opencv/platforms/ios/build_framework.py ios
+          cd ${{ github.workspace }} && python3 opencv/platforms/ios/build_framework.py --iphoneos_archs arm64 --iphonesimulator_archs x86_64 ios
       - name: Create Artifact
         timeout-minutes: 10
         run: cd ${{ github.workspace }}/ios && zip -r -9 -y opencv-4.x-ios-framework.zip opencv2.framework
