@@ -8,8 +8,6 @@ on:
       - '.github/workflows/OCV-PR-3.4-Android.yaml'
   workflow_call:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
 
 concurrency:
   group: OCV-PR-3.4-Android-${{ github.ref }}
