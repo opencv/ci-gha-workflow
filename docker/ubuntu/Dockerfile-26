@@ -84,6 +84,21 @@ RUN python3 -m pip install --break-system-packages \
     lapjv && \
     pip cache purge
 
+# OpenHTJ2K (WITH_OPENHTJ2K) is not packaged by Ubuntu: build the library from a release.
+ARG OPENHTJ2K_VERSION=0.29.1
+ARG OPENHTJ2K_SHA256=a846a055560cfaec5db298ddd0eaee66896ae12fccec3bb1697f794e7d9b2b08
+RUN \
+  cd /tmp && \
+  curl -fsSL -o openhtj2k.tar.gz https://github.com/osamu620/OpenHTJ2K/archive/refs/tags/v${OPENHTJ2K_VERSION}.tar.gz && \
+  echo "${OPENHTJ2K_SHA256}  openhtj2k.tar.gz" | sha256sum -c - && \
+  tar xzf openhtj2k.tar.gz && \
+  cmake -S OpenHTJ2K-${OPENHTJ2K_VERSION} -B openhtj2k-build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release -DOPENHTJ2K_BUILD_APPS=OFF -DOPENHTJ2K_TARGET_CPU=x86-64-v3 && \
+  cmake --build openhtj2k-build && \
+  cmake --install openhtj2k-build && \
+  ldconfig && \
+  rm -rf openhtj2k.tar.gz OpenHTJ2K-${OPENHTJ2K_VERSION} openhtj2k-build
+
 # Self-hosted runner UID is 1000
 
 USER ubuntu
