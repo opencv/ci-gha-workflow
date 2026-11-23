@@ -85,8 +85,8 @@ RUN python3 -m pip install --break-system-packages \
     pip cache purge
 
 # OpenHTJ2K (WITH_OPENHTJ2K) is not packaged by Ubuntu: build the library from a release.
-ARG OPENHTJ2K_VERSION=0.28.0
-ARG OPENHTJ2K_SHA256=328b8d8bbfd7d35d7ead18c87b48342be3c028125cf75f62e4b257d9a935a779
+ARG OPENHTJ2K_VERSION=0.29.1
+ARG OPENHTJ2K_SHA256=a846a055560cfaec5db298ddd0eaee66896ae12fccec3bb1697f794e7d9b2b08
 RUN \
   cd /tmp && \
   curl -fsSL -o openhtj2k.tar.gz https://github.com/osamu620/OpenHTJ2K/archive/refs/tags/v${OPENHTJ2K_VERSION}.tar.gz && \
