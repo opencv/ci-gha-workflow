@@ -55,16 +55,20 @@ runs:
     run: |
       echo "### Test summary:" >> $GITHUB_STEP_SUMMARY
       pyexe=python3
+      bindir=bin
       opt=""
       if [ "$RUNNER_OS" == "Windows" ]; then
         pyexe=python
-        opt="--exesuffix=.exe --bindir=bin/Release"
+        opt="--exesuffix=.exe"
+        if [ -d '${{ inputs.workdir }}/${{ inputs.builddir }}/bin/Release' ]; then
+          bindir=bin/Release
+        fi
       fi
       if [ "${{ inputs.fail_fast }}" = "true" ]; then
         opt="$opt --fail-fast"
       fi
       ${pyexe} "${{ inputs.scripts_path }}/runner.py" \
-        '--bindir=bin' \
+        "--bindir=${bindir}" \
         '--workdir=${{ inputs.workdir }}/${{ inputs.builddir }}' \
         '--logdir=${{ inputs.logdir }}' \
         '--plan=${{ inputs.scripts_path }}/${{ inputs.plan }}' \

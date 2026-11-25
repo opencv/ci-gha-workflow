@@ -98,7 +98,22 @@
                 "test": "--skip_unstable=1",
                 "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"
             },
-            "serial": [ "opencv_perf_", "opencv_test_highgui", "opencv_test_videoio" ]
+            "estimated_duration_seconds": {
+                "opencv_test_core": 500,
+                "opencv_test_dnn": 260,
+                "opencv_test_features": 250,
+                "opencv_perf_core": 210,
+                "opencv_perf_imgproc": 190,
+                "opencv_perf_dnn": 180,
+                "opencv_test_ptcloud": 175,
+                "opencv_perf_ptcloud": 170,
+                "opencv_test_calib": 160,
+                "opencv_test_imgproc": 150,
+                "opencv_test_video": 140,
+                "opencv_test_photo": 120,
+                "opencv_perf_stitching": 105
+            },
+            "serial": [ "opencv_test_highgui", "opencv_test_videoio" ]
         }
     }
 }
