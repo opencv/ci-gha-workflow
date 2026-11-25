@@ -52,11 +52,11 @@ jobs:
       run:
         shell: bash
     container:
-      image: 'quay.io/opencv-ci/opencv-ubuntu-24.04:20260928'
+      image: 'quay.io/opencv-ci/opencv-ubuntu-22.04:20260515'
       volumes:
         - /home/opencv-cn/git_cache:/opt/git_cache
-        - /home/opencv-cn/ci_cache/opencv/24.04:/opt/.ccache
-        - /home/opencv-cn/binaries_cache/24.04:/opt/binaries_cache
+        - /home/opencv-cn/ci_cache/opencv/22.04:/opt/.ccache
+        - /home/opencv-cn/binaries_cache/22.04:/opt/binaries_cache
         - /home/opencv-cn/dnn-models:/opt/dnn-models
     env:
       ANT_HOME: '/usr/share/ant'
@@ -73,7 +73,7 @@ jobs:
         -DOPENCV_FORCE_3RDPARTY_BUILD=ON
         -DWITH_OPENEXR=OFF
         -DWITH_GSTREAMER=OFF
-      HOME: '/home/ubuntu'
+      HOME: '/home/ci'
       MAIN_BUILD_DIR: "build"
       OPENCV_FOR_THREADS_NUM: 8
       CMAKE_BUILD_PARALLEL_LEVEL: 8
@@ -129,7 +129,7 @@ jobs:
         filter: "[ 'ubuntu-common', 'ubuntu-avx2' ]"
         enable_python: "true"
         enable_java: "true"
-        suffix: '24.04_${{ matrix.branch }}'
+        suffix: '22.04_${{ matrix.branch }}'
 
     - if: ${{ !cancelled() && env.WARNINGS == '1' }}
       name: Warnings check
