@@ -75,6 +75,7 @@ jobs:
       run:
         shell: bash
     env:
+      # SSE2 already implies SSE; avoid MSVC D9025 from passing both /arch switches to Ninja.
       CMAKE_OPT: >-
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
@@ -82,6 +83,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release
         ${{ matrix.config.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
         ${{ matrix.config.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
+        ${{ matrix.config.arch == 'x86' && '-DCPU_SSE_FLAGS_ON=' || '' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
       # opencv-cn-win has 12 logical CPUs: four test processes use three OpenCV threads each.
       OPENCV_FOR_THREADS_NUM: ${{ matrix.config.use_sccache && 3 || 4 }}
