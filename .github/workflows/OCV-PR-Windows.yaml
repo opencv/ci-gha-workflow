@@ -51,11 +51,11 @@ jobs:
               echo "branches=[ '${{ github.base_ref }}' ]" >> "$GITHUB_OUTPUT"
             fi
             if [ "${{ inputs.fast }}" = "true" ]; then
-              echo 'configurations=[{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64"}]' >> "$GITHUB_OUTPUT"
+              echo 'configurations=[{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","vs_year":"2019","msvc_arch":"x64","cmake_arch":"x64","use_sccache":true}]' >> "$GITHUB_OUTPUT"
             elif [ "${{ inputs.delta }}" = "true" ]; then
-              echo 'configurations=[{"arch":"x86","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"Win32"},{"arch":"arm64","runner":"windows-arm64","vs":"Visual Studio 17 2022","cmake_arch":"ARM64","no_opencl":true},{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64","compat_only":true}]' >> "$GITHUB_OUTPUT"
+              echo 'configurations=[{"arch":"x86","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","vs_year":"2019","msvc_arch":"amd64_x86","cmake_arch":"Win32","use_sccache":true},{"arch":"arm64","runner":"windows-arm64","vs":"Visual Studio 17 2022","cmake_arch":"ARM64","no_opencl":true},{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","vs_year":"2019","msvc_arch":"x64","cmake_arch":"x64","use_sccache":true,"compat_only":true}]' >> "$GITHUB_OUTPUT"
             else
-              echo 'configurations=[{"arch":"x86","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"Win32"},{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","cmake_arch":"x64"},{"arch":"arm64","runner":"windows-arm64","vs":"Visual Studio 17 2022","cmake_arch":"ARM64","no_opencl":true}]' >> "$GITHUB_OUTPUT"
+              echo 'configurations=[{"arch":"x86","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","vs_year":"2019","msvc_arch":"amd64_x86","cmake_arch":"Win32","use_sccache":true},{"arch":"x64","runner":"opencv-cn-win","vs":"Visual Studio 16 2019","vs_year":"2019","msvc_arch":"x64","cmake_arch":"x64","use_sccache":true},{"arch":"arm64","runner":"windows-arm64","vs":"Visual Studio 17 2022","cmake_arch":"ARM64","no_opencl":true}]' >> "$GITHUB_OUTPUT"
             fi
 
   Windows:
@@ -75,6 +75,7 @@ jobs:
       run:
         shell: bash
     env:
+      # MSVC x86 defaults to SSE2; avoid conflicting /arch switches on dispatched sources.
       CMAKE_OPT: >-
         -DCL_Z_OPTION=/Z7
         -DBUILD_EXAMPLES=ON
@@ -82,9 +83,15 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release
         ${{ matrix.config.no_opencl && '-DWITH_OPENCL=OFF' || '' }}
         ${{ matrix.config.arch == 'x86' && '-DBUILD_opencv_python3=OFF' || '' }}
+        ${{ matrix.config.arch == 'x86' && '-DCPU_SSE_FLAGS_ON=' || '' }}
+        ${{ matrix.config.arch == 'x86' && '-DCPU_SSE2_FLAGS_ON=' || '' }}
       MAIN_BUILD_DIR: "${{ (github.event.repository.name != 'opencv_contrib') && 'build' || 'build-contrib' }}"
-      OPENCV_FOR_THREADS_NUM: 4
+      # opencv-cn-win has 12 logical CPUs: four test processes use three OpenCV threads each.
+      OPENCV_FOR_THREADS_NUM: ${{ matrix.config.use_sccache && 3 || 4 }}
       CMAKE_BUILD_PARALLEL_LEVEL: 8
+      SCCACHE_DIR: C:/opencv-ci-cache/sccache/${{ matrix.config.arch }}
+      SCCACHE_CACHE_SIZE: 10G
+      SCCACHE_IGNORE_SERVER_IO_ERROR: 1
 
     # ==========
 
@@ -137,14 +144,39 @@ jobs:
           --dst '${{ env.DNN_MODELS }}/dnn'
         echo "OPENCV_DNN_TEST_DATA_PATH=${{ env.DNN_MODELS }}" >> $GITHUB_ENV
 
+    - name: Set up MSVC environment
+      if: ${{ matrix.config.use_sccache }}
+      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+      with:
+        arch: ${{ matrix.config.msvc_arch }}
+        vsversion: ${{ matrix.config.vs_year }}
+
+    - name: Set up sccache
+      if: ${{ matrix.config.use_sccache }}
+      uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
+      with:
+        version: v0.20.1
+
+    - name: Select build generator
+      run: |
+        if [ "${{ matrix.config.use_sccache }}" = "true" ]; then
+          which cl ninja sccache
+          sccache --zero-stats
+          echo "BUILD_GENERATOR=Ninja" >> "$GITHUB_ENV"
+          echo "BUILD_GENERATOR_OPT=-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache" >> "$GITHUB_ENV"
+        else
+          echo "BUILD_GENERATOR=${{ matrix.config.vs }}" >> "$GITHUB_ENV"
+          echo "BUILD_GENERATOR_OPT=-A ${{ matrix.config.cmake_arch }}" >> "$GITHUB_ENV"
+        fi
+
     - if: ${{ github.event.repository.name != 'opencv_contrib' && !matrix.config.compat_only }}
       name: Configure and build OpenCV
       uses: ./configure-and-build
       with:
         workdir: '${{ github.workspace }}'
         builddir: 'build'
-        generator: '${{ matrix.config.vs }}'
-        options: '-A ${{ matrix.config.cmake_arch }} ${{ env.CMAKE_OPT }}'
+        generator: '${{ env.BUILD_GENERATOR }}'
+        options: '${{ env.BUILD_GENERATOR_OPT }} ${{ env.CMAKE_OPT }}'
 
     - name: Configure and build OpenCV with contrib
       if: ${{ !inputs.fast || github.event.repository.name == 'opencv_contrib' }}
@@ -152,8 +184,8 @@ jobs:
       with:
         workdir: '${{ github.workspace }}'
         builddir: 'build-contrib'
-        generator: '${{ matrix.config.vs }}'
-        options: '-A ${{ matrix.config.cmake_arch }} -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
+        generator: '${{ env.BUILD_GENERATOR }}'
+        options: '${{ env.BUILD_GENERATOR_OPT }} -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules ${{ env.CMAKE_OPT }}'
 
     - name: Run OpenCV tests
       if: ${{ !matrix.config.compat_only }}
@@ -175,7 +207,7 @@ jobs:
         filter: "[ 'windows-common' ]"
         suffix: '${{ matrix.config.arch }}_${{ matrix.branch }}'
         timeout: 15
-        jobs: "2"
+        jobs: ${{ matrix.config.use_sccache && '4' || '2' }}
         fail_fast: ${{ inputs.fast }}
 
     - if: ${{ !cancelled() && env.WARNINGS == '1' }}

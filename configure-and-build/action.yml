@@ -69,7 +69,9 @@ runs:
       run: |
         set -x
         echo "::group::Stat"
-        if [ "$RUNNER_OS" == "Windows" ]; then
+        if command -v sccache > /dev/null; then
+          sccache --show-stats
+        elif [ "$RUNNER_OS" == "Windows" ]; then
           echo "No statistics on Windows for now"
         else
           ccache --show-stats | tee /tmp/opencv-ccache-stats.txt
