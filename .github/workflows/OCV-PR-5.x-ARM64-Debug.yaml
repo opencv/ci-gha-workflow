@@ -131,7 +131,7 @@ jobs:
     - name: Warnings check
       timeout-minutes: 60
       run: cd $HOME/build && python3 $HOME/scripts/warnings-handling.py
-    - name: Run OpenCV tests
+    - name: Run OpenCV tests in parallel
       timeout-minutes: 60
       if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
       uses: ./ci-gha-workflow/run-tests
