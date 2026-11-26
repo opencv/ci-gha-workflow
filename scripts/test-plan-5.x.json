@@ -2,12 +2,59 @@
     "suites": {
         "short": [ "opencv_test_core", "opencv_test_imgproc", "opencv_test_photo" ],
 
-        "arm-debug": [
+        "arm": [
+            "opencv_test_geometry",
             "opencv_test_calib",
             "opencv_test_core",
-            "opencv_test_ptcloud",
-            "opencv_test_photo",
+            "opencv_test_dnn",
+            "opencv_test_features",
+            "opencv_test_flann",
+            "opencv_test_highgui",
+            "opencv_test_imgcodecs",
             "opencv_test_imgproc",
+            "opencv_test_objdetect",
+            "opencv_test_photo",
+            "opencv_test_ptcloud",
+            "opencv_test_stereo",
+            "opencv_test_stitching",
+            "opencv_test_video",
+            "opencv_test_videoio",
+            "opencv_perf_geometry",
+            "opencv_perf_calib",
+            "opencv_perf_core",
+            "opencv_perf_dnn",
+            "opencv_perf_features",
+            "opencv_perf_imgcodecs",
+            "opencv_perf_imgproc",
+            "opencv_perf_objdetect",
+            "opencv_perf_photo",
+            "opencv_perf_ptcloud",
+            "opencv_perf_stereo",
+            "opencv_perf_stitching",
+            "opencv_perf_video",
+            "opencv_perf_videoio"
+        ],
+
+        "arm-debug": [
+            "opencv_test_calib_shard_0",
+            "opencv_test_calib_shard_1",
+            "opencv_test_calib_shard_2",
+            "opencv_test_calib_shard_3",
+            "opencv_test_core_shard_0",
+            "opencv_test_core_shard_1",
+            "opencv_test_core_shard_2",
+            "opencv_test_core_shard_3",
+            "opencv_test_ptcloud_shard_0",
+            "opencv_test_ptcloud_shard_1",
+            "opencv_test_ptcloud_shard_2",
+            "opencv_test_ptcloud_shard_3",
+            "opencv_test_ptcloud_shard_4",
+            "opencv_test_ptcloud_shard_5",
+            "opencv_test_imgproc_shard_0",
+            "opencv_test_imgproc_shard_1",
+            "opencv_test_imgproc_shard_2",
+            "opencv_test_imgproc_shard_3",
+            "opencv_test_photo",
             "opencv_test_objdetect",
             "opencv_test_geometry",
             "opencv_test_video",
@@ -118,6 +165,13 @@
                 "Core_InRange/ElemWiseTest.accuracy/0"
             ]
         },
+        "arm": {
+            "perf_objdetect": [
+                "Perf_Objdetect_QRCode.detect/2",
+                "Perf_Objdetect_QRCode_Multi.decodeMulti*",
+                "Perf_Objdetect_QRCode_Multi.detectMulti*"
+            ]
+        },
         "arm-debug": {
             "test_videoio": [
                 "Media.audio/0"
@@ -135,6 +189,48 @@
             },
             "serial": [ "opencv_perf_", "opencv_test_highgui", "opencv_test_videoio" ]
         },
+        "arm": {
+            "wrap": {
+                "": "xvfb-run -a"
+            },
+            "args": {
+                "test": "--skip_unstable=1 --test_threads=4",
+                "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=4"
+            },
+            "estimated_duration_seconds": {
+                "opencv_test_dnn": 272,
+                "opencv_test_features": 174,
+                "opencv_test_core": 169,
+                "opencv_test_ptcloud": 155,
+                "opencv_test_calib": 104,
+                "opencv_test_videoio": 96,
+                "opencv_test_imgproc": 68,
+                "opencv_test_imgcodecs": 65,
+                "opencv_test_video": 63,
+                "opencv_test_objdetect": 50,
+                "opencv_test_geometry": 27,
+                "opencv_test_photo": 17,
+                "opencv_test_stereo": 4,
+                "opencv_test_stitching": 4,
+                "opencv_test_flann": 1,
+                "opencv_test_highgui": 1,
+                "opencv_perf_dnn": 100,
+                "opencv_perf_imgproc": 77,
+                "opencv_perf_core": 64,
+                "opencv_perf_ptcloud": 57,
+                "opencv_perf_imgcodecs": 45,
+                "opencv_perf_videoio": 4,
+                "opencv_perf_video": 35,
+                "opencv_perf_stitching": 24,
+                "opencv_perf_stereo": 6,
+                "opencv_perf_features": 5,
+                "opencv_perf_objdetect": 4,
+                "opencv_perf_photo": 3,
+                "opencv_perf_geometry": 2,
+                "opencv_perf_calib": 2
+            },
+            "serial": [ "opencv_test_highgui", "opencv_test_videoio", "opencv_perf_videoio" ]
+        },
         "arm-debug": {
             "wrap": {
                 "": "xvfb-run -a"
@@ -142,21 +238,77 @@
             "args": {
                 "test": "--skip_unstable=1 --test_threads=4"
             },
+            "exe": {
+                "opencv_test_calib_shard_0": "opencv_test_calib",
+                "opencv_test_calib_shard_1": "opencv_test_calib",
+                "opencv_test_calib_shard_2": "opencv_test_calib",
+                "opencv_test_calib_shard_3": "opencv_test_calib",
+                "opencv_test_core_shard_0": "opencv_test_core",
+                "opencv_test_core_shard_1": "opencv_test_core",
+                "opencv_test_core_shard_2": "opencv_test_core",
+                "opencv_test_core_shard_3": "opencv_test_core",
+                "opencv_test_ptcloud_shard_0": "opencv_test_ptcloud",
+                "opencv_test_ptcloud_shard_1": "opencv_test_ptcloud",
+                "opencv_test_ptcloud_shard_2": "opencv_test_ptcloud",
+                "opencv_test_ptcloud_shard_3": "opencv_test_ptcloud",
+                "opencv_test_ptcloud_shard_4": "opencv_test_ptcloud",
+                "opencv_test_ptcloud_shard_5": "opencv_test_ptcloud",
+                "opencv_test_imgproc_shard_0": "opencv_test_imgproc",
+                "opencv_test_imgproc_shard_1": "opencv_test_imgproc",
+                "opencv_test_imgproc_shard_2": "opencv_test_imgproc",
+                "opencv_test_imgproc_shard_3": "opencv_test_imgproc"
+            },
+            "env": {
+                "opencv_test_calib_shard_0": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "0" },
+                "opencv_test_calib_shard_1": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "1" },
+                "opencv_test_calib_shard_2": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "2" },
+                "opencv_test_calib_shard_3": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "3" },
+                "opencv_test_core_shard_0": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "0" },
+                "opencv_test_core_shard_1": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "1" },
+                "opencv_test_core_shard_2": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "2" },
+                "opencv_test_core_shard_3": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "3" },
+                "opencv_test_ptcloud_shard_0": { "GTEST_TOTAL_SHARDS": "6", "GTEST_SHARD_INDEX": "0" },
+                "opencv_test_ptcloud_shard_1": { "GTEST_TOTAL_SHARDS": "6", "GTEST_SHARD_INDEX": "1" },
+                "opencv_test_ptcloud_shard_2": { "GTEST_TOTAL_SHARDS": "6", "GTEST_SHARD_INDEX": "2" },
+                "opencv_test_ptcloud_shard_3": { "GTEST_TOTAL_SHARDS": "6", "GTEST_SHARD_INDEX": "3" },
+                "opencv_test_ptcloud_shard_4": { "GTEST_TOTAL_SHARDS": "6", "GTEST_SHARD_INDEX": "4" },
+                "opencv_test_ptcloud_shard_5": { "GTEST_TOTAL_SHARDS": "6", "GTEST_SHARD_INDEX": "5" },
+                "opencv_test_imgproc_shard_0": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "0" },
+                "opencv_test_imgproc_shard_1": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "1" },
+                "opencv_test_imgproc_shard_2": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "2" },
+                "opencv_test_imgproc_shard_3": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "3" }
+            },
             "estimated_duration_seconds": {
-                "opencv_test_calib": 1560,
-                "opencv_test_core": 1440,
-                "opencv_test_ptcloud": 660,
-                "opencv_test_photo": 600,
-                "opencv_test_imgproc": 540,
-                "opencv_test_objdetect": 360,
-                "opencv_test_geometry": 300,
-                "opencv_test_video": 240,
-                "opencv_test_features": 180,
-                "opencv_test_dnn": 180,
-                "opencv_test_imgcodecs": 120,
-                "opencv_test_stitching": 90,
-                "opencv_test_stereo": 60,
-                "opencv_test_flann": 30
+                "opencv_test_calib_shard_0": 643,
+                "opencv_test_calib_shard_1": 221,
+                "opencv_test_calib_shard_2": 357,
+                "opencv_test_calib_shard_3": 311,
+                "opencv_test_objdetect": 416,
+                "opencv_test_ptcloud_shard_0": 166,
+                "opencv_test_ptcloud_shard_1": 91,
+                "opencv_test_ptcloud_shard_2": 297,
+                "opencv_test_ptcloud_shard_3": 91,
+                "opencv_test_ptcloud_shard_4": 182,
+                "opencv_test_ptcloud_shard_5": 81,
+                "opencv_test_photo": 236,
+                "opencv_test_features": 199,
+                "opencv_test_core_shard_0": 197,
+                "opencv_test_core_shard_1": 188,
+                "opencv_test_core_shard_2": 188,
+                "opencv_test_core_shard_3": 183,
+                "opencv_test_dnn": 175,
+                "opencv_test_videoio": 123,
+                "opencv_test_video": 159,
+                "opencv_test_geometry": 131,
+                "opencv_test_imgproc_shard_0": 130,
+                "opencv_test_imgproc_shard_1": 90,
+                "opencv_test_imgproc_shard_2": 90,
+                "opencv_test_imgproc_shard_3": 96,
+                "opencv_test_imgcodecs": 87,
+                "opencv_test_stereo": 52,
+                "opencv_test_stitching": 14,
+                "opencv_test_flann": 3,
+                "opencv_test_highgui": 2
             },
             "serial": [ "opencv_test_highgui", "opencv_test_videoio" ]
         }
