@@ -143,6 +143,50 @@ class SchedulerTest(unittest.TestCase):
 
         self.assertEqual(spec["estimated_duration"], 1440)
 
+    def test_sharded_alias_uses_real_executable_and_shard_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executable = root / "bin" / "opencv_test_core"
+            executable.parent.mkdir()
+            executable.touch()
+            args = SimpleNamespace(
+                options="arm-debug",
+                filter=None,
+                workdir=root,
+                bindir=Path("bin"),
+                exesuffix=None,
+                logdir=root,
+                prefix="out_",
+            )
+            plan = {
+                "options": {
+                    "arm-debug": {
+                        "args": {"test": "--test_threads=4"},
+                        "exe": {
+                            "opencv_test_core_shard_2": "opencv_test_core"
+                        },
+                        "env": {
+                            "opencv_test_core_shard_2": {
+                                "GTEST_TOTAL_SHARDS": "4",
+                                "GTEST_SHARD_INDEX": "2",
+                            }
+                        },
+                    }
+                },
+                "filters": {},
+            }
+            spec = runner.make_spec(
+                "opencv_test_core_shard_2", plan, args, 0
+            )
+
+        self.assertEqual(spec["cmd"], [executable, "--test_threads=4"])
+        self.assertEqual(
+            spec["env"],
+            {"GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "2"},
+        )
+        self.assertEqual(spec["logname"].name, "out_opencv_test_core_shard_2.txt")
+        self.assertIsNone(spec["error"])
+
     def test_summary_preserves_plan_order_and_durations(self):
         specs = [test_spec(0, "pass"), test_spec(1, "fail"), test_spec(2, "skip")]
         results = [(True, 1.25), (False, 2.5), None]

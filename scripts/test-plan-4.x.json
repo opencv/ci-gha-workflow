@@ -2,6 +2,60 @@
     "suites": {
         "short": [ "opencv_test_core", "opencv_test_imgproc", "opencv_test_photo" ],
 
+        "arm": [
+            "opencv_test_calib3d",
+            "opencv_test_core",
+            "opencv_test_dnn",
+            "opencv_test_features2d",
+            "opencv_test_flann",
+            "opencv_test_highgui",
+            "opencv_test_imgcodecs",
+            "opencv_test_imgproc",
+            "opencv_test_ml",
+            "opencv_test_objdetect",
+            "opencv_test_photo",
+            "opencv_test_stitching",
+            "opencv_test_video",
+            "opencv_test_videoio",
+            "opencv_perf_calib3d",
+            "opencv_perf_core",
+            "opencv_perf_dnn",
+            "opencv_perf_features2d",
+            "opencv_perf_imgcodecs",
+            "opencv_perf_imgproc",
+            "opencv_perf_objdetect",
+            "opencv_perf_photo",
+            "opencv_perf_stitching",
+            "opencv_perf_video",
+            "opencv_perf_videoio"
+        ],
+
+        "arm-debug": [
+            "opencv_test_calib3d_shard_0",
+            "opencv_test_calib3d_shard_1",
+            "opencv_test_calib3d_shard_2",
+            "opencv_test_calib3d_shard_3",
+            "opencv_test_core_shard_0",
+            "opencv_test_core_shard_1",
+            "opencv_test_core_shard_2",
+            "opencv_test_core_shard_3",
+            "opencv_test_imgproc_shard_0",
+            "opencv_test_imgproc_shard_1",
+            "opencv_test_imgproc_shard_2",
+            "opencv_test_imgproc_shard_3",
+            "opencv_test_dnn",
+            "opencv_test_features2d",
+            "opencv_test_flann",
+            "opencv_test_highgui",
+            "opencv_test_imgcodecs",
+            "opencv_test_ml",
+            "opencv_test_objdetect",
+            "opencv_test_photo",
+            "opencv_test_stitching",
+            "opencv_test_video",
+            "opencv_test_videoio"
+        ],
+
         "linux": [
             "opencv_test_calib3d",
             "opencv_test_core",
@@ -79,6 +133,8 @@
         ]
     },
     "filters": {
+        "arm": {},
+        "arm-debug": {},
         "ubuntu-common": {
             "test_gapi": [
                 "AsyncAPICancelation/cancel/*"
@@ -109,6 +165,105 @@
             "exe": {},
             "env": {},
             "serial": [ "opencv_perf_", "opencv_test_highgui", "opencv_test_videoio" ]
+        },
+        "arm": {
+            "wrap": {
+                "": "xvfb-run -a"
+            },
+            "args": {
+                "test": "--skip_unstable=1 --test_threads=4",
+                "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=4"
+            },
+            "estimated_duration_seconds": {
+                "opencv_test_core": 314,
+                "opencv_test_videoio": 161,
+                "opencv_test_dnn": 132,
+                "opencv_test_imgproc": 129,
+                "opencv_test_video": 116,
+                "opencv_test_calib3d": 102,
+                "opencv_test_features2d": 80,
+                "opencv_test_imgcodecs": 77,
+                "opencv_perf_imgproc": 159,
+                "opencv_perf_core": 146,
+                "opencv_perf_stitching": 69,
+                "opencv_perf_imgcodecs": 61,
+                "opencv_perf_dnn": 56,
+                "opencv_test_ml": 53,
+                "opencv_perf_features2d": 47,
+                "opencv_test_photo": 46,
+                "opencv_perf_photo": 44,
+                "opencv_test_objdetect": 42,
+                "opencv_perf_videoio": 4,
+                "opencv_perf_video": 28,
+                "opencv_perf_calib3d": 8,
+                "opencv_perf_objdetect": 8,
+                "opencv_test_highgui": 8,
+                "opencv_test_stitching": 7,
+                "opencv_test_flann": 1
+            },
+            "serial": [ "opencv_test_highgui", "opencv_test_videoio", "opencv_perf_videoio" ]
+        },
+        "arm-debug": {
+            "wrap": {
+                "": "xvfb-run -a"
+            },
+            "args": {
+                "test": "--skip_unstable=1 --test_threads=4"
+            },
+            "exe": {
+                "opencv_test_calib3d_shard_0": "opencv_test_calib3d",
+                "opencv_test_calib3d_shard_1": "opencv_test_calib3d",
+                "opencv_test_calib3d_shard_2": "opencv_test_calib3d",
+                "opencv_test_calib3d_shard_3": "opencv_test_calib3d",
+                "opencv_test_core_shard_0": "opencv_test_core",
+                "opencv_test_core_shard_1": "opencv_test_core",
+                "opencv_test_core_shard_2": "opencv_test_core",
+                "opencv_test_core_shard_3": "opencv_test_core",
+                "opencv_test_imgproc_shard_0": "opencv_test_imgproc",
+                "opencv_test_imgproc_shard_1": "opencv_test_imgproc",
+                "opencv_test_imgproc_shard_2": "opencv_test_imgproc",
+                "opencv_test_imgproc_shard_3": "opencv_test_imgproc"
+            },
+            "env": {
+                "opencv_test_calib3d_shard_0": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "0" },
+                "opencv_test_calib3d_shard_1": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "1" },
+                "opencv_test_calib3d_shard_2": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "2" },
+                "opencv_test_calib3d_shard_3": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "3" },
+                "opencv_test_core_shard_0": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "0" },
+                "opencv_test_core_shard_1": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "1" },
+                "opencv_test_core_shard_2": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "2" },
+                "opencv_test_core_shard_3": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "3" },
+                "opencv_test_imgproc_shard_0": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "0" },
+                "opencv_test_imgproc_shard_1": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "1" },
+                "opencv_test_imgproc_shard_2": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "2" },
+                "opencv_test_imgproc_shard_3": { "GTEST_TOTAL_SHARDS": "4", "GTEST_SHARD_INDEX": "3" }
+            },
+            "estimated_duration_seconds": {
+                "opencv_test_core_shard_0": 342,
+                "opencv_test_core_shard_1": 302,
+                "opencv_test_core_shard_2": 307,
+                "opencv_test_core_shard_3": 288,
+                "opencv_test_photo": 335,
+                "opencv_test_objdetect": 290,
+                "opencv_test_videoio": 230,
+                "opencv_test_video": 290,
+                "opencv_test_features2d": 275,
+                "opencv_test_calib3d_shard_0": 127,
+                "opencv_test_calib3d_shard_1": 128,
+                "opencv_test_calib3d_shard_2": 203,
+                "opencv_test_calib3d_shard_3": 159,
+                "opencv_test_ml": 200,
+                "opencv_test_imgproc_shard_0": 133,
+                "opencv_test_imgproc_shard_1": 158,
+                "opencv_test_imgproc_shard_2": 117,
+                "opencv_test_imgproc_shard_3": 188,
+                "opencv_test_imgcodecs": 115,
+                "opencv_test_stitching": 115,
+                "opencv_test_highgui": 10,
+                "opencv_test_dnn": 10,
+                "opencv_test_flann": 5
+            },
+            "serial": [ "opencv_test_highgui", "opencv_test_videoio" ]
         }
     }
 }
