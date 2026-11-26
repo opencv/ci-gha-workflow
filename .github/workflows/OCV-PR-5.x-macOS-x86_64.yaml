@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF'
+  EXTRA_CMAKE_OPTIONS: '-DBUILD_DOCS=ON -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 -DOPENCV_DOWNLOAD_PATH=$BINARIES_CACHE -DBUILD_EXAMPLES=ON -DOPENCV_ENABLE_NONFREE=ON -DBUILD_ZLIB=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'
   PR_AUTHOR: ${{ github.event.pull_request.head.repo.owner.login }}
   PR_AUTHOR_FORK: ${{ github.event.pull_request.head.repo.full_name }}
   SOURCE_BRANCH_NAME: ${{ github.head_ref }}
@@ -23,6 +23,8 @@ env:
   OPENCV_TEST_DATA_PATH: '${{ github.workspace }}/opencv_extra/testdata'
   OPENCV_TEST_REQUIRE_DATA: 1
   OPENCV_TEST_CHECK_OPTIONAL_DATA: 1
+  # The runner has 12 logical CPUs: four test processes use three OpenCV threads each.
+  OPENCV_FOR_THREADS_NUM: 3
 
 jobs:
   BuildAndTest:
@@ -38,11 +40,17 @@ jobs:
       timeout-minutes: 60
       if: ${{ github.event.repository.name == 'ci-gha-workflow' }}
       run: |
-        echo "TARGET_BRANCH_NAME=5.x" >> $GITHUB_ENV
-    - name: Setup test environment
-      if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
+        echo "TARGET_BRANCH_NAME=5.x" >> "$GITHUB_ENV"
+    - name: Set up ccache
       run: |
-        echo "EXTRA_GTEST_OPTIONS=--skip_unstable=1" >> $GITHUB_ENV
+        cache_dir="$HOME/Library/Caches/ccache"
+        mkdir -p "$cache_dir"
+        echo "CCACHE_DIR=$cache_dir" >> "$GITHUB_ENV"
+        export CCACHE_DIR="$cache_dir"
+        ccache --version
+        ccache --max-size=10G
+        ccache --zero-stats
+        ccache --show-stats
     - name: PR info
       timeout-minutes: 60
       run: |
@@ -54,6 +62,12 @@ jobs:
       timeout-minutes: 60
       run: find . -mindepth 1 -delete
       working-directory: ${{ github.workspace }}
+    - name: Checkout workflow repository
+      uses: actions/checkout@v4
+      with:
+        repository: opencv/ci-gha-workflow
+        ref: ${{ github.repository == 'opencv/ci-gha-workflow' && github.ref || 'main' }}
+        path: ci-gha-workflow
     - name: Fetch opencv
       timeout-minutes: 60
       run: git clone --branch ${{ env.TARGET_BRANCH_NAME }} --reference $GIT_CACHE/opencv.git https://github.com/opencv/opencv.git
@@ -72,7 +86,7 @@ jobs:
       if: ${{ github.event.repository.name != 'ci-gha-workflow' }}
       run: |
         OPENCV_EXTRA_FORK=$(git ls-remote --heads "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}") || true
-        if [[ ! -z "$OPENCV_EXTRA_FORK" ]]; then
+        if [[ -n "$OPENCV_EXTRA_FORK" ]]; then
           echo "Merge opencv_extra with ${{ env.SOURCE_BRANCH_NAME }} branch"
           git pull -v "https://github.com/${{ env.PR_AUTHOR }}/opencv_extra" "${{ env.SOURCE_BRANCH_NAME }}"
         else
@@ -88,171 +102,35 @@ jobs:
 
     - name: Configure OpenCV
       timeout-minutes: 60
-      run: |
-        cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} opencv
+      run: cmake -B build -G Ninja ${{ env.EXTRA_CMAKE_OPTIONS }} opencv
       working-directory: ${{ github.workspace }}
     - name: Build OpenCV
       timeout-minutes: 100
       id: build-opencv
-      run: |
-        ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
+      run: ninja -j $PARALLEL_JOBS | tee ${{ github.workspace }}/build/build-log.txt
       working-directory: ${{ github.workspace }}/build
+    - name: ccache statistics
+      if: ${{ always() }}
+      run: ccache --show-stats
     - name: Warnings check
       timeout-minutes: 60
       run: python3 $GIT_CACHE/warnings-handling.py
       working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:3d
-      timeout-minutes: 60
+    - name: Run OpenCV C++ tests
       if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_geometry --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:calib
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      env:
-        OPENCV_OPENCL_CACHE_ENABLE: 0
-      run: ./bin/opencv_test_calib --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:core
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_core --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:dnn
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_dnn --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:features
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_features --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:flann
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_flann --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:highgui
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_highgui --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:imgcodecs
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_imgcodecs --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:imgproc
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_imgproc --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:objdetect
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_objdetect --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:photo
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_photo --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:ptcloud
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_ptcloud --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:stereo
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_stereo --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:stitching
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_stitching --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:video
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_video --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Accuracy:videoio
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_test_videoio --test_threads=$PARALLEL_JOBS ${{ env.EXTRA_GTEST_OPTIONS }}
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:3d
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_geometry --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:calib
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_calib --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:core
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_core --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:dnn
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_dnn --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:features
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_features --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:imgcodecs
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_imgcodecs --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:imgproc
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_imgproc --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:objdetect
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_objdetect --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:ptcloud
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_ptcloud --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:photo
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_photo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:stereo
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_stereo --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:stitching
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_stitching --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:video
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_video --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
-    - name: Performance:videoio
-      timeout-minutes: 60
-      if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}
-      run: ./bin/opencv_perf_videoio --perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1 --perf_threads=$PARALLEL_JOBS
-      working-directory: ${{ github.workspace }}/build
+      uses: ./ci-gha-workflow/run-tests
+      with:
+        workdir: '${{ github.workspace }}'
+        builddir: build
+        logdir: '${{ github.workspace }}/build'
+        scripts_path: ci-gha-workflow/scripts
+        plan: test-plan-macos-5.x.json
+        suite: "[ 'main' ]"
+        filter: "[ 'macos-common' ]"
+        options: ${{ github.event.repository.name == 'ci-gha-workflow' && 'infra' || 'default' }}
+        timeout: 15
+        jobs: 4
+        suffix: macos-x86-64_5.x
     - name: Python3
       timeout-minutes: 60
       if: ${{ !cancelled() && steps.build-opencv.outcome == 'success' }}

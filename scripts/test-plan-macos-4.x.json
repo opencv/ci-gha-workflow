@@ -1,0 +1,119 @@
+{
+    "suites": {
+        "main": [
+            "opencv_test_calib3d",
+            "opencv_test_core",
+            "opencv_test_dnn",
+            "opencv_test_features2d",
+            "opencv_test_flann",
+            "opencv_test_gapi",
+            "opencv_test_highgui",
+            "opencv_test_imgcodecs",
+            "opencv_test_imgproc",
+            "opencv_test_ml",
+            "opencv_test_objdetect",
+            "opencv_test_photo",
+            "opencv_test_stitching",
+            "opencv_test_video",
+            "opencv_test_videoio",
+            "opencv_perf_calib3d",
+            "opencv_perf_core",
+            "opencv_perf_dnn",
+            "opencv_perf_features2d",
+            "opencv_perf_gapi",
+            "opencv_perf_imgcodecs",
+            "opencv_perf_imgproc",
+            "opencv_perf_objdetect",
+            "opencv_perf_photo",
+            "opencv_perf_stitching",
+            "opencv_perf_video",
+            "opencv_perf_videoio"
+        ]
+    },
+    "filters": {
+        "macos-common": {}
+    },
+    "options": {
+        "default": {
+            "args": {
+                "test": "--skip_unstable=1",
+                "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"
+            },
+            "env": {
+                "opencv_test_calib3d": {
+                    "OPENCV_OPENCL_CACHE_ENABLE": "0"
+                }
+            },
+            "estimated_duration_seconds": {
+                "opencv_test_calib3d": 83,
+                "opencv_test_core": 221,
+                "opencv_test_dnn": 111,
+                "opencv_test_features2d": 76,
+                "opencv_test_flann": 1,
+                "opencv_test_gapi": 156,
+                "opencv_test_highgui": 9,
+                "opencv_test_imgcodecs": 46,
+                "opencv_test_imgproc": 87,
+                "opencv_test_ml": 28,
+                "opencv_test_objdetect": 33,
+                "opencv_test_photo": 32,
+                "opencv_test_stitching": 8,
+                "opencv_test_video": 58,
+                "opencv_test_videoio": 88,
+                "opencv_perf_calib3d": 5,
+                "opencv_perf_core": 75,
+                "opencv_perf_dnn": 37,
+                "opencv_perf_features2d": 30,
+                "opencv_perf_gapi": 117,
+                "opencv_perf_imgcodecs": 35,
+                "opencv_perf_imgproc": 100,
+                "opencv_perf_objdetect": 6,
+                "opencv_perf_photo": 2,
+                "opencv_perf_stitching": 27,
+                "opencv_perf_video": 18,
+                "opencv_perf_videoio": 1
+            },
+            "serial": [ "opencv_test_highgui", "opencv_test_videoio" ]
+        },
+        "infra": {
+            "args": {
+                "perf": "--perf_impl=plain --perf_min_samples=1 --perf_force_samples=1 --perf_verify_sanity --skip_unstable=1"
+            },
+            "env": {
+                "opencv_test_calib3d": {
+                    "OPENCV_OPENCL_CACHE_ENABLE": "0"
+                }
+            },
+            "estimated_duration_seconds": {
+                "opencv_test_calib3d": 83,
+                "opencv_test_core": 221,
+                "opencv_test_dnn": 111,
+                "opencv_test_features2d": 76,
+                "opencv_test_flann": 1,
+                "opencv_test_gapi": 156,
+                "opencv_test_highgui": 9,
+                "opencv_test_imgcodecs": 46,
+                "opencv_test_imgproc": 87,
+                "opencv_test_ml": 28,
+                "opencv_test_objdetect": 33,
+                "opencv_test_photo": 32,
+                "opencv_test_stitching": 8,
+                "opencv_test_video": 58,
+                "opencv_test_videoio": 88,
+                "opencv_perf_calib3d": 5,
+                "opencv_perf_core": 75,
+                "opencv_perf_dnn": 37,
+                "opencv_perf_features2d": 30,
+                "opencv_perf_gapi": 117,
+                "opencv_perf_imgcodecs": 35,
+                "opencv_perf_imgproc": 100,
+                "opencv_perf_objdetect": 6,
+                "opencv_perf_photo": 2,
+                "opencv_perf_stitching": 27,
+                "opencv_perf_video": 18,
+                "opencv_perf_videoio": 1
+            },
+            "serial": [ "opencv_test_highgui", "opencv_test_videoio" ]
+        }
+    }
+}
