@@ -43,13 +43,41 @@ runs:
 
     - working-directory: ${{ inputs.workdir }}
       shell: bash
+      env:
+        OCV_BUILD_DIR: ${{ inputs.builddir }}
+        OCV_GENERATOR: ${{ inputs.generator }}
       run: |
         set -x
         echo "::group::Build"
+        msbuild_args=()
         if [ "$RUNNER_OS" == "Windows" ]; then
           cfg="--config Release"
         fi
-        cmake --build '${{ inputs.builddir }}' ${cfg} 2>&1 | tee '${{ inputs.builddir }}/log.txt'
+        if [[ "$RUNNER_OS" == "Windows" && "$OCV_GENERATOR" == "Visual Studio "* &&
+              -n "${CMAKE_BUILD_PARALLEL_LEVEL:-}" ]]; then
+          if [[ ! "$CMAKE_BUILD_PARALLEL_LEVEL" =~ ^0*[1-9][0-9]*$ ]]; then
+            echo "::error::CMAKE_BUILD_PARALLEL_LEVEL must be a positive decimal integer."
+            exit 2
+          fi
+          # Keep project parallelism separate from the shared compiler budget.
+          if compiler_jobs="$(pwsh -NoLogo -NoProfile -NonInteractive -Command '[Environment]::ProcessorCount')"; then
+            compiler_jobs="${compiler_jobs//$'\r'/}"
+          else
+            compiler_jobs=""
+          fi
+          if [[ ! "$compiler_jobs" =~ ^0*[1-9][0-9]*$ ]]; then
+            echo "::warning::Could not determine the available logical processor count; using CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL for the shared compiler budget."
+            compiler_jobs="$CMAKE_BUILD_PARALLEL_LEVEL"
+          fi
+          msbuild_args=(--parallel "$CMAKE_BUILD_PARALLEL_LEVEL" --
+            /p:MultiProcCL=true "/p:MultiProcMaxCount=$compiler_jobs"
+            /p:EnforceProcessCountAcrossBuilds=true /p:EnableClServerMode=true)
+          # Git Bash must not rewrite native MSBuild switches as filesystem paths.
+          if [ "${MSYS2_ARG_CONV_EXCL:-}" != "*" ]; then
+            export MSYS2_ARG_CONV_EXCL="${MSYS2_ARG_CONV_EXCL:+${MSYS2_ARG_CONV_EXCL};}/p:"
+          fi
+        fi
+        cmake --build "$OCV_BUILD_DIR" ${cfg} "${msbuild_args[@]}" 2>&1 | tee "$OCV_BUILD_DIR/log.txt"
         echo "::endgroup::"
 
     - shell: bash
